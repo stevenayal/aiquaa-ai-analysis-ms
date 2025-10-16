@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Environments
+.env
+venv/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs & Data
+*.log
+logs/
+data/
+
+# Secrets
+*.pem
+*.key
+*secret*
+*credential*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+monitoring/grafana/data/
+nginx/ssl/*.pem
