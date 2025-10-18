@@ -10,7 +10,7 @@ from datetime import datetime
 import structlog
 import google.generativeai as genai
 from langfuse import Langfuse
-from langfuse.decorators import observe, langfuse_context
+# Langfuse decorators removed in newer versions
 import backoff
 from dotenv import load_dotenv
 
@@ -21,12 +21,20 @@ class LLMWrapper:
     """Wrapper para modelos de lenguaje con observabilidad Langfuse"""
     
     def __init__(self):
-        # Configurar Langfuse
-        self.langfuse = Langfuse(
-            public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
-            secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
-            host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
-        )
+        # Configurar Langfuse (opcional)
+        self.langfuse_public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
+        self.langfuse_secret_key = os.getenv("LANGFUSE_SECRET_KEY")
+        self.langfuse_host = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+        
+        if self.langfuse_public_key and self.langfuse_secret_key:
+            self.langfuse = Langfuse(
+                public_key=self.langfuse_public_key,
+                secret_key=self.langfuse_secret_key,
+                host=self.langfuse_host
+            )
+        else:
+            self.langfuse = None
+            logger.warning("Langfuse not configured - observability disabled")
         
         # Configurar Gemini
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
@@ -42,6 +50,10 @@ class LLMWrapper:
     async def health_check(self) -> bool:
         """Verificar salud de Langfuse"""
         try:
+            if self.langfuse is None:
+                logger.info("Langfuse not configured - skipping health check")
+                return True
+            
             # Test básico de conexión con Langfuse
             self.langfuse.flush()
             logger.info("Langfuse health check successful")
@@ -64,7 +76,6 @@ class LLMWrapper:
             logger.error("LLM connection test failed", error=str(e))
             return False
     
-    @observe(name="analyze_test_case")
     async def analyze_test_case(
         self,
         prompt: str,
@@ -79,23 +90,43 @@ class LLMWrapper:
                 analysis_id=analysis_id
             )
             
-            # Configurar contexto de Langfuse
-            langfuse_context.update_current_trace(
-                name="test_case_analysis",
-                user_id=f"test_case_{test_case_id}",
-                tags=["qa", "analysis", "test_case"],
-                metadata={
-                    "test_case_id": test_case_id,
-                    "analysis_id": analysis_id,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
-            )
+            # Crear trace en Langfuse (si está configurado)
+            trace = None
+            generation = None
+            if self.langfuse:
+                trace = self.langfuse.trace(
+                    name="test_case_analysis",
+                    user_id=f"test_case_{test_case_id}",
+                    tags=["qa", "analysis", "test_case"],
+                    metadata={
+                        "test_case_id": test_case_id,
+                        "analysis_id": analysis_id,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                )
+                
+                # Crear span para la generación
+                generation = trace.generation(
+                    name="llm_analysis",
+                    model=self.gemini_model,
+                    input=prompt
+                )
             
             # Generar respuesta del LLM
             response = await self._generate_response(prompt)
             
             # Procesar respuesta
             analysis_result = self._process_analysis_response(response)
+            
+            # Finalizar generación (si Langfuse está configurado)
+            if generation:
+                generation.end(
+                    output=analysis_result,
+                    metadata={
+                        "suggestions_count": len(analysis_result.get("suggestions", [])),
+                        "confidence_score": analysis_result.get("confidence_score", 0.8)
+                    }
+                )
             
             # Agregar metadatos
             analysis_result.update({
@@ -104,6 +135,16 @@ class LLMWrapper:
                 "timestamp": datetime.utcnow().isoformat(),
                 "model_used": self.gemini_model
             })
+            
+            # Finalizar trace (si Langfuse está configurado)
+            if trace:
+                trace.update(
+                    output=analysis_result,
+                    metadata={
+                        "suggestions_count": len(analysis_result.get("suggestions", [])),
+                        "confidence_score": analysis_result.get("confidence_score", 0.8)
+                    }
+                )
             
             logger.info(
                 "LLM analysis completed",
@@ -350,7 +391,10 @@ class LLMWrapper:
     def flush_langfuse(self):
         """Forzar envío de datos a Langfuse"""
         try:
-            self.langfuse.flush()
-            logger.info("Langfuse data flushed successfully")
+            if self.langfuse:
+                self.langfuse.flush()
+                logger.info("Langfuse data flushed successfully")
+            else:
+                logger.info("Langfuse not configured - no data to flush")
         except Exception as e:
             logger.error("Error flushing Langfuse data", error=str(e))

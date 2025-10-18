@@ -1,0 +1,26 @@
+# Configuración del Microservicio de Análisis QA
+# Copia este archivo como .env y configura las variables
+
+# Puerto del servidor
+PORT=8000
+LOG_LEVEL=INFO
+
+# Configuración de Langfuse (Observabilidad)
+LANGFUSE_PUBLIC_KEY=your_langfuse_public_key_here
+LANGFUSE_SECRET_KEY=your_langfuse_secret_key_here
+LANGFUSE_HOST=https://cloud.langfuse.com
+
+# Configuración de Google Gemini
+GOOGLE_API_KEY=your_google_api_key_here
+GEMINI_MODEL=gemini-pro
+
+# Configuración de Jira
+JIRA_BASE_URL=https://your-domain.atlassian.net
+JIRA_TOKEN=your_jira_token_here
+JIRA_ORG_ID=your_jira_org_id_here
+
+# Configuración de Redis (opcional)
+REDIS_URL=redis://localhost:6379
+
+# Configuración de base de datos (opcional)
+DATABASE_URL=sqlite:///./qa_analysis.db
