@@ -177,6 +177,216 @@ class TestCaseAnalysisResponse(BaseModel):
             }
         }
 
+class RequirementsAnalysisRequest(BaseModel):
+    """Solicitud de análisis de requerimientos para generar casos de prueba"""
+    requirement_id: str = Field(
+        ..., 
+        description="ID único del requerimiento",
+        example="REQ-001",
+        min_length=1,
+        max_length=50
+    )
+    requirement_content: str = Field(
+        ..., 
+        description="Descripción detallada del requerimiento a analizar",
+        example="El sistema debe permitir a los usuarios autenticarse usando email y contraseña",
+        min_length=10,
+        max_length=10000
+    )
+    project_key: str = Field(
+        ..., 
+        description="Clave del proyecto en Jira",
+        example="AUTH",
+        min_length=1,
+        max_length=20
+    )
+    priority: Optional[str] = Field(
+        "Medium", 
+        description="Prioridad del requerimiento",
+        example="High",
+        pattern="^(Low|Medium|High|Critical)$"
+    )
+    test_types: Optional[List[str]] = Field(
+        default_factory=lambda: ["functional", "integration"],
+        description="Tipos de pruebas a generar",
+        example=["functional", "integration", "ui", "api", "security"]
+    )
+    coverage_level: Optional[str] = Field(
+        "medium",
+        description="Nivel de cobertura de pruebas",
+        example="high",
+        pattern="^(low|medium|high|comprehensive)$"
+    )
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "requirement_id": "REQ-001",
+                "requirement_content": "El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado.",
+                "project_key": "AUTH",
+                "priority": "High",
+                "test_types": ["functional", "integration", "security"],
+                "coverage_level": "high"
+            }
+        }
+
+class TestCase(BaseModel):
+    """Caso de prueba generado"""
+    test_case_id: str = Field(..., description="ID del caso de prueba", example="TC-AUTH-001")
+    title: str = Field(..., description="Título del caso de prueba", example="Verificar login con credenciales válidas")
+    description: str = Field(..., description="Descripción detallada del caso de prueba")
+    test_type: str = Field(..., description="Tipo de prueba", example="functional")
+    priority: str = Field(..., description="Prioridad del caso de prueba", example="high")
+    steps: List[str] = Field(..., description="Pasos detallados del caso de prueba")
+    expected_result: str = Field(..., description="Resultado esperado")
+    preconditions: List[str] = Field(default_factory=list, description="Precondiciones necesarias")
+    test_data: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Datos de prueba específicos")
+    automation_potential: str = Field(..., description="Potencial de automatización", example="high")
+    estimated_duration: str = Field(..., description="Duración estimada", example="5-10 minutes")
+
+class RequirementsAnalysisResponse(BaseModel):
+    """Respuesta del análisis de requerimientos"""
+    requirement_id: str = Field(..., description="ID del requerimiento analizado", example="REQ-001")
+    analysis_id: str = Field(..., description="ID único del análisis", example="req_analysis_REQ001_1760825804")
+    status: str = Field(..., description="Estado del análisis", example="completed")
+    test_cases: List[TestCase] = Field(..., description="Lista de casos de prueba generados")
+    coverage_analysis: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
+    confidence_score: float = Field(..., description="Puntuación de confianza del análisis (0-1)", example=0.85)
+    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos", example=12.5)
+    created_at: datetime = Field(..., description="Timestamp de creación del análisis")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "requirement_id": "REQ-001",
+                "analysis_id": "req_analysis_REQ001_1760825804",
+                "status": "completed",
+                "test_cases": [
+                    {
+                        "test_case_id": "TC-AUTH-001",
+                        "title": "Verificar login con credenciales válidas",
+                        "description": "Caso de prueba para verificar que un usuario puede autenticarse exitosamente",
+                        "test_type": "functional",
+                        "priority": "high",
+                        "steps": [
+                            "Navegar a la página de login",
+                            "Ingresar email válido",
+                            "Ingresar contraseña válida",
+                            "Hacer clic en 'Iniciar Sesión'"
+                        ],
+                        "expected_result": "Usuario autenticado exitosamente y redirigido al dashboard",
+                        "preconditions": ["Usuario existe en la base de datos", "Usuario está activo"],
+                        "test_data": {"email": "test@example.com", "password": "Test123!"},
+                        "automation_potential": "high",
+                        "estimated_duration": "5-10 minutes"
+                    }
+                ],
+                "coverage_analysis": {
+                    "functional_coverage": "90%",
+                    "edge_case_coverage": "75%",
+                    "integration_coverage": "80%"
+                },
+                "confidence_score": 0.85,
+                "processing_time": 12.5,
+                "created_at": "2025-10-18T19:16:44.520862"
+            }
+        }
+
+class JiraWorkItemRequest(BaseModel):
+    """Solicitud de análisis de work item de Jira"""
+    work_item_id: str = Field(
+        ..., 
+        description="ID del work item en Jira (ej: PROJ-123)",
+        example="AUTH-123",
+        min_length=1,
+        max_length=50
+    )
+    project_key: str = Field(
+        ..., 
+        description="Clave del proyecto en Jira",
+        example="AUTH",
+        min_length=1,
+        max_length=20
+    )
+    test_types: Optional[List[str]] = Field(
+        default_factory=lambda: ["functional", "integration"],
+        description="Tipos de pruebas a generar",
+        example=["functional", "integration", "ui", "api", "security"]
+    )
+    coverage_level: Optional[str] = Field(
+        "medium",
+        description="Nivel de cobertura de pruebas",
+        example="high",
+        pattern="^(low|medium|high|comprehensive)$"
+    )
+    include_acceptance_criteria: Optional[bool] = Field(
+        True,
+        description="Incluir criterios de aceptación en el análisis",
+        example=True
+    )
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "work_item_id": "AUTH-123",
+                "project_key": "AUTH",
+                "test_types": ["functional", "integration", "security"],
+                "coverage_level": "high",
+                "include_acceptance_criteria": True
+            }
+        }
+
+class JiraWorkItemResponse(BaseModel):
+    """Respuesta del análisis de work item de Jira"""
+    work_item_id: str = Field(..., description="ID del work item analizado", example="AUTH-123")
+    jira_data: Dict[str, Any] = Field(..., description="Datos obtenidos de Jira")
+    analysis_id: str = Field(..., description="ID único del análisis", example="jira_analysis_AUTH123_1760825804")
+    status: str = Field(..., description="Estado del análisis", example="completed")
+    test_cases: List[TestCase] = Field(..., description="Lista de casos de prueba generados")
+    coverage_analysis: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
+    confidence_score: float = Field(..., description="Puntuación de confianza del análisis (0-1)", example=0.85)
+    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos", example=15.5)
+    created_at: datetime = Field(..., description="Timestamp de creación del análisis")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "work_item_id": "AUTH-123",
+                "jira_data": {
+                    "summary": "Implementar autenticación de usuarios",
+                    "description": "El sistema debe permitir a los usuarios autenticarse...",
+                    "issue_type": "Story",
+                    "priority": "High",
+                    "status": "In Progress"
+                },
+                "analysis_id": "jira_analysis_AUTH123_1760825804",
+                "status": "completed",
+                "test_cases": [
+                    {
+                        "test_case_id": "TC-AUTH-001",
+                        "title": "Verificar login con credenciales válidas",
+                        "description": "Caso de prueba para verificar autenticación exitosa",
+                        "test_type": "functional",
+                        "priority": "high",
+                        "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
+                        "expected_result": "Usuario autenticado exitosamente",
+                        "preconditions": ["Usuario existe en BD"],
+                        "test_data": {"email": "test@example.com", "password": "Test123!"},
+                        "automation_potential": "high",
+                        "estimated_duration": "5-10 minutes"
+                    }
+                ],
+                "coverage_analysis": {
+                    "functional_coverage": "90%",
+                    "edge_case_coverage": "75%",
+                    "integration_coverage": "80%"
+                },
+                "confidence_score": 0.85,
+                "processing_time": 15.5,
+                "created_at": "2025-10-18T19:16:44.520862"
+            }
+        }
+
 class HealthResponse(BaseModel):
     """Respuesta de salud del servicio"""
     status: str
@@ -416,6 +626,357 @@ async def batch_analyze_test_cases(
         "results": results
     }
 
+@app.post("/analyze-requirements", 
+          response_model=RequirementsAnalysisResponse,
+          summary="Analizar requerimientos y generar casos de prueba",
+          description="Analiza un requerimiento y genera casos de prueba estructurados usando IA",
+          tags=["Requerimientos"],
+          responses={
+              200: {
+                  "description": "Análisis de requerimientos completado exitosamente",
+                  "model": RequirementsAnalysisResponse
+              },
+              400: {
+                  "description": "Datos de entrada inválidos",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Datos de entrada inválidos"}
+                      }
+                  }
+              },
+              500: {
+                  "description": "Error interno del servidor",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Error interno del servidor"}
+                      }
+                  }
+              }
+          })
+async def analyze_requirements(
+    request: RequirementsAnalysisRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    ## Analizar Requerimientos y Generar Casos de Prueba
+    
+    Analiza un requerimiento de software y genera casos de prueba estructurados utilizando IA generativa.
+    
+    ### Proceso:
+    1. **Análisis del Requerimiento**: Se procesa el contenido del requerimiento
+    2. **Generación de Casos**: Se crean casos de prueba para diferentes tipos y niveles
+    3. **Estructuración**: Se organizan los casos con pasos, datos y resultados esperados
+    4. **Análisis de Cobertura**: Se evalúa la cobertura de pruebas generada
+    
+    ### Tipos de Pruebas Soportados:
+    - **Functional**: Pruebas funcionales básicas
+    - **Integration**: Pruebas de integración
+    - **UI**: Pruebas de interfaz de usuario
+    - **API**: Pruebas de API
+    - **Security**: Pruebas de seguridad
+    - **Performance**: Pruebas de rendimiento
+    
+    ### Niveles de Cobertura:
+    - **Low**: Casos básicos esenciales
+    - **Medium**: Casos estándar con casos edge
+    - **High**: Cobertura completa con casos complejos
+    - **Comprehensive**: Cobertura exhaustiva con todos los escenarios
+    
+    ### Respuesta:
+    - **test_cases**: Lista de casos de prueba generados
+    - **coverage_analysis**: Análisis de cobertura por tipo
+    - **confidence_score**: Puntuación de confianza (0-1)
+    - **processing_time**: Tiempo de procesamiento en segundos
+    """
+    start_time = datetime.utcnow()
+    analysis_id = f"req_analysis_{request.requirement_id}_{int(start_time.timestamp())}"
+    
+    try:
+        logger.info(
+            "Starting requirements analysis",
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id,
+            project_key=request.project_key
+        )
+        
+        # Sanitizar contenido sensible
+        sanitized_content = sanitizer.sanitize(request.requirement_content)
+        
+        # Generar prompt para análisis de requerimientos
+        prompt = prompt_templates.get_requirements_analysis_prompt(
+            requirement_content=sanitized_content,
+            project_key=request.project_key,
+            priority=request.priority,
+            test_types=request.test_types,
+            coverage_level=request.coverage_level
+        )
+        
+        # Ejecutar análisis con LLM
+        analysis_result = await llm_wrapper.analyze_requirements(
+            prompt=prompt,
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id
+        )
+        
+        # Procesar casos de prueba generados
+        test_cases = []
+        if analysis_result.get("test_cases"):
+            for tc_data in analysis_result["test_cases"]:
+                test_case = TestCase(
+                    test_case_id=tc_data.get("test_case_id", f"TC-{request.requirement_id}-001"),
+                    title=tc_data.get("title", ""),
+                    description=tc_data.get("description", ""),
+                    test_type=tc_data.get("test_type", "functional"),
+                    priority=tc_data.get("priority", "medium"),
+                    steps=tc_data.get("steps", []),
+                    expected_result=tc_data.get("expected_result", ""),
+                    preconditions=tc_data.get("preconditions", []),
+                    test_data=tc_data.get("test_data", {}),
+                    automation_potential=tc_data.get("automation_potential", "medium"),
+                    estimated_duration=tc_data.get("estimated_duration", "5-10 minutes")
+                )
+                test_cases.append(test_case)
+        
+        # Calcular tiempo de procesamiento
+        processing_time = (datetime.utcnow() - start_time).total_seconds()
+        
+        # Crear respuesta
+        response = RequirementsAnalysisResponse(
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id,
+            status="completed",
+            test_cases=test_cases,
+            coverage_analysis=analysis_result.get("coverage_analysis", {}),
+            confidence_score=analysis_result.get("confidence_score", 0.8),
+            processing_time=processing_time,
+            created_at=start_time
+        )
+        
+        # Registrar en background task para tracking
+        background_tasks.add_task(
+            log_requirements_analysis_completion,
+            analysis_id,
+            request.requirement_id,
+            response
+        )
+        
+        logger.info(
+            "Requirements analysis completed",
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id,
+            test_cases_count=len(test_cases),
+            processing_time=processing_time
+        )
+        
+        return response
+        
+    except Exception as e:
+        logger.error(
+            "Requirements analysis failed",
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id,
+            error=str(e)
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing requirements: {str(e)}"
+        )
+
+@app.post("/analyze-jira-workitem", 
+          response_model=JiraWorkItemResponse,
+          summary="Analizar work item de Jira y generar casos de prueba",
+          description="Obtiene un work item de Jira y genera casos de prueba estructurados usando IA",
+          tags=["Integración Jira"],
+          responses={
+              200: {
+                  "description": "Análisis de work item completado exitosamente",
+                  "model": JiraWorkItemResponse
+              },
+              400: {
+                  "description": "Datos de entrada inválidos o work item no encontrado",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Work item no encontrado en Jira"}
+                      }
+                  }
+              },
+              500: {
+                  "description": "Error interno del servidor",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Error interno del servidor"}
+                      }
+                  }
+              }
+          })
+async def analyze_jira_workitem(
+    request: JiraWorkItemRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    ## Analizar Work Item de Jira y Generar Casos de Prueba
+    
+    Obtiene un work item específico de Jira y genera casos de prueba estructurados basados en su contenido.
+    
+    ### Proceso:
+    1. **Obtención de Jira**: Se recupera el work item desde Jira API
+    2. **Extracción de Datos**: Se extrae información relevante (summary, description, acceptance criteria)
+    3. **Análisis IA**: Se procesa con Google Gemini usando prompts especializados
+    4. **Generación de Casos**: Se crean casos de prueba estructurados
+    5. **Análisis de Cobertura**: Se evalúa la cobertura de pruebas generada
+    
+    ### Datos Obtenidos de Jira:
+    - **Summary**: Título del work item
+    - **Description**: Descripción detallada
+    - **Acceptance Criteria**: Criterios de aceptación (si están disponibles)
+    - **Issue Type**: Tipo de issue (Story, Task, Bug, etc.)
+    - **Priority**: Prioridad del work item
+    - **Status**: Estado actual
+    
+    ### Tipos de Pruebas Soportados:
+    - **Functional**: Pruebas funcionales básicas
+    - **Integration**: Pruebas de integración
+    - **UI**: Pruebas de interfaz de usuario
+    - **API**: Pruebas de API
+    - **Security**: Pruebas de seguridad
+    - **Performance**: Pruebas de rendimiento
+    
+    ### Respuesta:
+    - **jira_data**: Datos completos obtenidos de Jira
+    - **test_cases**: Lista de casos de prueba generados
+    - **coverage_analysis**: Análisis de cobertura por tipo
+    - **confidence_score**: Puntuación de confianza (0-1)
+    - **processing_time**: Tiempo de procesamiento en segundos
+    """
+    start_time = datetime.utcnow()
+    analysis_id = f"jira_analysis_{request.work_item_id.replace('-', '')}_{int(start_time.timestamp())}"
+    
+    try:
+        logger.info(
+            "Starting Jira work item analysis",
+            work_item_id=request.work_item_id,
+            project_key=request.project_key,
+            analysis_id=analysis_id
+        )
+        
+        # Obtener datos del work item desde Jira
+        jira_data = await tracker_client.get_work_item_details(
+            work_item_id=request.work_item_id,
+            project_key=request.project_key
+        )
+        
+        if not jira_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Work item {request.work_item_id} not found in project {request.project_key}"
+            )
+        
+        # Construir contenido para análisis
+        requirement_content = f"""
+        TÍTULO: {jira_data.get('summary', '')}
+        
+        DESCRIPCIÓN:
+        {jira_data.get('description', '')}
+        
+        TIPO DE ISSUE: {jira_data.get('issue_type', '')}
+        PRIORIDAD: {jira_data.get('priority', '')}
+        ESTADO: {jira_data.get('status', '')}
+        """
+        
+        # Agregar criterios de aceptación si están disponibles
+        if request.include_acceptance_criteria and jira_data.get('acceptance_criteria'):
+            requirement_content += f"""
+            
+            CRITERIOS DE ACEPTACIÓN:
+            {jira_data.get('acceptance_criteria', '')}
+            """
+        
+        # Sanitizar contenido sensible
+        sanitized_content = sanitizer.sanitize(requirement_content)
+        
+        # Generar prompt para análisis de work item
+        prompt = prompt_templates.get_jira_workitem_analysis_prompt(
+            work_item_data=jira_data,
+            requirement_content=sanitized_content,
+            project_key=request.project_key,
+            test_types=request.test_types,
+            coverage_level=request.coverage_level
+        )
+        
+        # Ejecutar análisis con LLM
+        analysis_result = await llm_wrapper.analyze_jira_workitem(
+            prompt=prompt,
+            work_item_id=request.work_item_id,
+            analysis_id=analysis_id
+        )
+        
+        # Procesar casos de prueba generados
+        test_cases = []
+        if analysis_result.get("test_cases"):
+            for tc_data in analysis_result["test_cases"]:
+                test_case = TestCase(
+                    test_case_id=tc_data.get("test_case_id", f"TC-{request.project_key}-001"),
+                    title=tc_data.get("title", ""),
+                    description=tc_data.get("description", ""),
+                    test_type=tc_data.get("test_type", "functional"),
+                    priority=tc_data.get("priority", "medium"),
+                    steps=tc_data.get("steps", []),
+                    expected_result=tc_data.get("expected_result", ""),
+                    preconditions=tc_data.get("preconditions", []),
+                    test_data=tc_data.get("test_data", {}),
+                    automation_potential=tc_data.get("automation_potential", "medium"),
+                    estimated_duration=tc_data.get("estimated_duration", "5-10 minutes")
+                )
+                test_cases.append(test_case)
+        
+        # Calcular tiempo de procesamiento
+        processing_time = (datetime.utcnow() - start_time).total_seconds()
+        
+        # Crear respuesta
+        response = JiraWorkItemResponse(
+            work_item_id=request.work_item_id,
+            jira_data=jira_data,
+            analysis_id=analysis_id,
+            status="completed",
+            test_cases=test_cases,
+            coverage_analysis=analysis_result.get("coverage_analysis", {}),
+            confidence_score=analysis_result.get("confidence_score", 0.8),
+            processing_time=processing_time,
+            created_at=start_time
+        )
+        
+        # Registrar en background task para tracking
+        background_tasks.add_task(
+            log_jira_workitem_analysis_completion,
+            analysis_id,
+            request.work_item_id,
+            response
+        )
+        
+        logger.info(
+            "Jira work item analysis completed",
+            work_item_id=request.work_item_id,
+            analysis_id=analysis_id,
+            test_cases_count=len(test_cases),
+            processing_time=processing_time
+        )
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            "Jira work item analysis failed",
+            work_item_id=request.work_item_id,
+            analysis_id=analysis_id,
+            error=str(e)
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing Jira work item: {str(e)}"
+        )
+
 @app.get("/analysis/{analysis_id}")
 async def get_analysis_result(analysis_id: str):
     """
@@ -452,6 +1013,55 @@ async def log_analysis_completion(
     except Exception as e:
         logger.error(
             "Failed to log analysis completion",
+            analysis_id=analysis_id,
+            error=str(e)
+        )
+
+async def log_requirements_analysis_completion(
+    analysis_id: str,
+    requirement_id: str,
+    response: RequirementsAnalysisResponse
+):
+    """Background task para registrar la finalización del análisis de requerimientos"""
+    try:
+        # Aquí podrías implementar lógica adicional como:
+        # - Guardar en base de datos
+        # - Enviar notificaciones
+        # - Actualizar métricas
+        logger.info(
+            "Requirements analysis completion logged",
+            analysis_id=analysis_id,
+            requirement_id=requirement_id,
+            test_cases_count=len(response.test_cases)
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to log requirements analysis completion",
+            analysis_id=analysis_id,
+            error=str(e)
+        )
+
+async def log_jira_workitem_analysis_completion(
+    analysis_id: str,
+    work_item_id: str,
+    response: JiraWorkItemResponse
+):
+    """Background task para registrar la finalización del análisis de work item de Jira"""
+    try:
+        # Aquí podrías implementar lógica adicional como:
+        # - Guardar en base de datos
+        # - Enviar notificaciones
+        # - Actualizar métricas
+        # - Crear casos de prueba en Jira
+        logger.info(
+            "Jira work item analysis completion logged",
+            analysis_id=analysis_id,
+            work_item_id=work_item_id,
+            test_cases_count=len(response.test_cases)
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to log Jira work item analysis completion",
             analysis_id=analysis_id,
             error=str(e)
         )

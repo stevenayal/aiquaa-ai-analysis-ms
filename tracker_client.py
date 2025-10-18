@@ -45,6 +45,90 @@ class TrackerClient:
             logger.error("Jira health check failed", error=str(e))
             return False
     
+    async def get_work_item_details(self, work_item_id: str, project_key: str) -> Optional[Dict[str, Any]]:
+        """Obtener detalles de un work item específico de Jira"""
+        try:
+            logger.info("Fetching work item details", work_item_id=work_item_id, project_key=project_key)
+            
+            # Construir JQL query para buscar el work item
+            jql_query = f"key = {work_item_id} AND project = {project_key}"
+            
+            # Hacer la búsqueda
+            search_url = f"{self.jira_base_url}/rest/api/3/search"
+            search_params = {
+                "jql": jql_query,
+                "fields": [
+                    "summary",
+                    "description", 
+                    "issuetype",
+                    "priority",
+                    "status",
+                    "customfield_10014",  # Acceptance Criteria (común en Jira)
+                    "customfield_10015",  # Story Points (común en Jira)
+                    "labels",
+                    "components",
+                    "fixVersions",
+                    "assignee",
+                    "reporter",
+                    "created",
+                    "updated"
+                ],
+                "maxResults": 1
+            }
+            
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(search_url, params=search_params, headers=self.jira_headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    issues = data.get("issues", [])
+                    
+                    if not issues:
+                        logger.warning("Work item not found", work_item_id=work_item_id, project_key=project_key)
+                        return None
+                    
+                    issue = issues[0]
+                    fields = issue.get("fields", {})
+                    
+                    # Extraer información relevante
+                    work_item_data = {
+                        "key": issue.get("key"),
+                        "summary": fields.get("summary", ""),
+                        "description": self._extract_text_from_jira_content(fields.get("description", "")),
+                        "issue_type": fields.get("issuetype", {}).get("name", ""),
+                        "priority": fields.get("priority", {}).get("name", ""),
+                        "status": fields.get("status", {}).get("name", ""),
+                        "acceptance_criteria": self._extract_text_from_jira_content(fields.get("customfield_10014", "")),
+                        "story_points": fields.get("customfield_10015"),
+                        "labels": fields.get("labels", []),
+                        "components": [comp.get("name", "") for comp in fields.get("components", [])],
+                        "fix_versions": [version.get("name", "") for version in fields.get("fixVersions", [])],
+                        "assignee": fields.get("assignee", {}).get("displayName", ""),
+                        "reporter": fields.get("reporter", {}).get("displayName", ""),
+                        "created": fields.get("created", ""),
+                        "updated": fields.get("updated", ""),
+                        "url": f"{self.jira_base_url}/browse/{issue.get('key')}"
+                    }
+                    
+                    logger.info("Work item details retrieved successfully", 
+                               work_item_id=work_item_id, 
+                               issue_type=work_item_data.get("issue_type"))
+                    
+                    return work_item_data
+                    
+                else:
+                    logger.error("Failed to fetch work item", 
+                               work_item_id=work_item_id, 
+                               status_code=response.status_code,
+                               response=response.text)
+                    return None
+                
+        except Exception as e:
+            logger.error("Error fetching work item details", 
+                        work_item_id=work_item_id, 
+                        error=str(e))
+            return None
+    
     async def get_issue(self, issue_key: str) -> Optional[Dict[str, Any]]:
         """Obtener un issue de Jira por su clave"""
         try:

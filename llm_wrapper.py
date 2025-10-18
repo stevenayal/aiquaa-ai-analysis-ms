@@ -388,6 +388,406 @@ class LLMWrapper:
             logger.error("Error suggesting improvements", error=str(e))
             return []
     
+    async def analyze_requirements(
+        self,
+        prompt: str,
+        requirement_id: str,
+        analysis_id: str
+    ) -> Dict[str, Any]:
+        """Analizar requerimientos y generar casos de prueba usando LLM con observabilidad"""
+        try:
+            logger.info(
+                "Starting requirements analysis",
+                requirement_id=requirement_id,
+                analysis_id=analysis_id
+            )
+            
+            # Crear trace en Langfuse (si está configurado)
+            trace = None
+            generation = None
+            if self.langfuse:
+                trace = self.langfuse.trace(
+                    name="requirements_analysis",
+                    user_id=f"requirement_{requirement_id}",
+                    tags=["qa", "requirements", "test_generation"],
+                    metadata={
+                        "requirement_id": requirement_id,
+                        "analysis_id": analysis_id,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                )
+                
+                # Crear span para la generación
+                generation = trace.generation(
+                    name="llm_requirements_analysis",
+                    model=self.gemini_model,
+                    input=prompt
+                )
+            
+            # Generar respuesta del LLM
+            response = await self._generate_response(prompt)
+            
+            # Procesar respuesta
+            analysis_result = self._process_requirements_response(response)
+            
+            # Finalizar generación (si Langfuse está configurado)
+            if generation:
+                generation.end(
+                    output=analysis_result,
+                    metadata={
+                        "test_cases_count": len(analysis_result.get("test_cases", [])),
+                        "confidence_score": analysis_result.get("confidence_score", 0.8)
+                    }
+                )
+            
+            # Agregar metadatos
+            analysis_result.update({
+                "requirement_id": requirement_id,
+                "analysis_id": analysis_id,
+                "timestamp": datetime.utcnow().isoformat(),
+                "model_used": self.gemini_model
+            })
+            
+            # Finalizar trace (si Langfuse está configurado)
+            if trace:
+                trace.update(
+                    output=analysis_result,
+                    metadata={
+                        "test_cases_count": len(analysis_result.get("test_cases", [])),
+                        "confidence_score": analysis_result.get("confidence_score", 0.8)
+                    }
+                )
+            
+            logger.info(
+                "Requirements analysis completed",
+                requirement_id=requirement_id,
+                analysis_id=analysis_id,
+                test_cases_count=len(analysis_result.get("test_cases", []))
+            )
+            
+            return analysis_result
+            
+        except Exception as e:
+            logger.error(
+                "Requirements analysis failed",
+                requirement_id=requirement_id,
+                analysis_id=analysis_id,
+                error=str(e)
+            )
+            raise
+    
+    def _process_requirements_response(self, response: str) -> Dict[str, Any]:
+        """Procesar respuesta del LLM para análisis de requerimientos"""
+        try:
+            import json
+            import re
+            
+            # Buscar JSON en la respuesta
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+                try:
+                    parsed_response = json.loads(json_str)
+                    return self._validate_requirements_response(parsed_response)
+                except json.JSONDecodeError:
+                    logger.warning("Failed to parse JSON response, using fallback")
+            
+            # Fallback: procesar respuesta de texto libre
+            return self._parse_requirements_text_response(response)
+            
+        except Exception as e:
+            logger.error("Error processing requirements response", error=str(e))
+            return self._create_fallback_requirements_response(response)
+    
+    def _validate_requirements_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        """Validar y normalizar respuesta del análisis de requerimientos"""
+        validated = {
+            "test_cases": [],
+            "coverage_analysis": {},
+            "confidence_score": 0.8
+        }
+        
+        # Validar casos de prueba
+        if "test_cases" in response and isinstance(response["test_cases"], list):
+            for tc in response["test_cases"]:
+                if isinstance(tc, dict):
+                    validated["test_cases"].append({
+                        "test_case_id": tc.get("test_case_id", ""),
+                        "title": tc.get("title", ""),
+                        "description": tc.get("description", ""),
+                        "test_type": tc.get("test_type", "functional"),
+                        "priority": tc.get("priority", "medium"),
+                        "steps": tc.get("steps", []),
+                        "expected_result": tc.get("expected_result", ""),
+                        "preconditions": tc.get("preconditions", []),
+                        "test_data": tc.get("test_data", {}),
+                        "automation_potential": tc.get("automation_potential", "medium"),
+                        "estimated_duration": tc.get("estimated_duration", "5-10 minutes")
+                    })
+        
+        # Validar análisis de cobertura
+        if "coverage_analysis" in response and isinstance(response["coverage_analysis"], dict):
+            validated["coverage_analysis"] = response["coverage_analysis"]
+        
+        # Validar score de confianza
+        if "confidence_score" in response:
+            try:
+                score = float(response["confidence_score"])
+                validated["confidence_score"] = max(0.0, min(1.0, score))
+            except (ValueError, TypeError):
+                pass
+        
+        return validated
+    
+    def _parse_requirements_text_response(self, response: str) -> Dict[str, Any]:
+        """Parsear respuesta de texto libre para análisis de requerimientos"""
+        # Implementación básica para fallback
+        return {
+            "test_cases": [{
+                "test_case_id": "TC-FALLBACK-001",
+                "title": "Caso de prueba generado",
+                "description": response[:200] + "..." if len(response) > 200 else response,
+                "test_type": "functional",
+                "priority": "medium",
+                "steps": ["Paso 1: Implementar según requerimiento"],
+                "expected_result": "Resultado esperado según especificación",
+                "preconditions": [],
+                "test_data": {},
+                "automation_potential": "medium",
+                "estimated_duration": "5-10 minutes"
+            }],
+            "coverage_analysis": {
+                "functional_coverage": "70%",
+                "edge_case_coverage": "50%",
+                "integration_coverage": "60%"
+            },
+            "confidence_score": 0.6
+        }
+    
+    def _create_fallback_requirements_response(self, response: str) -> Dict[str, Any]:
+        """Crear respuesta de fallback para análisis de requerimientos"""
+        return {
+            "test_cases": [{
+                "test_case_id": "TC-ERROR-001",
+                "title": "Error en análisis",
+                "description": "No se pudo procesar el requerimiento correctamente",
+                "test_type": "functional",
+                "priority": "low",
+                "steps": ["Revisar requerimiento y reintentar"],
+                "expected_result": "Análisis exitoso",
+                "preconditions": [],
+                "test_data": {},
+                "automation_potential": "low",
+                "estimated_duration": "TBD"
+            }],
+            "coverage_analysis": {
+                "functional_coverage": "0%",
+                "edge_case_coverage": "0%",
+                "integration_coverage": "0%"
+            },
+            "confidence_score": 0.3
+        }
+    
+    async def analyze_jira_workitem(
+        self,
+        prompt: str,
+        work_item_id: str,
+        analysis_id: str
+    ) -> Dict[str, Any]:
+        """Analizar work item de Jira y generar casos de prueba usando LLM con observabilidad"""
+        try:
+            logger.info(
+                "Starting Jira work item analysis",
+                work_item_id=work_item_id,
+                analysis_id=analysis_id
+            )
+            
+            # Crear trace en Langfuse (si está configurado)
+            trace = None
+            generation = None
+            if self.langfuse:
+                trace = self.langfuse.trace(
+                    name="jira_workitem_analysis",
+                    user_id=f"workitem_{work_item_id}",
+                    tags=["qa", "jira", "workitem", "test_generation"],
+                    metadata={
+                        "work_item_id": work_item_id,
+                        "analysis_id": analysis_id,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                )
+                
+                # Crear span para la generación
+                generation = trace.generation(
+                    name="llm_jira_workitem_analysis",
+                    model=self.gemini_model,
+                    input=prompt
+                )
+            
+            # Generar respuesta del LLM
+            response = await self._generate_response(prompt)
+            
+            # Procesar respuesta
+            analysis_result = self._process_jira_workitem_response(response)
+            
+            # Finalizar generación (si Langfuse está configurado)
+            if generation:
+                generation.end(
+                    output=analysis_result,
+                    metadata={
+                        "test_cases_count": len(analysis_result.get("test_cases", [])),
+                        "confidence_score": analysis_result.get("confidence_score", 0.8)
+                    }
+                )
+            
+            # Agregar metadatos
+            analysis_result.update({
+                "work_item_id": work_item_id,
+                "analysis_id": analysis_id,
+                "timestamp": datetime.utcnow().isoformat(),
+                "model_used": self.gemini_model
+            })
+            
+            # Finalizar trace (si Langfuse está configurado)
+            if trace:
+                trace.update(
+                    output=analysis_result,
+                    metadata={
+                        "test_cases_count": len(analysis_result.get("test_cases", [])),
+                        "confidence_score": analysis_result.get("confidence_score", 0.8)
+                    }
+                )
+            
+            logger.info(
+                "Jira work item analysis completed",
+                work_item_id=work_item_id,
+                analysis_id=analysis_id,
+                test_cases_count=len(analysis_result.get("test_cases", []))
+            )
+            
+            return analysis_result
+            
+        except Exception as e:
+            logger.error(
+                "Jira work item analysis failed",
+                work_item_id=work_item_id,
+                analysis_id=analysis_id,
+                error=str(e)
+            )
+            raise
+    
+    def _process_jira_workitem_response(self, response: str) -> Dict[str, Any]:
+        """Procesar respuesta del LLM para análisis de work item de Jira"""
+        try:
+            import json
+            import re
+            
+            # Buscar JSON en la respuesta
+            json_match = re.search(r'\{.*\}', response, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(0)
+                try:
+                    parsed_response = json.loads(json_str)
+                    return self._validate_jira_workitem_response(parsed_response)
+                except json.JSONDecodeError:
+                    logger.warning("Failed to parse JSON response, using fallback")
+            
+            # Fallback: procesar respuesta de texto libre
+            return self._parse_jira_workitem_text_response(response)
+            
+        except Exception as e:
+            logger.error("Error processing Jira work item response", error=str(e))
+            return self._create_fallback_jira_workitem_response(response)
+    
+    def _validate_jira_workitem_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        """Validar y normalizar respuesta del análisis de work item de Jira"""
+        validated = {
+            "test_cases": [],
+            "coverage_analysis": {},
+            "confidence_score": 0.8
+        }
+        
+        # Validar casos de prueba
+        if "test_cases" in response and isinstance(response["test_cases"], list):
+            for tc in response["test_cases"]:
+                if isinstance(tc, dict):
+                    validated["test_cases"].append({
+                        "test_case_id": tc.get("test_case_id", ""),
+                        "title": tc.get("title", ""),
+                        "description": tc.get("description", ""),
+                        "test_type": tc.get("test_type", "functional"),
+                        "priority": tc.get("priority", "medium"),
+                        "steps": tc.get("steps", []),
+                        "expected_result": tc.get("expected_result", ""),
+                        "preconditions": tc.get("preconditions", []),
+                        "test_data": tc.get("test_data", {}),
+                        "automation_potential": tc.get("automation_potential", "medium"),
+                        "estimated_duration": tc.get("estimated_duration", "5-10 minutes")
+                    })
+        
+        # Validar análisis de cobertura
+        if "coverage_analysis" in response and isinstance(response["coverage_analysis"], dict):
+            validated["coverage_analysis"] = response["coverage_analysis"]
+        
+        # Validar score de confianza
+        if "confidence_score" in response:
+            try:
+                score = float(response["confidence_score"])
+                validated["confidence_score"] = max(0.0, min(1.0, score))
+            except (ValueError, TypeError):
+                pass
+        
+        return validated
+    
+    def _parse_jira_workitem_text_response(self, response: str) -> Dict[str, Any]:
+        """Parsear respuesta de texto libre para análisis de work item de Jira"""
+        # Implementación básica para fallback
+        return {
+            "test_cases": [{
+                "test_case_id": "TC-JIRA-FALLBACK-001",
+                "title": "Caso de prueba generado desde Jira",
+                "description": response[:200] + "..." if len(response) > 200 else response,
+                "test_type": "functional",
+                "priority": "medium",
+                "steps": ["Paso 1: Implementar según work item de Jira"],
+                "expected_result": "Resultado esperado según especificación de Jira",
+                "preconditions": [],
+                "test_data": {},
+                "automation_potential": "medium",
+                "estimated_duration": "5-10 minutes"
+            }],
+            "coverage_analysis": {
+                "functional_coverage": "70%",
+                "edge_case_coverage": "50%",
+                "integration_coverage": "60%"
+            },
+            "confidence_score": 0.6
+        }
+    
+    def _create_fallback_jira_workitem_response(self, response: str) -> Dict[str, Any]:
+        """Crear respuesta de fallback para análisis de work item de Jira"""
+        return {
+            "test_cases": [{
+                "test_case_id": "TC-JIRA-ERROR-001",
+                "title": "Error en análisis de Jira",
+                "description": "No se pudo procesar el work item de Jira correctamente",
+                "test_type": "functional",
+                "priority": "low",
+                "steps": ["Revisar work item de Jira y reintentar"],
+                "expected_result": "Análisis exitoso",
+                "preconditions": [],
+                "test_data": {},
+                "automation_potential": "low",
+                "estimated_duration": "TBD"
+            }],
+            "coverage_analysis": {
+                "functional_coverage": "0%",
+                "edge_case_coverage": "0%",
+                "integration_coverage": "0%"
+            },
+            "confidence_score": 0.3
+        }
+    
     def flush_langfuse(self):
         """Forzar envío de datos a Langfuse"""
         try:

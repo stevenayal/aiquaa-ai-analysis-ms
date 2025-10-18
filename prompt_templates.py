@@ -38,6 +38,27 @@ class PromptTemplates:
                 "version": "1.0.0",
                 "template": self._get_quality_template(),
                 "variables": ["test_case_content", "quality_criteria"]
+            },
+            # NUEVOS
+            "modular_generation": {
+                "version": "1.0.0",
+                "template": self._get_modular_generation_template(),
+                "variables": ["programa", "modulos", "condiciones", "variantes", "cantidad_max"]
+            },
+            "cp_briefs": {
+                "version": "1.0.0",
+                "template": self._get_cp_briefs_template(),
+                "variables": ["programa", "modulos", "condiciones", "cantidad_max"]
+            },
+            "requirements_analysis": {
+                "version": "1.0.0",
+                "template": self._get_requirements_analysis_template(),
+                "variables": ["requirement_content", "project_key", "priority", "test_types", "coverage_level"]
+            },
+            "jira_workitem_analysis": {
+                "version": "1.0.0",
+                "template": self._get_jira_workitem_analysis_template(),
+                "variables": ["work_item_data", "requirement_content", "project_key", "test_types", "coverage_level"]
             }
         }
     
@@ -144,6 +165,102 @@ class PromptTemplates:
         except Exception as e:
             logger.error("Error generating quality assessment prompt", error=str(e))
             return self._get_fallback_quality_prompt(test_case_content)
+    
+    def get_modular_generation_prompt(
+        self,
+        programa: str,
+        modulos: List[str],
+        condiciones: List[str],
+        variantes: Optional[List[str]] = None,
+        cantidad_max: int = 200
+    ) -> str:
+        """Método para CSV de CPs (CP - NNN - ...)"""
+        try:
+            template = self.templates["modular_generation"]["template"]
+            prompt = template.format(
+                programa=programa.upper().strip(),
+                modulos=", ".join([m.upper().strip() for m in modulos]),
+                condiciones=", ".join([c.upper().strip() for c in condiciones]),
+                variantes=", ".join([v.upper().strip() for v in variantes]) if variantes else "N/A",
+                cantidad_max=cantidad_max,
+                timestamp=datetime.utcnow().isoformat()
+            )
+            logger.info("Modular generation prompt created",
+                        programa=programa, cantidad_max=cantidad_max)
+            return prompt
+        except Exception as e:
+            logger.error("Error generating modular generation prompt", error=str(e))
+            return f"Genera CSV sin encabezado: CP - NNN - {programa.upper()} - MODULO - CONDICION - ESCENARIO "\
+                   f"usando MODULOS={modulos} y CONDICIONES={condiciones}. Máx: {cantidad_max}."
+    
+    def get_cp_briefs_prompt(
+        self,
+        programa: str,
+        modulos: List[str],
+        condiciones: List[str],
+        cantidad_max: int = 50
+    ) -> str:
+        """
+        Genera prompt para devolver bloques en formato:
+        1 - CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO
+        2- Precondicion: ...
+        3- Resultado Esperado: ...
+        """
+        try:
+            template = self.templates["cp_briefs"]["template"]
+            prompt = template.format(
+                programa=programa.upper().strip(),
+                modulos=", ".join([m.upper().strip() for m in modulos]),
+                condiciones=", ".join([c.upper().strip() for c in condiciones]),
+                cantidad_max=cantidad_max,
+                timestamp=datetime.utcnow().isoformat()
+            )
+            logger.info("CP briefs prompt created", programa=programa, cantidad_max=cantidad_max)
+            return prompt
+        except Exception as e:
+            logger.error("Error generating cp briefs prompt", error=str(e))
+            # Fallback mínimo
+            return (
+                f"Genera {cantidad_max} bloques con el formato exacto:\n"
+                f"1 - CP - NNN - {programa.upper()} - MODULO - CONDICION - ESCENARIO\n"
+                "2- Precondicion: <texto breve y concreto>\n"
+                "3- Resultado Esperado: <resultado verificable>\n"
+                f"Usá MODULOS={modulos} y CONDICIONES={condiciones}. Solo los bloques, sin texto extra."
+            )
+    
+    def get_requirements_analysis_prompt(
+        self,
+        requirement_content: str,
+        project_key: str,
+        priority: str = "Medium",
+        test_types: Optional[List[str]] = None,
+        coverage_level: str = "medium"
+    ) -> str:
+        """Obtener prompt para análisis de requerimientos y generación de casos de prueba"""
+        try:
+            template_data = self.templates["requirements_analysis"]
+            template = template_data["template"]
+            
+            # Preparar variables
+            test_types_str = ", ".join(test_types) if test_types else "functional, integration"
+            
+            # Reemplazar variables en el template
+            prompt = template.format(
+                requirement_content=requirement_content,
+                project_key=project_key,
+                priority=priority,
+                test_types=test_types_str,
+                coverage_level=coverage_level,
+                timestamp=datetime.utcnow().isoformat()
+            )
+            
+            logger.info("Requirements analysis prompt generated", 
+                       project_key=project_key, priority=priority, coverage_level=coverage_level)
+            return prompt
+            
+        except Exception as e:
+            logger.error("Error generating requirements analysis prompt", error=str(e))
+            return self._get_fallback_requirements_prompt(requirement_content)
     
     def _get_analysis_template(self) -> str:
         """Template para análisis de casos de prueba"""
@@ -362,6 +479,74 @@ FORMATO DE RESPUESTA JSON:
 Responde SOLO con el JSON válido.
 """
     
+    def _get_modular_generation_template(self) -> str:
+        """Template para generación modular de casos de prueba"""
+        return """
+Eres un generador estricto de CASOS DE PRUEBA por DISEÑO MODULAR.
+
+METADATOS:
+- PROGRAMA: {programa}
+- MODULOS: {modulos}
+- CONDICIONES: {condiciones}
+- VARIANTES/EDICIONES: {variantes}
+- MAX_FILAS: {cantidad_max}
+- TIMESTAMP: {timestamp}
+
+OBJETIVO:
+Producir exclusivamente líneas CSV (sin encabezado) con el patrón EXACTO:
+CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO
+
+REGLAS:
+1) NNN inicia en 001, sin saltos.
+2) PROGRAMA = {programa}.
+3) MODULO ∈ MODULOS.
+4) CONDICION ∈ CONDICIONES (átoma).
+5) ESCENARIO: MAYÚSCULAS, verbo + resultado (≤12 palabras).
+6) Sin texto adicional.
+7) Cobertura mínima por módulo: ≥1 caso feliz y ≥1 caso error.
+8) Si hay fallas remotas (p.ej., TIMEOUT/SIN_CONEXION), al menos 1 caso con RETRY o MARCADO PENDIENTE.
+9) Si VARIANTES ≠ N/A, duplicar solo cuando cambie el comportamiento.
+10) Priorizar alto riesgo en los primeros 30.
+11) Máximo {cantidad_max} filas.
+
+SALIDA: SOLO el CSV.
+""".strip()
+    
+    def _get_cp_briefs_template(self) -> str:
+        """Template para fichas de caso de prueba"""
+        return """
+Eres un generador de fichas de caso de prueba. Para cada caso, entrega EXACTAMENTE tres líneas:
+
+1 - CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO
+2- Precondicion: <precondición concreta, verificable, breve>
+3- Resultado Esperado: <resultado observable y medible>
+
+PARÁMETROS:
+- PROGRAMA: {programa}
+- MODULOS: {modulos}
+- CONDICIONES: {condiciones}
+- MAX_CASOS: {cantidad_max}
+- TIMESTAMP: {timestamp}
+
+REGLAS:
+- NNN desde 001, correlativo sin saltos.
+- MODULO debe ser uno de MODULOS.
+- CONDICION debe ser una de CONDICIONES.
+- ESCENARIO en MAYÚSCULAS, verbo + resultado (≤12 palabras).
+- Precondición: estado del sistema/datos previos/flags/roles necesarios.
+- Resultado esperado: incluir estado final + efectos (persistencia, logs, eventos, códigos).
+- Cobertura: por cada MÓDULO, al menos 1 caso feliz y 1 de error.
+- No incluir texto extra, encabezados ni viñetas entre casos.
+- Generar hasta MAX_CASOS.
+
+EJEMPLO DE FORMA (NO lo repitas si no aplica):
+1 - CP - 001 - {programa} - AUTORIZACION - INPUT_VALIDO - AUTORIZA Y REGISTRA OPERACION
+2- Precondicion: Usuario activo; datos completos; firma válida.
+3- Resultado Esperado: Operación autorizada; ID transacción generado; registro persistido y auditado.
+
+Ahora genera los casos.
+""".strip()
+    
     def _get_default_quality_criteria(self) -> str:
         """Criterios de calidad por defecto"""
         return """
@@ -426,3 +611,233 @@ Proporciona evaluación en formato JSON con campos: quality_scores, overall_scor
     def get_version(self) -> str:
         """Obtener versión actual de las plantillas"""
         return self.version
+    
+    def _get_requirements_analysis_template(self) -> str:
+        """Template para análisis de requerimientos y generación de casos de prueba"""
+        return """
+Eres un experto en QA y testing. Analiza el siguiente requerimiento y genera casos de prueba estructurados.
+
+REQUERIMIENTO:
+{requirement_content}
+
+CONTEXTO:
+- Proyecto: {project_key}
+- Prioridad: {priority}
+- Tipos de prueba: {test_types}
+- Nivel de cobertura: {coverage_level}
+
+INSTRUCCIONES:
+1. Analiza el requerimiento y identifica todos los escenarios de prueba necesarios
+2. Genera casos de prueba para cada tipo especificado: {test_types}
+3. Asegúrate de cubrir casos positivos, negativos y edge cases
+4. Incluye precondiciones, pasos detallados y resultados esperados
+5. Evalúa el potencial de automatización de cada caso
+6. Proporciona un análisis de cobertura
+
+FORMATO DE RESPUESTA JSON:
+{{
+    "test_cases": [
+        {{
+            "test_case_id": "TC-{project_key}-001",
+            "title": "Título descriptivo del caso de prueba",
+            "description": "Descripción detallada del caso de prueba",
+            "test_type": "functional|integration|ui|api|security|performance",
+            "priority": "high|medium|low",
+            "steps": [
+                "Paso 1: Descripción detallada",
+                "Paso 2: Descripción detallada",
+                "Paso N: Descripción detallada"
+            ],
+            "expected_result": "Resultado esperado específico y verificable",
+            "preconditions": [
+                "Precondición 1",
+                "Precondición 2"
+            ],
+            "test_data": {{
+                "campo1": "valor1",
+                "campo2": "valor2"
+            }},
+            "automation_potential": "high|medium|low",
+            "estimated_duration": "X-Y minutes"
+        }}
+    ],
+    "coverage_analysis": {{
+        "functional_coverage": "X%",
+        "edge_case_coverage": "X%",
+        "integration_coverage": "X%",
+        "security_coverage": "X%",
+        "ui_coverage": "X%"
+    }},
+    "confidence_score": 0.85
+}}
+
+REGLAS:
+- Genera entre 3-8 casos de prueba según la complejidad
+- Cada caso debe ser independiente y ejecutable
+- Incluye datos de prueba específicos cuando sea relevante
+- Prioriza casos de alta prioridad primero
+- Asegúrate de que los pasos sean claros y verificables
+- Incluye casos de error y validación cuando aplique
+
+Genera la respuesta JSON ahora:
+        """
+    
+    def _get_fallback_requirements_prompt(self, requirement_content: str) -> str:
+        """Prompt de fallback para análisis de requerimientos"""
+        return f"""
+Analiza el siguiente requerimiento y genera casos de prueba:
+
+{requirement_content}
+
+Genera casos de prueba en formato JSON con:
+- test_case_id
+- title
+- description
+- test_type
+- priority
+- steps
+- expected_result
+- preconditions
+- test_data
+- automation_potential
+- estimated_duration
+
+Incluye también coverage_analysis y confidence_score.
+        """
+    
+    def get_jira_workitem_analysis_prompt(
+        self,
+        work_item_data: Dict[str, Any],
+        requirement_content: str,
+        project_key: str,
+        test_types: Optional[List[str]] = None,
+        coverage_level: str = "medium"
+    ) -> str:
+        """Obtener prompt para análisis de work item de Jira y generación de casos de prueba"""
+        try:
+            template_data = self.templates["jira_workitem_analysis"]
+            template = template_data["template"]
+            
+            # Preparar variables
+            test_types_str = ", ".join(test_types) if test_types else "functional, integration"
+            
+            # Reemplazar variables en el template
+            prompt = template.format(
+                work_item_data=work_item_data,
+                requirement_content=requirement_content,
+                project_key=project_key,
+                test_types=test_types_str,
+                coverage_level=coverage_level,
+                timestamp=datetime.utcnow().isoformat()
+            )
+            
+            logger.info("Jira work item analysis prompt generated", 
+                       project_key=project_key, 
+                       work_item_id=work_item_data.get("key", ""),
+                       coverage_level=coverage_level)
+            return prompt
+            
+        except Exception as e:
+            logger.error("Error generating Jira work item analysis prompt", error=str(e))
+            return self._get_fallback_jira_workitem_prompt(work_item_data, requirement_content)
+    
+    def _get_jira_workitem_analysis_template(self) -> str:
+        """Template para análisis de work item de Jira y generación de casos de prueba"""
+        return """
+Eres un experto en QA y testing. Analiza el siguiente work item de Jira y genera casos de prueba estructurados.
+
+DATOS DEL WORK ITEM:
+{work_item_data}
+
+CONTENIDO DEL REQUERIMIENTO:
+{requirement_content}
+
+CONTEXTO:
+- Proyecto: {project_key}
+- Tipos de prueba: {test_types}
+- Nivel de cobertura: {coverage_level}
+- Timestamp: {timestamp}
+
+INSTRUCCIONES:
+1. Analiza el work item de Jira y extrae todos los escenarios de prueba necesarios
+2. Considera el tipo de issue, prioridad y estado del work item
+3. Genera casos de prueba para cada tipo especificado: {test_types}
+4. Asegúrate de cubrir casos positivos, negativos y edge cases
+5. Incluye precondiciones, pasos detallados y resultados esperados
+6. Evalúa el potencial de automatización de cada caso
+7. Proporciona un análisis de cobertura específico para el contexto de Jira
+
+FORMATO DE RESPUESTA JSON:
+{{
+    "test_cases": [
+        {{
+            "test_case_id": "TC-{project_key}-001",
+            "title": "Título descriptivo del caso de prueba",
+            "description": "Descripción detallada del caso de prueba",
+            "test_type": "functional|integration|ui|api|security|performance",
+            "priority": "high|medium|low",
+            "steps": [
+                "Paso 1: Descripción detallada",
+                "Paso 2: Descripción detallada",
+                "Paso N: Descripción detallada"
+            ],
+            "expected_result": "Resultado esperado específico y verificable",
+            "preconditions": [
+                "Precondición 1",
+                "Precondición 2"
+            ],
+            "test_data": {{
+                "campo1": "valor1",
+                "campo2": "valor2"
+            }},
+            "automation_potential": "high|medium|low",
+            "estimated_duration": "X-Y minutes"
+        }}
+    ],
+    "coverage_analysis": {{
+        "functional_coverage": "X%",
+        "edge_case_coverage": "X%",
+        "integration_coverage": "X%",
+        "security_coverage": "X%",
+        "ui_coverage": "X%",
+        "jira_integration_coverage": "X%"
+    }},
+    "confidence_score": 0.85
+}}
+
+REGLAS ESPECÍFICAS PARA JIRA:
+- Genera entre 3-8 casos de prueba según la complejidad del work item
+- Cada caso debe ser independiente y ejecutable
+- Incluye datos de prueba específicos cuando sea relevante
+- Prioriza casos de alta prioridad primero
+- Asegúrate de que los pasos sean claros y verificables
+- Incluye casos de error y validación cuando aplique
+- Considera el contexto del proyecto y tipo de issue
+- Incluye casos específicos para integración con Jira si aplica
+
+Genera la respuesta JSON ahora:
+        """
+    
+    def _get_fallback_jira_workitem_prompt(self, work_item_data: Dict[str, Any], requirement_content: str) -> str:
+        """Prompt de fallback para análisis de work item de Jira"""
+        return f"""
+Analiza el siguiente work item de Jira y genera casos de prueba:
+
+WORK ITEM: {work_item_data.get('key', 'N/A')} - {work_item_data.get('summary', 'N/A')}
+DESCRIPCIÓN: {requirement_content}
+
+Genera casos de prueba en formato JSON con:
+- test_case_id
+- title
+- description
+- test_type
+- priority
+- steps
+- expected_result
+- preconditions
+- test_data
+- automation_potential
+- estimated_duration
+
+Incluye también coverage_analysis y confidence_score.
+        """

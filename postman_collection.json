@@ -190,6 +190,210 @@
 			"description": "Endpoints para análisis en lote"
 		},
 		{
+			"name": "Integración Jira",
+			"item": [
+				{
+					"name": "Analizar Work Item - Story",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"work_item_id\": \"AIQUAA-123\",\n  \"project_key\": \"AIQUAA\",\n  \"test_types\": [\"functional\", \"integration\", \"security\"],\n  \"coverage_level\": \"high\",\n  \"include_acceptance_criteria\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/analyze-jira-workitem",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analyze-jira-workitem"
+							]
+						},
+						"description": "Analiza un work item de tipo Story desde Jira y genera casos de prueba"
+					},
+					"response": []
+				},
+				{
+					"name": "Analizar Work Item - Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"work_item_id\": \"AIQUAA-456\",\n  \"project_key\": \"AIQUAA\",\n  \"test_types\": [\"api\", \"integration\"],\n  \"coverage_level\": \"medium\",\n  \"include_acceptance_criteria\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/analyze-jira-workitem",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analyze-jira-workitem"
+							]
+						},
+						"description": "Analiza un work item de tipo Task desde Jira y genera casos de prueba"
+					},
+					"response": []
+				},
+				{
+					"name": "Analizar Work Item - Bug",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"work_item_id\": \"AIQUAA-789\",\n  \"project_key\": \"AIQUAA\",\n  \"test_types\": [\"ui\", \"functional\"],\n  \"coverage_level\": \"comprehensive\",\n  \"include_acceptance_criteria\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/analyze-jira-workitem",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analyze-jira-workitem"
+							]
+						},
+						"description": "Analiza un work item de tipo Bug desde Jira y genera casos de prueba"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para análisis de work items de Jira y generación de casos de prueba"
+		},
+		{
+			"name": "Requerimientos",
+			"item": [
+				{
+					"name": "Analizar Requerimiento - Autenticación",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"requirement_id\": \"REQ-001\",\n  \"requirement_content\": \"El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado.\",\n  \"project_key\": \"AUTH\",\n  \"priority\": \"High\",\n  \"test_types\": [\"functional\", \"integration\", \"security\"],\n  \"coverage_level\": \"high\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/analyze-requirements",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analyze-requirements"
+							]
+						},
+						"description": "Analiza un requerimiento de autenticación y genera casos de prueba"
+					},
+					"response": []
+				},
+				{
+					"name": "Analizar Requerimiento - API",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"requirement_id\": \"REQ-002\",\n  \"requirement_content\": \"El sistema debe proporcionar una API REST para gestionar usuarios. La API debe soportar operaciones CRUD (Crear, Leer, Actualizar, Eliminar) y debe incluir validación de datos, manejo de errores y autenticación mediante tokens JWT.\",\n  \"project_key\": \"API\",\n  \"priority\": \"Medium\",\n  \"test_types\": [\"api\", \"integration\", \"security\"],\n  \"coverage_level\": \"comprehensive\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/analyze-requirements",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analyze-requirements"
+							]
+						},
+						"description": "Analiza un requerimiento de API y genera casos de prueba"
+					},
+					"response": []
+				},
+				{
+					"name": "Analizar Requerimiento - UI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"requirement_id\": \"REQ-003\",\n  \"requirement_content\": \"El sistema debe incluir un formulario de registro de usuarios con validación en tiempo real. El formulario debe incluir campos para nombre, email, contraseña y confirmación de contraseña. Debe mostrar mensajes de error apropiados y deshabilitar el botón de envío hasta que todos los campos sean válidos.\",\n  \"project_key\": \"UI\",\n  \"priority\": \"Medium\",\n  \"test_types\": [\"ui\", \"functional\"],\n  \"coverage_level\": \"medium\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/analyze-requirements",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"analyze-requirements"
+							]
+						},
+						"description": "Analiza un requerimiento de UI y genera casos de prueba"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para análisis de requerimientos y generación de casos de prueba"
+		},
+		{
 			"name": "Consultas",
 			"item": [
 				{
@@ -244,6 +448,16 @@
 		{
 			"key": "analysis_id",
 			"value": "analysis_TC001_1760825804",
+			"type": "string"
+		},
+		{
+			"key": "project_key",
+			"value": "AIQUAA",
+			"type": "string"
+		},
+		{
+			"key": "jira_url",
+			"value": "https://aiquaa.atlassian.net",
 			"type": "string"
 		}
 	]
