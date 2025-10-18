@@ -24,11 +24,25 @@ class TrackerClient:
         self.timeout = 30.0
         
         # Configurar headers para Jira
-        self.jira_headers = {
-            "Authorization": f"Bearer {self.jira_token}",
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        }
+        # Para Jira, necesitamos usar Basic Auth con email y API token
+        # El token que proporcionaste es un API token, necesitamos tu email de Jira
+        self.jira_email = os.getenv("JIRA_EMAIL", "")
+        if self.jira_email and self.jira_token:
+            import base64
+            credentials = f"{self.jira_email}:{self.jira_token}"
+            encoded_credentials = base64.b64encode(credentials.encode()).decode()
+            self.jira_headers = {
+                "Authorization": f"Basic {encoded_credentials}",
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            }
+        else:
+            # Fallback a Bearer si no hay email configurado
+            self.jira_headers = {
+                "Authorization": f"Bearer {self.jira_token}",
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            }
     
     async def health_check(self) -> bool:
         """Verificar salud de la conexión con Jira"""
@@ -53,8 +67,8 @@ class TrackerClient:
             # Construir JQL query para buscar el work item
             jql_query = f"key = {work_item_id} AND project = {project_key}"
             
-            # Hacer la búsqueda
-            search_url = f"{self.jira_base_url}/rest/api/3/search"
+            # Hacer la búsqueda usando el endpoint correcto
+            search_url = f"{self.jira_base_url}/rest/api/3/search/jql"
             search_params = {
                 "jql": jql_query,
                 "fields": [
@@ -96,15 +110,15 @@ class TrackerClient:
                         "summary": fields.get("summary", ""),
                         "description": self._extract_text_from_jira_content(fields.get("description", "")),
                         "issue_type": fields.get("issuetype", {}).get("name", ""),
-                        "priority": fields.get("priority", {}).get("name", ""),
+                        "priority": fields.get("priority", {}).get("name", "") if fields.get("priority") else "",
                         "status": fields.get("status", {}).get("name", ""),
                         "acceptance_criteria": self._extract_text_from_jira_content(fields.get("customfield_10014", "")),
                         "story_points": fields.get("customfield_10015"),
                         "labels": fields.get("labels", []),
                         "components": [comp.get("name", "") for comp in fields.get("components", [])],
                         "fix_versions": [version.get("name", "") for version in fields.get("fixVersions", [])],
-                        "assignee": fields.get("assignee", {}).get("displayName", ""),
-                        "reporter": fields.get("reporter", {}).get("displayName", ""),
+                        "assignee": fields.get("assignee", {}).get("displayName", "") if fields.get("assignee") else "",
+                        "reporter": fields.get("reporter", {}).get("displayName", "") if fields.get("reporter") else "",
                         "created": fields.get("created", ""),
                         "updated": fields.get("updated", ""),
                         "url": f"{self.jira_base_url}/browse/{issue.get('key')}"

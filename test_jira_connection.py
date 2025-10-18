@@ -13,16 +13,28 @@ async def test_jira_connection():
     """Probar conexión con Jira"""
     jira_url = os.getenv("JIRA_BASE_URL", "https://aiquaa.atlassian.net")
     jira_token = os.getenv("JIRA_TOKEN")
+    jira_email = os.getenv("JIRA_EMAIL")
     
     print(f"Probando conexion con Jira: {jira_url}")
     print(f"Token configurado: {'SI' if jira_token else 'NO'}")
+    print(f"Email configurado: {'SI' if jira_email else 'NO'}")
     
     if not jira_token:
         print("Error: JIRA_TOKEN no esta configurado")
         return
     
+    if not jira_email:
+        print("Error: JIRA_EMAIL no esta configurado")
+        print("Necesitas configurar tu email de Jira en JIRA_EMAIL")
+        return
+    
+    # Usar Basic Authentication para Jira
+    import base64
+    credentials = f"{jira_email}:{jira_token}"
+    encoded_credentials = base64.b64encode(credentials.encode()).decode()
+    
     headers = {
-        "Authorization": f"Bearer {jira_token}",
+        "Authorization": f"Basic {encoded_credentials}",
         "Accept": "application/json",
         "Content-Type": "application/json"
     }
