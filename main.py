@@ -45,10 +45,44 @@ logger = structlog.get_logger()
 # Inicializar FastAPI
 app = FastAPI(
     title="Microservicio de Análisis QA",
-    description="Análisis automatizado de casos de prueba con observabilidad completa",
+    description="""
+    ## API de Análisis Automatizado de Casos de Prueba
+    
+    Esta API proporciona análisis inteligente de casos de prueba utilizando IA generativa.
+    
+    ### Características:
+    - 🤖 Análisis automatizado con Google Gemini
+    - 📊 Observabilidad completa con Langfuse
+    - 🔗 Integración con Jira
+    - 📝 Sugerencias de mejora estructuradas
+    - 🚀 Procesamiento en lote
+    
+    ### Autenticación:
+    No se requiere autenticación para las pruebas locales.
+    
+    ### Uso:
+    1. Envía un caso de prueba al endpoint `/analyze`
+    2. Recibe sugerencias de mejora estructuradas
+    3. Usa `/batch-analyze` para múltiples casos
+    4. Monitorea el estado con `/health`
+    """,
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Equipo de QA",
+        "email": "qa-team@company.com",
+    },
+    license_info={
+        "name": "MIT",
+    },
+    servers=[
+        {
+            "url": "http://localhost:8000",
+            "description": "Servidor de desarrollo local"
+        }
+    ]
 )
 
 # Inicializar componentes
@@ -60,21 +94,88 @@ sanitizer = PIISanitizer()
 # Modelos Pydantic
 class TestCaseAnalysisRequest(BaseModel):
     """Solicitud de análisis de caso de prueba"""
-    test_case_id: str = Field(..., description="ID del caso de prueba")
-    test_case_content: str = Field(..., description="Contenido del caso de prueba")
-    project_key: str = Field(..., description="Clave del proyecto")
-    priority: Optional[str] = Field("Medium", description="Prioridad del caso")
-    labels: Optional[List[str]] = Field(default_factory=list, description="Etiquetas del caso")
+    test_case_id: str = Field(
+        ..., 
+        description="ID único del caso de prueba",
+        example="TC-001",
+        min_length=1,
+        max_length=50
+    )
+    test_case_content: str = Field(
+        ..., 
+        description="Descripción detallada del caso de prueba a analizar",
+        example="Verificar que el usuario pueda iniciar sesión con credenciales válidas",
+        min_length=10,
+        max_length=5000
+    )
+    project_key: str = Field(
+        ..., 
+        description="Clave del proyecto en Jira",
+        example="TEST",
+        min_length=1,
+        max_length=20
+    )
+    priority: Optional[str] = Field(
+        "Medium", 
+        description="Prioridad del caso de prueba",
+        example="High",
+        pattern="^(Low|Medium|High|Critical)$"
+    )
+    labels: Optional[List[str]] = Field(
+        default_factory=list, 
+        description="Etiquetas para categorizar el caso de prueba",
+        example=["login", "authentication", "smoke-test"]
+    )
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "test_case_id": "TC-001",
+                "test_case_content": "Verificar que el usuario pueda iniciar sesión con credenciales válidas. Pasos: 1) Abrir la página de login, 2) Ingresar usuario válido, 3) Ingresar contraseña válida, 4) Hacer clic en 'Iniciar Sesión'. Resultado esperado: Usuario logueado exitosamente y redirigido al dashboard.",
+                "project_key": "TEST",
+                "priority": "High",
+                "labels": ["login", "authentication", "smoke-test"]
+            }
+        }
+
+class Suggestion(BaseModel):
+    """Sugerencia de mejora para un caso de prueba"""
+    type: str = Field(..., description="Tipo de sugerencia", example="clarity")
+    title: str = Field(..., description="Título de la sugerencia", example="Definir datos de prueba específicos")
+    description: str = Field(..., description="Descripción detallada", example="El caso de prueba debe incluir datos específicos de usuario y contraseña")
+    priority: str = Field(..., description="Prioridad de la sugerencia", example="high")
+    category: str = Field(..., description="Categoría de la mejora", example="improvement")
 
 class TestCaseAnalysisResponse(BaseModel):
     """Respuesta del análisis de caso de prueba"""
-    test_case_id: str
-    analysis_id: str
-    status: str
-    suggestions: List[Dict[str, Any]]
-    confidence_score: float
-    processing_time: float
-    created_at: datetime
+    test_case_id: str = Field(..., description="ID del caso de prueba analizado", example="TC-001")
+    analysis_id: str = Field(..., description="ID único del análisis", example="analysis_TC001_1760825804")
+    status: str = Field(..., description="Estado del análisis", example="completed")
+    suggestions: List[Suggestion] = Field(..., description="Lista de sugerencias de mejora")
+    confidence_score: float = Field(..., description="Puntuación de confianza del análisis (0-1)", example=0.85)
+    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos", example=8.81)
+    created_at: datetime = Field(..., description="Timestamp de creación del análisis")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "test_case_id": "TC-001",
+                "analysis_id": "analysis_TC001_1760825804",
+                "status": "completed",
+                "suggestions": [
+                    {
+                        "type": "clarity",
+                        "title": "Definir datos de prueba específicos",
+                        "description": "El caso de prueba debe incluir datos específicos de usuario y contraseña",
+                        "priority": "high",
+                        "category": "improvement"
+                    }
+                ],
+                "confidence_score": 0.85,
+                "processing_time": 8.81,
+                "created_at": "2025-10-18T19:16:44.520862"
+            }
+        }
 
 class HealthResponse(BaseModel):
     """Respuesta de salud del servicio"""
@@ -83,9 +184,22 @@ class HealthResponse(BaseModel):
     version: str
     components: Dict[str, str]
 
-@app.get("/", response_model=Dict[str, str])
+@app.get("/", 
+         response_model=Dict[str, str],
+         summary="Información del servicio",
+         description="Endpoint raíz que proporciona información básica sobre el microservicio de análisis QA",
+         tags=["Información"])
 async def root():
-    """Endpoint raíz"""
+    """
+    ## Información del Servicio
+    
+    Retorna información básica sobre el microservicio de análisis QA.
+    
+    ### Respuesta:
+    - **message**: Descripción del servicio
+    - **version**: Versión actual de la API
+    - **docs**: URL de la documentación Swagger
+    """
     return {
         "message": "Microservicio de Análisis QA",
         "version": "1.0.0",
@@ -130,13 +244,58 @@ async def health_check():
         components=components
     )
 
-@app.post("/analyze", response_model=TestCaseAnalysisResponse)
+@app.post("/analyze", 
+          response_model=TestCaseAnalysisResponse,
+          summary="Analizar caso de prueba",
+          description="Analiza un caso de prueba individual y genera sugerencias de mejora usando IA",
+          tags=["Análisis"],
+          responses={
+              200: {
+                  "description": "Análisis completado exitosamente",
+                  "model": TestCaseAnalysisResponse
+              },
+              400: {
+                  "description": "Datos de entrada inválidos",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Datos de entrada inválidos"}
+                      }
+                  }
+              },
+              500: {
+                  "description": "Error interno del servidor",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Error interno del servidor"}
+                      }
+                  }
+              }
+          })
 async def analyze_test_case(
     request: TestCaseAnalysisRequest,
     background_tasks: BackgroundTasks
 ):
     """
-    Analizar un caso de prueba y generar sugerencias de mejora
+    ## Analizar Caso de Prueba
+    
+    Analiza un caso de prueba individual utilizando IA generativa (Google Gemini) y genera sugerencias de mejora estructuradas.
+    
+    ### Proceso:
+    1. **Sanitización**: Se elimina información sensible del contenido
+    2. **Análisis IA**: Se procesa con Google Gemini usando prompts especializados
+    3. **Estructuración**: Se organizan las sugerencias en categorías
+    4. **Observabilidad**: Se registra en Langfuse para monitoreo
+    
+    ### Tipos de Sugerencias:
+    - **Clarity**: Mejoras en claridad y legibilidad
+    - **Coverage**: Sugerencias para mejorar cobertura de pruebas
+    - **Automation**: Optimizaciones para automatización
+    - **Best Practice**: Mejores prácticas de testing
+    
+    ### Respuesta:
+    - **suggestions**: Lista de sugerencias categorizadas
+    - **confidence_score**: Puntuación de confianza (0-1)
+    - **processing_time**: Tiempo de procesamiento en segundos
     """
     start_time = datetime.utcnow()
     analysis_id = f"analysis_{request.test_case_id}_{int(start_time.timestamp())}"
