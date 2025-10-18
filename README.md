@@ -1,6 +1,6 @@
-# 🤖 Microservicio de Análisis QA con Langfuse
+# 🤖 Microservicio de Análisis QA con Técnicas ISTQB
 
-Análisis automatizado de casos de prueba con observabilidad completa usando FastAPI, Langfuse y Gemini.
+Análisis automatizado de casos de prueba con técnicas ISTQB Foundation Level, observabilidad completa usando FastAPI, Langfuse y Gemini.
 
 ## 🚀 Quick Start
 
@@ -32,8 +32,38 @@ start http://localhost:8000/docs
 - ✅ **Pydantic** - Validación de datos
 - ✅ **Structlog** - Logging estructurado
 - ✅ **Docker** - Containerización
+- 🎯 **ISTQB** - Técnicas de diseño de pruebas Foundation Level
 
 ## 🔗 Endpoints Principales
+
+### 🎯 Generación ISTQB (NUEVO)
+```http
+POST /generate-istqb-tests
+Content-Type: application/json
+
+{
+  "programa": "SISTEMA_AUTH",
+  "dominio": "Autenticación de usuarios con validación de credenciales",
+  "modulos": ["AUTORIZACION", "VALIDACION", "AUDITORIA"],
+  "factores": {
+    "TIPO_USUARIO": ["ADMIN", "USER", "GUEST"],
+    "ESTADO_CREDENCIAL": ["VALIDA", "INVALIDA", "EXPIRADA"]
+  },
+  "limites": {
+    "CAMPO_USUARIO_len": {"min": 1, "max": 64},
+    "REINTENTOS": 3
+  },
+  "reglas": [
+    "R1: si TIPO_USUARIO=ADMIN y ESTADO_CREDENCIAL=VALIDA -> ACCESO_TOTAL"
+  ],
+  "tecnicas": {
+    "equivalencia": true,
+    "valores_limite": true,
+    "tabla_decision": true
+  },
+  "cantidad_max": 150
+}
+```
 
 ### Análisis de Casos de Prueba
 ```http
@@ -49,23 +79,31 @@ Content-Type: application/json
 }
 ```
 
-### Análisis en Lote
+### Análisis de Requerimientos
 ```http
-POST /batch-analyze
+POST /analyze-requirements
 Content-Type: application/json
 
-[
-  {
-    "test_case_id": "TC-001",
-    "test_case_content": "Caso 1...",
-    "project_key": "PROJ"
-  },
-  {
-    "test_case_id": "TC-002", 
-    "test_case_content": "Caso 2...",
-    "project_key": "PROJ"
-  }
-]
+{
+  "requirement_id": "REQ-001",
+  "requirement_content": "El sistema debe permitir...",
+  "project_key": "PROJ",
+  "test_types": ["functional", "integration"],
+  "coverage_level": "high"
+}
+```
+
+### Integración Jira
+```http
+POST /analyze-jira-workitem
+Content-Type: application/json
+
+{
+  "work_item_id": "PROJ-123",
+  "project_key": "PROJ",
+  "test_types": ["functional", "ui"],
+  "coverage_level": "medium"
+}
 ```
 
 ### Health Check
@@ -222,6 +260,27 @@ El sistema incluye sanitización automática de:
 - [QUICKSTART.md](QUICKSTART.md) - Guía de inicio rápido
 - [CONFIGURACION_COMPLETA.md](CONFIGURACION_COMPLETA.md) - Configuración detallada
 - [ALTERNATIVAS_LLM.md](ALTERNATIVAS_LLM.md) - Alternativas de modelos LLM
+- [ISTQB_DOCUMENTATION.md](ISTQB_DOCUMENTATION.md) - **NUEVO**: Documentación completa del sistema ISTQB
+- [ejemplo_istqb_usage.py](ejemplo_istqb_usage.py) - **NUEVO**: Ejemplos prácticos de uso
+
+## 🎯 Técnicas ISTQB Implementadas
+
+### Técnicas de Diseño de Pruebas
+1. **Equivalencia** - Partición de clases de equivalencia válidas/inválidas
+2. **Valores Límite** - Análisis de casos min-1, min, min+1, max-1, max, max+1
+3. **Tabla de Decisión** - Matrices compactas de condiciones y acciones
+4. **Transición de Estados** - Estados y transiciones principales del sistema
+5. **Árbol de Clasificación** - Clases/atributos y restricciones entre factores
+6. **Pairwise** - Combinaciones mínimas que cubren todas las parejas
+7. **Casos de Uso** - Flujos principales y alternos relevantes
+8. **Error Guessing** - Hipótesis de fallos del dominio
+9. **Checklist** - Verificación genérica de calidad
+
+### Formato de Salida Estructurado
+- **Sección A**: CSV con casos de prueba (CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO)
+- **Sección B**: Fichas detalladas con precondiciones y resultados esperados
+- **Sección C**: Artefactos técnicos según técnicas seleccionadas
+- **Sección D**: Plan de ejecución automatizado (opcional)
 
 ## 🤝 Contribución
 

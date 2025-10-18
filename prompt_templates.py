@@ -59,6 +59,11 @@ class PromptTemplates:
                 "version": "1.0.0",
                 "template": self._get_jira_workitem_analysis_template(),
                 "variables": ["work_item_data", "requirement_content", "project_key", "test_types", "coverage_level"]
+            },
+            "istqb_test_generation": {
+                "version": "1.0.0",
+                "template": self._get_istqb_test_generation_template(),
+                "variables": ["programa", "dominio", "modulos", "factores", "limites", "reglas", "tecnicas", "priorizacion", "cantidad_max", "salida_plan_ejecucion"]
             }
         }
     
@@ -840,4 +845,189 @@ Genera casos de prueba en formato JSON con:
 - estimated_duration
 
 Incluye también coverage_analysis y confidence_score.
+        """
+    
+    def get_istqb_test_generation_prompt(
+        self,
+        programa: str,
+        dominio: str,
+        modulos: List[str],
+        factores: Dict[str, List[str]],
+        limites: Dict[str, Any],
+        reglas: List[str],
+        tecnicas: Dict[str, bool],
+        priorizacion: str = "Riesgo",
+        cantidad_max: int = 150,
+        salida_plan_ejecucion: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """Obtener prompt para generación de casos de prueba con técnicas ISTQB"""
+        try:
+            template_data = self.templates["istqb_test_generation"]
+            template = template_data["template"]
+            
+            # Preparar variables
+            modulos_str = ", ".join([m.upper().strip() for m in modulos])
+            factores_str = self._format_factores(factores)
+            limites_str = self._format_limites(limites)
+            reglas_str = "\n".join([f"- {regla}" for regla in reglas])
+            tecnicas_str = self._format_tecnicas(tecnicas)
+            salida_plan_str = self._format_salida_plan(salida_plan_ejecucion)
+            
+            # Reemplazar variables en el template
+            prompt = template.format(
+                programa=programa.upper().strip(),
+                dominio=dominio,
+                modulos=modulos_str,
+                factores=factores_str,
+                limites=limites_str,
+                reglas=reglas_str,
+                tecnicas=tecnicas_str,
+                priorizacion=priorizacion,
+                cantidad_max=cantidad_max,
+                salida_plan_ejecucion=salida_plan_str,
+                timestamp=datetime.utcnow().isoformat()
+            )
+            
+            logger.info("ISTQB test generation prompt created", 
+                       programa=programa, cantidad_max=cantidad_max)
+            return prompt
+            
+        except Exception as e:
+            logger.error("Error generating ISTQB test generation prompt", error=str(e))
+            return self._get_fallback_istqb_prompt(programa, modulos, cantidad_max)
+    
+    def _format_factores(self, factores: Dict[str, List[str]]) -> str:
+        """Formatear factores para el prompt"""
+        formatted = []
+        for factor, valores in factores.items():
+            valores_str = ", ".join([f'"{v}"' for v in valores])
+            formatted.append(f'"{factor}": [{valores_str}]')
+        return "{\n    " + ",\n    ".join(formatted) + "\n}"
+    
+    def _format_limites(self, limites: Dict[str, Any]) -> str:
+        """Formatear límites para el prompt"""
+        formatted = []
+        for limite, valor in limites.items():
+            if isinstance(valor, dict):
+                if "min" in valor and "max" in valor:
+                    formatted.append(f'"{limite}": {{"min": {valor["min"]}, "max": {valor["max"]}}}')
+                else:
+                    formatted.append(f'"{limite}": {valor}')
+            else:
+                formatted.append(f'"{limite}": {valor}')
+        return "{\n    " + ",\n    ".join(formatted) + "\n}"
+    
+    def _format_tecnicas(self, tecnicas: Dict[str, bool]) -> str:
+        """Formatear técnicas para el prompt"""
+        formatted = []
+        for tecnica, activa in tecnicas.items():
+            formatted.append(f'"{tecnica}": {str(activa).lower()}')
+        return "{\n    " + ",\n    ".join(formatted) + "\n}"
+    
+    def _format_salida_plan(self, salida_plan: Optional[Dict[str, Any]]) -> str:
+        """Formatear configuración de salida del plan"""
+        if not salida_plan:
+            return '{"incluir": false, "formato": "cursor_playwright_mcp"}'
+        
+        incluir = salida_plan.get("incluir", False)
+        formato = salida_plan.get("formato", "cursor_playwright_mcp")
+        return f'{{"incluir": {str(incluir).lower()}, "formato": "{formato}"}}'
+    
+    def _get_istqb_test_generation_template(self) -> str:
+        """Template para generación de casos de prueba con técnicas ISTQB"""
+        return """
+Eres un Agente QA experto que genera artefactos de prueba aplicando técnicas de diseño ISTQB Foundation Level.
+
+ROL: Agente QA que genera artefactos de prueba aplicando técnicas de diseño, con nombres de casos en el formato:
+CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO.
+
+ENTRADA (JSON de configuración):
+{{
+  "programa": "{programa}",
+  "dominio": "{dominio}",
+  "modulos": [{modulos}],
+  "factores": {factores},
+  "limites": {limites},
+  "reglas": [
+{reglas}
+  ],
+  "tecnicas": {tecnicas},
+  "priorizacion": "{priorizacion}",
+  "cantidad_max": {cantidad_max},
+  "salida_plan_ejecucion": {salida_plan_ejecucion}
+}}
+
+REGLAS GLOBALES:
+- CP Name: CP - NNN - {{PROGRAMA}} - {{MODULO}} - {{CONDICION}} - {{ESCENARIO}}; NNN desde 001, sin saltos.
+- CONDICION: atómica y tomada de factores/eventos (p.ej. FACTOR_3_TIMEOUT, FACTOR_1_VALOR1).
+- ESCENARIO: MAYÚSCULAS, verbo + resultado (≤12 palabras).
+- Cobertura mínima por módulo: ≥1 caso feliz y ≥1 de error.
+- Riesgo primero: priorizar alto impacto/uso en los primeros 30 CP.
+- Sin duplicados semánticos.
+- Todo en MAYÚSCULAS y sin texto extra salvo lo especificado.
+
+QUÉ GENERAR (controlado por tecnicas):
+
+Sección A — CSV (obligatorio): líneas CP - NNN - … hasta cantidad_max.
+
+Sección B — FICHAS (obligatorio): por cada CP, exactamente 3 líneas:
+1 - CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO
+2- Precondicion: <estado/datos/roles/flags>
+3- Resultado Esperado: <resultado observable/medible, efectos y auditoría>
+
+Sección C — ARTEFACTOS TÉCNICOS (incluir solo los marcados true):
+- equivalencias: particiones válidas/ inválidas por cada factor.
+- valores_limite: casos min-1,min,min+1,max-1,max,max+1 para límites numéricos/longitudes.
+- tabla_decision: matriz compacta Condiciones→Acciones alineada a reglas.
+- transicion_estados: estados y transiciones principales del requerimiento.
+- arbol_clasificacion: clases/atributos y restricciones entre factores.
+- pairwise: combinaciones mínimas que cubren todas las parejas entre factores + CP asociado.
+- casos_uso: flujo principal y alternos relevantes del dominio.
+- error_guessing: lista de hipótesis de fallos del dominio.
+- checklist: verificación genérica (mensajes claros, logs, auditoría, accesibilidad, rate-limit/quotas, idempotencia, seguridad, internacionalización, performance básica).
+
+Sección D — Plan de Ejecución (opcional por salida_plan_ejecucion.incluir):
+Si formato="cursor_playwright_mcp", entregar JSON por CP con:
+steps[] (action, target/selector, value/opciones), asserts[] (assertion, target, args), artefactos (screenshot/trace), timeout_sec, tags.
+
+No incluir secretos; enmascarar con {{secrets.*}}.
+
+FORMATO DE SALIDA (estricto):
+Entregar solo las secciones en este orden exacto:
+A) CSV → B) FICHAS → C) ARTEFACTOS TÉCNICOS → D) PLAN (si aplica).
+
+No agregar prólogos, epílogos ni comentarios fuera de las secciones.
+
+GUÍA DE MAPEO VARIABLE→CONTENIDO:
+- PROGRAMA ← programa.
+- MODULO ← un elemento de modulos.
+- CONDICION ← combinación atomizada de factores/eventos (<FACTOR>_<VALOR>).
+- ESCENARIO ← derivado de reglas/acciones (p.ej., PROCESA Y PERSISTE, RECHAZA POR REGLA R2, REINTENTA Y MARCA PENDIENTE).
+- Precondición ← requisitos de datos/estado/flags/config necesarios para ejecutar el CP.
+- Resultado esperado ← estado final + efectos colaterales (persistencia, eventos, logs, códigos, auditoría).
+
+TIMESTAMP: {timestamp}
+
+Genera ahora los casos de prueba aplicando las técnicas ISTQB especificadas.
+""".strip()
+    
+    def _get_fallback_istqb_prompt(self, programa: str, modulos: List[str], cantidad_max: int) -> str:
+        """Prompt de fallback para generación ISTQB"""
+        modulos_str = ", ".join([m.upper().strip() for m in modulos])
+        return f"""
+Genera {cantidad_max} casos de prueba con formato:
+CP - NNN - {programa.upper()} - MODULO - CONDICION - ESCENARIO
+
+Usando módulos: {modulos_str}
+
+Aplica técnicas ISTQB básicas:
+- Partición de equivalencia
+- Valores límite
+- Casos positivos y negativos
+- Cobertura por módulo
+
+Formato de salida:
+A) CSV con casos
+B) Fichas detalladas
+C) Artefactos técnicos básicos
         """

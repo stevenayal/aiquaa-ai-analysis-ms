@@ -788,6 +788,196 @@ class LLMWrapper:
             "confidence_score": 0.3
         }
     
+    async def generate_istqb_test_cases(
+        self,
+        prompt: str,
+        programa: str,
+        generation_id: str
+    ) -> Dict[str, Any]:
+        """Generar casos de prueba usando técnicas ISTQB con observabilidad"""
+        try:
+            logger.info(
+                "Starting ISTQB test case generation",
+                programa=programa,
+                generation_id=generation_id
+            )
+            
+            # Crear trace en Langfuse (si está configurado)
+            trace = None
+            generation = None
+            if self.langfuse:
+                trace = self.langfuse.trace(
+                    name="istqb_test_generation",
+                    user_id=f"programa_{programa}",
+                    tags=["qa", "istqb", "test_generation", "advanced_techniques"],
+                    metadata={
+                        "programa": programa,
+                        "generation_id": generation_id,
+                        "timestamp": datetime.utcnow().isoformat()
+                    }
+                )
+                
+                # Crear span para la generación
+                generation = trace.generation(
+                    name="llm_istqb_generation",
+                    model=self.gemini_model,
+                    input=prompt
+                )
+            
+            # Generar respuesta del LLM
+            response = await self._generate_response(prompt)
+            
+            # Procesar respuesta ISTQB
+            generation_result = self._process_istqb_response(response)
+            
+            # Finalizar generación (si Langfuse está configurado)
+            if generation:
+                generation.end(
+                    output=generation_result,
+                    metadata={
+                        "csv_cases_count": len(generation_result.get("csv_cases", [])),
+                        "fichas_count": len(generation_result.get("fichas", [])),
+                        "artefactos_count": len(generation_result.get("artefactos_tecnicos", {})),
+                        "confidence_score": generation_result.get("confidence_score", 0.8)
+                    }
+                )
+            
+            # Agregar metadatos
+            generation_result.update({
+                "programa": programa,
+                "generation_id": generation_id,
+                "timestamp": datetime.utcnow().isoformat(),
+                "model_used": self.gemini_model
+            })
+            
+            # Finalizar trace (si Langfuse está configurado)
+            if trace:
+                trace.update(
+                    output=generation_result,
+                    metadata={
+                        "csv_cases_count": len(generation_result.get("csv_cases", [])),
+                        "fichas_count": len(generation_result.get("fichas", [])),
+                        "artefactos_count": len(generation_result.get("artefactos_tecnicos", {})),
+                        "confidence_score": generation_result.get("confidence_score", 0.8)
+                    }
+                )
+            
+            logger.info(
+                "ISTQB test case generation completed",
+                programa=programa,
+                generation_id=generation_id,
+                csv_cases_count=len(generation_result.get("csv_cases", [])),
+                fichas_count=len(generation_result.get("fichas", []))
+            )
+            
+            return generation_result
+            
+        except Exception as e:
+            logger.error(
+                "ISTQB test case generation failed",
+                programa=programa,
+                generation_id=generation_id,
+                error=str(e)
+            )
+            raise
+    
+    def _process_istqb_response(self, response: str) -> Dict[str, Any]:
+        """Procesar respuesta del LLM para generación ISTQB"""
+        try:
+            # Parsear respuesta estructurada ISTQB
+            sections = self._parse_istqb_sections(response)
+            
+            return {
+                "csv_cases": sections.get("csv", []),
+                "fichas": sections.get("fichas", []),
+                "artefactos_tecnicos": sections.get("artefactos", {}),
+                "plan_ejecucion": sections.get("plan", {}),
+                "confidence_score": 0.85,
+                "raw_response": response[:1000] + "..." if len(response) > 1000 else response
+            }
+            
+        except Exception as e:
+            logger.error("Error processing ISTQB response", error=str(e))
+            return self._create_fallback_istqb_response(response)
+    
+    def _parse_istqb_sections(self, response: str) -> Dict[str, Any]:
+        """Parsear secciones de la respuesta ISTQB"""
+        sections = {
+            "csv": [],
+            "fichas": [],
+            "artefactos": {},
+            "plan": {}
+        }
+        
+        lines = response.split('\n')
+        current_section = None
+        current_ficha = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            
+            # Detectar secciones
+            if line.startswith('A) CSV') or line.startswith('Sección A'):
+                current_section = 'csv'
+                continue
+            elif line.startswith('B) FICHAS') or line.startswith('Sección B'):
+                current_section = 'fichas'
+                continue
+            elif line.startswith('C) ARTEFACTOS') or line.startswith('Sección C'):
+                current_section = 'artefactos'
+                continue
+            elif line.startswith('D) PLAN') or line.startswith('Sección D'):
+                current_section = 'plan'
+                continue
+            
+            # Procesar contenido según sección
+            if current_section == 'csv' and line.startswith('CP -'):
+                sections['csv'].append(line)
+            elif current_section == 'fichas':
+                if line.startswith('1 - CP -'):
+                    if current_ficha:
+                        sections['fichas'].append('\n'.join(current_ficha))
+                    current_ficha = [line]
+                elif line.startswith('2- Precondicion:') or line.startswith('3- Resultado Esperado:'):
+                    current_ficha.append(line)
+            elif current_section == 'artefactos':
+                # Procesar artefactos técnicos
+                if ':' in line:
+                    key, value = line.split(':', 1)
+                    sections['artefactos'][key.strip()] = value.strip()
+            elif current_section == 'plan':
+                # Procesar plan de ejecución
+                if line.startswith('{') and line.endswith('}'):
+                    try:
+                        import json
+                        sections['plan'] = json.loads(line)
+                    except:
+                        sections['plan']['raw'] = line
+        
+        # Agregar última ficha si existe
+        if current_ficha:
+            sections['fichas'].append('\n'.join(current_ficha))
+        
+        return sections
+    
+    def _create_fallback_istqb_response(self, response: str) -> Dict[str, Any]:
+        """Crear respuesta de fallback para generación ISTQB"""
+        return {
+            "csv_cases": ["CP - 001 - FALLBACK - MODULO - CONDICION - ESCENARIO"],
+            "fichas": [
+                "1 - CP - 001 - FALLBACK - MODULO - CONDICION - ESCENARIO\n2- Precondicion: Sistema en estado inicial\n3- Resultado Esperado: Funcionalidad básica verificada"
+            ],
+            "artefactos_tecnicos": {
+                "equivalencias": "Particiones básicas aplicadas",
+                "valores_limite": "Casos límite identificados"
+            },
+            "plan_ejecucion": {},
+            "confidence_score": 0.5,
+            "raw_response": response[:500] + "..." if len(response) > 500 else response
+        }
+    
     def flush_langfuse(self):
         """Forzar envío de datos a Langfuse"""
         try:
