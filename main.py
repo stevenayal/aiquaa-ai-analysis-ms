@@ -146,8 +146,7 @@ sanitizer = PIISanitizer()
          tags=["Información"])
 async def root():
     """Redirige a la documentación de Swagger"""
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/docs")
+    return {"message": "Microservicio de Análisis QA", "docs": "/docs", "status": "running"}
 
 # Modelos Pydantic
 class AnalysisRequest(BaseModel):
@@ -433,40 +432,52 @@ class HealthResponse(BaseModel):
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Verificación de salud del servicio"""
-    components = {}
-    
-    # Verificar Langfuse
     try:
-        await llm_wrapper.health_check()
-        components["langfuse"] = "healthy"
+        components = {}
+        
+        # Verificación básica del servicio
+        components["api"] = "healthy"
+        
+        # Verificar Langfuse (opcional)
+        try:
+            await llm_wrapper.health_check()
+            components["langfuse"] = "healthy"
+        except Exception as e:
+            logger.warning("Langfuse health check failed", error=str(e))
+            components["langfuse"] = "unhealthy"
+        
+        # Verificar Jira (opcional)
+        try:
+            await tracker_client.health_check()
+            components["jira"] = "healthy"
+        except Exception as e:
+            logger.warning("Jira health check failed", error=str(e))
+            components["jira"] = "unhealthy"
+        
+        # Verificar LLM (opcional)
+        try:
+            await llm_wrapper.test_connection()
+            components["llm"] = "healthy"
+        except Exception as e:
+            logger.warning("LLM health check failed", error=str(e))
+            components["llm"] = "unhealthy"
+        
+        overall_status = "healthy" if components.get("api") == "healthy" else "degraded"
+        
+        return HealthResponse(
+            status=overall_status,
+            timestamp=datetime.utcnow(),
+            version="1.0.0",
+            components=components
+        )
     except Exception as e:
-        logger.error("Langfuse health check failed", error=str(e))
-        components["langfuse"] = "unhealthy"
-    
-    # Verificar Jira
-    try:
-        await tracker_client.health_check()
-        components["jira"] = "healthy"
-    except Exception as e:
-        logger.error("Jira health check failed", error=str(e))
-        components["jira"] = "unhealthy"
-    
-    # Verificar LLM
-    try:
-        await llm_wrapper.test_connection()
-        components["llm"] = "healthy"
-    except Exception as e:
-        logger.error("LLM health check failed", error=str(e))
-        components["llm"] = "unhealthy"
-    
-    overall_status = "healthy" if all(status == "healthy" for status in components.values()) else "degraded"
-    
-    return HealthResponse(
-        status=overall_status,
-        timestamp=datetime.utcnow(),
-        version="1.0.0",
-        components=components
-    )
+        logger.error("Health check failed", error=str(e))
+        return HealthResponse(
+            status="unhealthy",
+            timestamp=datetime.utcnow(),
+            version="1.0.0",
+            components={"api": "unhealthy", "error": str(e)}
+        )
 
 @app.post("/analyze", 
           response_model=AnalysisResponse,
@@ -1141,16 +1152,21 @@ async def log_advanced_generation_completion(
 if __name__ == "__main__":
     import uvicorn
     
-    port = int(os.getenv("PORT", 8000))
-    log_level = os.getenv("LOG_LEVEL", "info").lower()
-    is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production"
-    
-    logger.info("Starting Microservicio de Análisis QA", port=port, log_level=log_level, is_production=is_production)
-    
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=port,
-        reload=not is_production,
-        log_level=log_level
-    )
+    try:
+        port = int(os.getenv("PORT", 8000))
+        log_level = os.getenv("LOG_LEVEL", "info").lower()
+        is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production"
+        
+        logger.info("Starting Microservicio de Análisis QA", port=port, log_level=log_level, is_production=is_production)
+        
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=port,
+            reload=not is_production,
+            log_level=log_level,
+            access_log=True
+        )
+    except Exception as e:
+        logger.error("Failed to start server", error=str(e))
+        raise
