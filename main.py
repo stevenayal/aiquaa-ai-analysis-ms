@@ -92,6 +92,10 @@ app = FastAPI(
         {
             "url": "http://localhost:8000",
             "description": "Servidor de desarrollo local"
+        },
+        {
+            "url": "https://ia-analisis-production.up.railway.app",
+            "description": "Servidor de producción (Railway)"
         }
     ]
 )
