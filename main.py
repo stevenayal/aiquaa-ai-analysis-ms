@@ -9,6 +9,8 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import structlog
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
@@ -95,9 +97,39 @@ app = FastAPI(
     },
     servers=[
         {
+            "url": "https://ia-analisis-production.up.railway.app",
+            "description": "Servidor de producción en Railway"
+        },
+        {
             "url": "http://localhost:8000",
             "description": "Servidor de desarrollo local"
         }
+    ]
+)
+
+# Configurar CORS para Railway
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://ia-analisis-production.up.railway.app",
+        "http://localhost:8000",
+        "http://localhost:3000",
+        "http://127.0.0.1:8000",
+        "http://127.0.0.1:3000"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Configurar TrustedHostMiddleware para Railway
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=[
+        "ia-analisis-production.up.railway.app",
+        "localhost",
+        "127.0.0.1",
+        "*.railway.app"
     ]
 )
 
@@ -106,6 +138,16 @@ tracker_client = TrackerClient()
 llm_wrapper = LLMWrapper()
 prompt_templates = PromptTemplates()
 sanitizer = PIISanitizer()
+
+# Endpoint raíz que redirige a la documentación
+@app.get("/", 
+         summary="Redirigir a la documentación",
+         description="Redirige a la documentación de Swagger de la API",
+         tags=["Información"])
+async def root():
+    """Redirige a la documentación de Swagger"""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/docs")
 
 # Modelos Pydantic
 class AnalysisRequest(BaseModel):
@@ -189,14 +231,14 @@ class AnalysisResponse(BaseModel):
                 "status": "completed",
                 "test_cases": [
                     {
-                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
-                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
+                        "test_case_id": "CP-001-SISTEMA_AUTH-AUTENTICACION-DATO-CONDICION-RESULTADO",
+                        "title": "CP - 001 - SISTEMA_AUTH - AUTENTICACION - DATO - CONDICION - RESULTADO",
                         "description": "Caso de prueba para verificar autenticación exitosa",
                         "test_type": "functional",
                         "priority": "high",
                         "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
                         "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
-                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
+                        "preconditions": ["Precondicion: Ingresar al publicado https://auth.sistema.com/login", "Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
                         "test_data": {"email": "test@example.com", "password": "Test123!"},
                         "automation_potential": "high",
                         "estimated_duration": "5-10 minutes"
@@ -273,14 +315,14 @@ class JiraAnalysisResponse(BaseModel):
                 "status": "completed",
                 "test_cases": [
                     {
-                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
-                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
+                        "test_case_id": "CP-001-SISTEMA_AUTH-AUTENTICACION-DATO-CONDICION-RESULTADO",
+                        "title": "CP - 001 - SISTEMA_AUTH - AUTENTICACION - DATO - CONDICION - RESULTADO",
                         "description": "Caso de prueba para verificar autenticación exitosa",
                         "test_type": "functional",
                         "priority": "high",
                         "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
                         "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
-                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
+                        "preconditions": ["Precondicion: Ingresar al publicado https://auth.sistema.com/login", "Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
                         "test_data": {"email": "test@example.com", "password": "Test123!"},
                         "automation_potential": "high",
                         "estimated_duration": "5-10 minutes"
@@ -313,12 +355,27 @@ class AdvancedTestGenerationRequest(BaseModel):
         min_length=1,
         max_length=50
     )
+    modulo: str = Field(
+        ..., 
+        description="Módulo específico del sistema que se va a probar",
+        example="AUTENTICACION",
+        min_length=1,
+        max_length=50
+    )
+    servicio_publicado: Optional[str] = Field(
+        None,
+        description="URL o nombre del servicio publicado (si existe)",
+        example="https://auth.sistema.com/login",
+        max_length=200
+    )
     
     class Config:
         json_schema_extra = {
             "example": {
                 "requerimiento": "El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado.",
-                "aplicacion": "SISTEMA_AUTH"
+                "aplicacion": "SISTEMA_AUTH",
+                "modulo": "AUTENTICACION",
+                "servicio_publicado": "https://auth.sistema.com/login"
             }
         }
 
@@ -341,14 +398,14 @@ class AdvancedTestGenerationResponse(BaseModel):
                 "status": "completed",
                 "test_cases": [
                     {
-                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
-                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
+                        "test_case_id": "CP-001-SISTEMA_AUTH-AUTENTICACION-DATO-CONDICION-RESULTADO",
+                        "title": "CP - 001 - SISTEMA_AUTH - AUTENTICACION - DATO - CONDICION - RESULTADO",
                         "description": "Caso de prueba para verificar autenticación exitosa",
                         "test_type": "functional",
                         "priority": "high",
                         "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
                         "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
-                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
+                        "preconditions": ["Precondicion: Ingresar al publicado https://auth.sistema.com/login", "Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
                         "test_data": {"email": "test@example.com", "password": "Test123!"},
                         "automation_potential": "high",
                         "estimated_duration": "5-10 minutes"
@@ -857,17 +914,23 @@ async def generate_advanced_test_cases(
     - **Casos de Integración**: Flujos end-to-end
     - **Casos de Seguridad**: Autenticación y autorización
     
+    ### Parámetros de Entrada:
+    - **requerimiento**: Requerimiento completo a analizar
+    - **aplicacion**: Nombre de la aplicación o sistema
+    - **modulo**: Módulo específico del sistema que se va a probar
+    - **servicio_publicado**: URL o nombre del servicio publicado (opcional)
+    
     ### Formato de Salida:
     - **test_cases**: Lista de casos de prueba con estructura estandarizada
     - **coverage_analysis**: Análisis de cobertura por tipo de prueba
     - **confidence_score**: Puntuación de confianza (0-1)
     - **processing_time**: Tiempo de procesamiento en segundos
     
-    ### Respuesta:
-    - **test_cases**: Lista de casos de prueba generados
-    - **coverage_analysis**: Análisis de cobertura de pruebas
-    - **confidence_score**: Puntuación de confianza (0-1)
-    - **processing_time**: Tiempo de procesamiento en segundos
+    ### Estructura de Casos de Prueba:
+    - **ID**: CP-001-APLICACION-MODULO-DATO-CONDICION-RESULTADO
+    - **Título**: CP - 001 - APLICACION - MODULO - DATO - CONDICION - RESULTADO
+    - **Precondiciones**: Incluye "Ingresar al publicado XXXX" si se proporciona servicio_publicado
+    - **Resultado Esperado**: Formato "Resultado Esperado: [descripción específica]"
     """
     start_time = datetime.utcnow()
     generation_id = f"advanced_{request.aplicacion}_{int(start_time.timestamp())}"
@@ -898,16 +961,25 @@ async def generate_advanced_test_cases(
         # Procesar casos de prueba generados
         test_cases = []
         if analysis_result.get("test_cases"):
-            for tc_data in analysis_result["test_cases"]:
+            for i, tc_data in enumerate(analysis_result["test_cases"], 1):
+                # Generar ID y título con el módulo específico
+                test_case_id = f"CP-{i:03d}-{request.aplicacion}-{request.modulo}-DATO-CONDICION-RESULTADO"
+                title = f"CP - {i:03d} - {request.aplicacion} - {request.modulo} - DATO - CONDICION - RESULTADO"
+                
+                # Agregar precondición del servicio publicado si existe
+                preconditions = tc_data.get("preconditions", ["Precondicion: [Descripción específica]"])
+                if request.servicio_publicado:
+                    preconditions.insert(0, f"Precondicion: Ingresar al publicado {request.servicio_publicado}")
+                
                 test_case = TestCase(
-                    test_case_id=tc_data.get("test_case_id", f"CP-001-{request.aplicacion}-MODULO-DATO-CONDICION-RESULTADO"),
-                    title=tc_data.get("title", f"CP - 001 - {request.aplicacion} - MODULO - DATO - CONDICION - RESULTADO"),
+                    test_case_id=test_case_id,
+                    title=title,
                     description=tc_data.get("description", ""),
                     test_type=tc_data.get("test_type", "functional"),
                     priority=tc_data.get("priority", "high"),
                     steps=tc_data.get("steps", []),
                     expected_result=tc_data.get("expected_result", "Resultado Esperado: [Descripción específica]"),
-                    preconditions=tc_data.get("preconditions", ["Precondicion: [Descripción específica]"]),
+                    preconditions=preconditions,
                     test_data=tc_data.get("test_data", {}),
                     automation_potential=tc_data.get("automation_potential", "high"),
                     estimated_duration=tc_data.get("estimated_duration", "5-10 minutes")
@@ -1071,13 +1143,14 @@ if __name__ == "__main__":
     
     port = int(os.getenv("PORT", 8000))
     log_level = os.getenv("LOG_LEVEL", "info").lower()
+    is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production"
     
-    logger.info("Starting Microservicio de Análisis QA", port=port, log_level=log_level)
+    logger.info("Starting Microservicio de Análisis QA", port=port, log_level=log_level, is_production=is_production)
     
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=True,
+        reload=not is_production,
         log_level=log_level
     )
