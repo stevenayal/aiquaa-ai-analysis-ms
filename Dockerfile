@@ -21,7 +21,7 @@ COPY . .
 RUN mkdir -p logs data
 
 # Exponer puerto
-EXPOSE 8080
+EXPOSE 8000
 
 # Comando por defecto
-CMD ["python", "app_simple.py"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
