@@ -38,7 +38,7 @@ class LLMWrapper:
         
         # Configurar Gemini
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
-        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-pro")
         
         if self.google_api_key:
             genai.configure(api_key=self.google_api_key)

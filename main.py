@@ -431,7 +431,7 @@ async def config_check():
     """Verificar configuración del servicio (solo para diagnóstico)"""
     config_status = {
         "google_api_key": "configured" if os.getenv("GOOGLE_API_KEY") else "missing",
-        "gemini_model": os.getenv("GEMINI_MODEL", "gemini-1.5-flash"),
+        "gemini_model": os.getenv("GEMINI_MODEL", "gemini-pro"),
         "langfuse_public_key": "configured" if os.getenv("LANGFUSE_PUBLIC_KEY") else "missing",
         "langfuse_secret_key": "configured" if os.getenv("LANGFUSE_SECRET_KEY") else "missing",
         "jira_base_url": "configured" if os.getenv("JIRA_BASE_URL") else "missing",
@@ -445,6 +445,45 @@ async def config_check():
         "timestamp": datetime.utcnow().isoformat(),
         "configuration": config_status
     }
+
+@app.get("/models", include_in_schema=False)
+async def list_available_models():
+    """Listar modelos disponibles de Gemini"""
+    try:
+        if not llm_wrapper.google_api_key:
+            return {
+                "error": "Google API key not configured",
+                "available_models": []
+            }
+        
+        import google.generativeai as genai
+        genai.configure(api_key=llm_wrapper.google_api_key)
+        
+        models = genai.list_models()
+        available_models = []
+        
+        for model in models:
+            if 'generateContent' in model.supported_generation_methods:
+                available_models.append({
+                    "name": model.name,
+                    "display_name": model.display_name,
+                    "description": model.description,
+                    "supported_methods": list(model.supported_generation_methods)
+                })
+        
+        return {
+            "status": "ok",
+            "timestamp": datetime.utcnow().isoformat(),
+            "available_models": available_models,
+            "current_model": llm_wrapper.gemini_model
+        }
+        
+    except Exception as e:
+        logger.error("Error listing models", error=str(e))
+        return {
+            "error": f"Error listing models: {str(e)}",
+            "available_models": []
+        }
 
 @app.post("/analyze", 
           response_model=AnalysisResponse,

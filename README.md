@@ -40,7 +40,7 @@ start http://localhost:8000/docs
 
 ### Variables de Entorno Requeridas:
 - `GOOGLE_API_KEY` - API key de Google Gemini (REQUERIDA)
-- `GEMINI_MODEL` - Modelo de Gemini (por defecto: gemini-1.5-flash)
+- `GEMINI_MODEL` - Modelo de Gemini (por defecto: gemini-pro)
 
 ### Variables Opcionales:
 - `LANGFUSE_PUBLIC_KEY` - Para observabilidad
