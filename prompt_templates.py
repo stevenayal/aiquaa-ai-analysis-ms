@@ -268,9 +268,10 @@ class PromptTemplates:
             return self._get_fallback_requirements_prompt(requirement_content)
     
     def _get_analysis_template(self) -> str:
-        """Template para análisis de casos de prueba"""
+        """Template mejorado para análisis de casos de prueba existentes"""
         return """
-Eres un experto en QA y testing. Analiza el siguiente caso de prueba y proporciona sugerencias de mejora.
+Eres un experto en QA y testing con más de 10 años de experiencia en análisis de casos de prueba y mejora continua de procesos de testing.
+Analiza el siguiente caso de prueba y proporciona sugerencias de mejora basadas en las mejores prácticas de la industria.
 
 CONTEXTO:
 - Proyecto: {project_key}
@@ -278,53 +279,106 @@ CONTEXTO:
 - Etiquetas: {labels}
 - Timestamp: {timestamp}
 
-CASO DE PRUEBA:
+CASO DE PRUEBA A ANALIZAR:
 {test_case_content}
 
-INSTRUCCIONES:
-Analiza el caso de prueba y proporciona sugerencias estructuradas en formato JSON. Enfócate en:
+METODOLOGÍA DE ANÁLISIS:
+1. **EVALUACIÓN DE CALIDAD**:
+   - Claridad y legibilidad del caso
+   - Completitud de pasos y verificaciones
+   - Especificidad de resultados esperados
+   - Consistencia en nomenclatura y formato
 
-1. CLARIDAD Y COMPLETITUD
-   - ¿Está claro el objetivo del test?
-   - ¿Faltan pasos o información?
-   - ¿Son específicos los resultados esperados?
+2. **ANÁLISIS DE COBERTURA**:
+   - Cobertura de casos positivos y negativos
+   - Inclusión de casos edge y boundary values
+   - Cobertura de integración y regresión
+   - Consideración de aspectos de seguridad
 
-2. COBERTURA DE TESTING
-   - ¿Cubre casos edge?
-   - ¿Incluye casos de error?
-   - ¿Prueba integración adecuadamente?
+3. **EVALUACIÓN DE MANTENIBILIDAD**:
+   - Facilidad de mantenimiento y actualización
+   - Reutilización de componentes
+   - Documentación y comentarios
+   - Estructura modular y organizada
 
-3. MEJORES PRÁCTICAS
-   - ¿Sigue convenciones de naming?
-   - ¿Es mantenible y reutilizable?
-   - ¿Tiene datos de prueba apropiados?
-
-4. AUTOMATIZACIÓN
-   - ¿Se puede automatizar fácilmente?
-   - ¿Qué herramientas recomiendas?
+4. **POTENCIAL DE AUTOMATIZACIÓN**:
+   - Viabilidad técnica de automatización
+   - Herramientas y frameworks recomendados
+   - Estrategias de implementación
+   - Consideraciones de mantenimiento
 
 FORMATO DE RESPUESTA JSON:
 {{
-    "summary": "Resumen del análisis en 2-3 oraciones",
+    "summary": "Resumen ejecutivo del análisis en 2-3 oraciones",
     "confidence_score": 0.85,
     "suggestions": [
         {{
-            "type": "clarity|coverage|best_practice|automation",
-            "title": "Título de la sugerencia",
-            "description": "Descripción detallada de la mejora",
-            "priority": "high|medium|low",
-            "category": "improvement|bug_fix|enhancement",
+            "type": "clarity|coverage|best_practice|automation|maintainability|security|performance",
+            "title": "Título específico y accionable de la sugerencia",
+            "description": "Descripción detallada de la mejora con ejemplos concretos",
+            "priority": "critical|high|medium|low",
+            "category": "improvement|bug_fix|enhancement|optimization|security|performance",
             "effort": "low|medium|high",
-            "impact": "low|medium|high"
+            "impact": "low|medium|high",
+            "implementation_guidance": "Pasos específicos para implementar la mejora",
+            "expected_benefit": "Beneficio esperado de la mejora",
+            "related_standards": ["ISO 25010", "ISTQB", "IEEE 829"]
         }}
     ],
-    "categories": ["clarity", "coverage", "automation"],
+    "quality_metrics": {{
+        "clarity_score": 0.85,
+        "completeness_score": 0.90,
+        "maintainability_score": 0.75,
+        "automation_readiness": 0.80,
+        "coverage_score": 0.70,
+        "security_consideration": 0.65
+    }},
+    "categories": ["clarity", "coverage", "automation", "maintainability"],
     "overall_quality_score": 0.75,
+    "quality_grade": "A|B|C|D|F",
+    "strengths": [
+        "Fortaleza identificada 1",
+        "Fortaleza identificada 2"
+    ],
+    "weaknesses": [
+        "Debilidad identificada 1",
+        "Debilidad identificada 2"
+    ],
     "recommendations": [
-        "Recomendación específica 1",
-        "Recomendación específica 2"
-    ]
+        "Recomendación específica y accionable 1",
+        "Recomendación específica y accionable 2"
+    ],
+    "compliance_check": {{
+        "standards_met": ["ISO 25010", "ISTQB Foundation"],
+        "compliance_score": 0.85,
+        "non_compliant_areas": ["Área 1", "Área 2"],
+        "improvement_areas": ["Área de mejora 1", "Área de mejora 2"]
+    }},
+    "automation_assessment": {{
+        "feasibility": "high|medium|low",
+        "recommended_tools": ["Selenium", "Playwright", "Cypress"],
+        "implementation_effort": "low|medium|high",
+        "maintenance_considerations": "Consideraciones específicas de mantenimiento"
+    }}
 }}
+
+CRITERIOS DE EVALUACIÓN:
+- **Claridad**: El caso es fácil de entender y seguir
+- **Completitud**: Incluye todos los pasos y verificaciones necesarias
+- **Mantenibilidad**: Fácil de actualizar y mantener
+- **Automatización**: Preparado para automatización
+- **Cobertura**: Cubre diferentes escenarios y casos edge
+- **Seguridad**: Considera aspectos de seguridad
+- **Rendimiento**: Evalúa impactos en rendimiento
+- **Estándares**: Cumple con estándares de la industria
+
+BUENAS PRÁCTICAS APLICADAS:
+- Análisis basado en estándares ISO 25010 e ISTQB
+- Evaluación de viabilidad de automatización
+- Consideración de aspectos de seguridad y rendimiento
+- Recomendaciones específicas y accionables
+- Métricas de calidad cuantificables
+- Evaluación de cumplimiento de estándares
 
 Responde SOLO con el JSON válido, sin texto adicional.
 """
@@ -618,11 +672,12 @@ Proporciona evaluación en formato JSON con campos: quality_scores, overall_scor
         return self.version
     
     def _get_requirements_analysis_template(self) -> str:
-        """Template para análisis de requerimientos y generación de casos de prueba"""
+        """Template mejorado para análisis de requerimientos y generación de casos de prueba"""
         return """
-Eres un experto en QA y testing. Analiza el siguiente requerimiento y genera casos de prueba estructurados.
+Eres un experto en QA y testing con especialización en análisis de requerimientos y historias de usuario. 
+Analiza el siguiente contenido y genera casos de prueba estructurados aplicando las mejores prácticas de testing.
 
-REQUERIMIENTO:
+CONTENIDO A ANALIZAR:
 {requirement_content}
 
 CONTEXTO:
@@ -631,39 +686,55 @@ CONTEXTO:
 - Tipos de prueba: {test_types}
 - Nivel de cobertura: {coverage_level}
 
-INSTRUCCIONES:
-1. Analiza el requerimiento y identifica todos los escenarios de prueba necesarios
-2. Genera casos de prueba para cada tipo especificado: {test_types}
-3. Asegúrate de cubrir casos positivos, negativos y edge cases
-4. Incluye precondiciones, pasos detallados y resultados esperados
-5. Evalúa el potencial de automatización de cada caso
-6. Proporciona un análisis de cobertura
+METODOLOGÍA DE ANÁLISIS:
+1. **ANÁLISIS DE REQUERIMIENTOS**:
+   - Identifica actores principales y secundarios
+   - Extrae funcionalidades críticas y opcionales
+   - Detecta dependencias y restricciones
+   - Identifica criterios de aceptación implícitos y explícitos
+
+2. **DISEÑO DE CASOS DE PRUEBA**:
+   - Aplica técnicas de partición de equivalencia
+   - Considera valores límite y casos edge
+   - Incluye casos de integración y regresión
+   - Evalúa aspectos de seguridad y rendimiento
+
+3. **COBERTURA COMPLETA**:
+   - Casos positivos (happy path)
+   - Casos negativos (validaciones y errores)
+   - Casos límite (boundary values)
+   - Casos de integración (flujos end-to-end)
+   - Casos de seguridad (autenticación, autorización, validación de entrada)
 
 FORMATO DE RESPUESTA JSON:
 {{
     "test_cases": [
         {{
             "test_case_id": "TC-{project_key}-001",
-            "title": "Título descriptivo del caso de prueba",
-            "description": "Descripción detallada del caso de prueba",
-            "test_type": "functional|integration|ui|api|security|performance",
-            "priority": "high|medium|low",
+            "title": "Título descriptivo y específico del caso de prueba",
+            "description": "Descripción detallada que explique el propósito y alcance del caso",
+            "test_type": "functional|integration|ui|api|security|performance|usability|accessibility",
+            "priority": "critical|high|medium|low",
             "steps": [
-                "Paso 1: Descripción detallada",
-                "Paso 2: Descripción detallada",
-                "Paso N: Descripción detallada"
+                "Paso 1: Acción específica y verificable",
+                "Paso 2: Acción específica y verificable",
+                "Paso N: Verificación del resultado"
             ],
-            "expected_result": "Resultado esperado específico y verificable",
+            "expected_result": "Resultado esperado específico, medible y verificable",
             "preconditions": [
-                "Precondición 1",
-                "Precondición 2"
+                "Estado del sistema requerido",
+                "Datos de prueba necesarios",
+                "Configuraciones específicas"
             ],
             "test_data": {{
-                "campo1": "valor1",
-                "campo2": "valor2"
+                "input_data": "Datos de entrada específicos",
+                "environment": "Configuración del entorno",
+                "user_roles": "Roles de usuario necesarios"
             }},
             "automation_potential": "high|medium|low",
-            "estimated_duration": "X-Y minutes"
+            "estimated_duration": "X-Y minutes",
+            "risk_level": "high|medium|low",
+            "business_impact": "critical|high|medium|low"
         }}
     ],
     "coverage_analysis": {{
@@ -671,18 +742,38 @@ FORMATO DE RESPUESTA JSON:
         "edge_case_coverage": "X%",
         "integration_coverage": "X%",
         "security_coverage": "X%",
-        "ui_coverage": "X%"
+        "ui_coverage": "X%",
+        "usability_coverage": "X%",
+        "accessibility_coverage": "X%"
     }},
-    "confidence_score": 0.85
+    "confidence_score": 0.85,
+    "test_strategy": {{
+        "approach": "Descripción del enfoque de testing utilizado",
+        "techniques_applied": ["Partición de equivalencia", "Valores límite", "Casos de uso"],
+        "risks_identified": ["Riesgo 1", "Riesgo 2"],
+        "mitigation_strategies": ["Estrategia 1", "Estrategia 2"]
+    }}
 }}
 
-REGLAS:
-- Genera entre 3-8 casos de prueba según la complejidad
-- Cada caso debe ser independiente y ejecutable
-- Incluye datos de prueba específicos cuando sea relevante
-- Prioriza casos de alta prioridad primero
-- Asegúrate de que los pasos sean claros y verificables
-- Incluye casos de error y validación cuando aplique
+REGLAS DE CALIDAD:
+- Genera entre 5-12 casos de prueba según la complejidad del requerimiento
+- Cada caso debe ser independiente, ejecutable y mantenible
+- Incluye datos de prueba realistas y específicos
+- Prioriza casos críticos y de alto impacto de negocio
+- Asegúrate de que los pasos sean claros, específicos y verificables
+- Incluye casos de error, validación y recuperación
+- Considera aspectos de usabilidad y accesibilidad
+- Evalúa el impacto en el negocio y el nivel de riesgo
+
+BUENAS PRÁCTICAS APLICADAS:
+- Naming convention consistente y descriptivo
+- Pasos de prueba atómicos y verificables
+- Resultados esperados específicos y medibles
+- Precondiciones claras y completas
+- Datos de prueba realistas y variados
+- Cobertura de casos edge y de error
+- Consideración de aspectos de seguridad
+- Evaluación de potencial de automatización
 
 Genera la respuesta JSON ahora:
         """
@@ -747,9 +838,10 @@ Incluye también coverage_analysis y confidence_score.
             return self._get_fallback_jira_workitem_prompt(work_item_data, requirement_content)
     
     def _get_jira_workitem_analysis_template(self) -> str:
-        """Template para análisis de work item de Jira y generación de casos de prueba"""
+        """Template mejorado para análisis de work item de Jira y generación de casos de prueba"""
         return """
-Eres un experto en QA y testing. Analiza el siguiente work item de Jira y genera casos de prueba estructurados.
+Eres un experto en QA y testing con especialización en análisis de work items de Jira y generación de casos de prueba basados en historias de usuario y requerimientos.
+Analiza el siguiente work item de Jira y genera casos de prueba estructurados aplicando las mejores prácticas de testing ágil.
 
 DATOS DEL WORK ITEM:
 {work_item_data}
@@ -763,40 +855,68 @@ CONTEXTO:
 - Nivel de cobertura: {coverage_level}
 - Timestamp: {timestamp}
 
-INSTRUCCIONES:
-1. Analiza el work item de Jira y extrae todos los escenarios de prueba necesarios
-2. Considera el tipo de issue, prioridad y estado del work item
-3. Genera casos de prueba para cada tipo especificado: {test_types}
-4. Asegúrate de cubrir casos positivos, negativos y edge cases
-5. Incluye precondiciones, pasos detallados y resultados esperados
-6. Evalúa el potencial de automatización de cada caso
-7. Proporciona un análisis de cobertura específico para el contexto de Jira
+METODOLOGÍA DE ANÁLISIS PARA JIRA:
+1. **ANÁLISIS DEL WORK ITEM**:
+   - Identifica el tipo de issue (Story, Task, Bug, Epic)
+   - Extrae criterios de aceptación explícitos e implícitos
+   - Analiza la descripción y campos personalizados
+   - Considera la prioridad y el estado actual
+   - Identifica dependencias y relaciones con otros issues
+
+2. **DISEÑO DE CASOS DE PRUEBA ÁGILES**:
+   - Aplica técnicas de testing basadas en comportamiento (BDD)
+   - Considera el contexto del usuario y el valor de negocio
+   - Incluye casos de aceptación y criterios de "Definition of Done"
+   - Evalúa aspectos de usabilidad y experiencia de usuario
+   - Considera integración con otros sistemas y APIs
+
+3. **COBERTURA COMPLETA**:
+   - Casos positivos (happy path) basados en criterios de aceptación
+   - Casos negativos (validaciones y manejo de errores)
+   - Casos límite (boundary values y edge cases)
+   - Casos de integración (flujos end-to-end)
+   - Casos de regresión (impacto en funcionalidades existentes)
+   - Casos de seguridad (autenticación, autorización, validación de entrada)
 
 FORMATO DE RESPUESTA JSON:
 {{
     "test_cases": [
         {{
             "test_case_id": "TC-{project_key}-001",
-            "title": "Título descriptivo del caso de prueba",
-            "description": "Descripción detallada del caso de prueba",
-            "test_type": "functional|integration|ui|api|security|performance",
-            "priority": "high|medium|low",
+            "title": "Título descriptivo y específico del caso de prueba",
+            "description": "Descripción detallada que explique el propósito y alcance del caso",
+            "test_type": "functional|integration|ui|api|security|performance|usability|accessibility|regression",
+            "priority": "critical|high|medium|low",
             "steps": [
-                "Paso 1: Descripción detallada",
-                "Paso 2: Descripción detallada",
-                "Paso N: Descripción detallada"
+                "Paso 1: Acción específica y verificable",
+                "Paso 2: Acción específica y verificable",
+                "Paso N: Verificación del resultado"
             ],
-            "expected_result": "Resultado esperado específico y verificable",
+            "expected_result": "Resultado esperado específico, medible y verificable",
             "preconditions": [
-                "Precondición 1",
-                "Precondición 2"
+                "Estado del sistema requerido",
+                "Datos de prueba necesarios",
+                "Configuraciones específicas",
+                "Dependencias de otros work items"
             ],
             "test_data": {{
-                "campo1": "valor1",
-                "campo2": "valor2"
+                "input_data": "Datos de entrada específicos",
+                "environment": "Configuración del entorno",
+                "user_roles": "Roles de usuario necesarios",
+                "jira_context": "Contexto específico del work item"
             }},
             "automation_potential": "high|medium|low",
-            "estimated_duration": "X-Y minutes"
+            "estimated_duration": "X-Y minutes",
+            "risk_level": "high|medium|low",
+            "business_impact": "critical|high|medium|low",
+            "acceptance_criteria": [
+                "Criterio de aceptación 1",
+                "Criterio de aceptación 2"
+            ],
+            "definition_of_done": [
+                "Criterio de Definition of Done 1",
+                "Criterio de Definition of Done 2"
+            ]
         }}
     ],
     "coverage_analysis": {{
@@ -805,20 +925,51 @@ FORMATO DE RESPUESTA JSON:
         "integration_coverage": "X%",
         "security_coverage": "X%",
         "ui_coverage": "X%",
-        "jira_integration_coverage": "X%"
+        "usability_coverage": "X%",
+        "accessibility_coverage": "X%",
+        "jira_integration_coverage": "X%",
+        "regression_coverage": "X%"
     }},
-    "confidence_score": 0.85
+    "confidence_score": 0.85,
+    "jira_analysis": {{
+        "issue_type": "Story|Task|Bug|Epic",
+        "priority_level": "Highest|High|Medium|Low|Lowest",
+        "complexity": "low|medium|high",
+        "business_value": "high|medium|low",
+        "technical_risk": "high|medium|low",
+        "dependencies": ["Dependencia 1", "Dependencia 2"],
+        "related_issues": ["Issue relacionado 1", "Issue relacionado 2"]
+    }},
+    "test_strategy": {{
+        "approach": "Descripción del enfoque de testing utilizado",
+        "techniques_applied": ["BDD", "Partición de equivalencia", "Valores límite", "Casos de uso"],
+        "risks_identified": ["Riesgo 1", "Riesgo 2"],
+        "mitigation_strategies": ["Estrategia 1", "Estrategia 2"],
+        "testing_phases": ["Unit", "Integration", "System", "Acceptance"]
+    }}
 }}
 
 REGLAS ESPECÍFICAS PARA JIRA:
-- Genera entre 3-8 casos de prueba según la complejidad del work item
-- Cada caso debe ser independiente y ejecutable
-- Incluye datos de prueba específicos cuando sea relevante
-- Prioriza casos de alta prioridad primero
-- Asegúrate de que los pasos sean claros y verificables
-- Incluye casos de error y validación cuando aplique
-- Considera el contexto del proyecto y tipo de issue
-- Incluye casos específicos para integración con Jira si aplica
+- Genera entre 5-12 casos de prueba según la complejidad del work item
+- Cada caso debe ser independiente, ejecutable y mantenible
+- Incluye datos de prueba realistas y específicos del contexto
+- Prioriza casos críticos y de alto valor de negocio
+- Asegúrate de que los pasos sean claros, específicos y verificables
+- Incluye casos de error, validación y recuperación
+- Considera aspectos de usabilidad y accesibilidad
+- Evalúa el impacto en el negocio y el nivel de riesgo
+- Incluye criterios de aceptación y Definition of Done
+- Considera dependencias con otros work items
+
+BUENAS PRÁCTICAS APLICADAS:
+- Análisis basado en metodologías ágiles (Scrum, Kanban)
+- Consideración del contexto de usuario y valor de negocio
+- Aplicación de técnicas BDD (Behavior-Driven Development)
+- Evaluación de viabilidad de automatización
+- Consideración de aspectos de seguridad y rendimiento
+- Recomendaciones específicas y accionables
+- Métricas de calidad cuantificables
+- Evaluación de cumplimiento de estándares ágiles
 
 Genera la respuesta JSON ahora:
         """

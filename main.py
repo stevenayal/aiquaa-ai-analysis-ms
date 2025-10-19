@@ -473,27 +473,6 @@ class HealthResponse(BaseModel):
     version: str
     components: Dict[str, str]
 
-@app.get("/", 
-         response_model=Dict[str, str],
-         summary="Información del servicio",
-         description="Endpoint raíz que proporciona información básica sobre el microservicio de análisis QA",
-         tags=["Información"])
-async def root():
-    """
-    ## Información del Servicio
-    
-    Retorna información básica sobre el microservicio de análisis QA.
-    
-    ### Respuesta:
-    - **message**: Descripción del servicio
-    - **version**: Versión actual de la API
-    - **docs**: URL de la documentación Swagger
-    """
-    return {
-        "message": "Microservicio de Análisis QA",
-        "version": "1.0.0",
-        "docs": "/docs"
-    }
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
@@ -543,11 +522,11 @@ async def health_check():
                   "description": "Análisis completado exitosamente",
                   "model": AnalysisResponse
               },
-              400: {
+              422: {
                   "description": "Datos de entrada inválidos",
                   "content": {
                       "application/json": {
-                          "example": {"detail": "Datos de entrada inválidos"}
+                          "example": {"detail": "Error de validación en los datos de entrada"}
                       }
                   }
               },
@@ -737,11 +716,19 @@ async def analyze_content(
                   "description": "Análisis de work item completado exitosamente",
                   "model": JiraAnalysisResponse
               },
-              400: {
-                  "description": "Datos de entrada inválidos o work item no encontrado",
+              404: {
+                  "description": "Work item no encontrado en Jira",
                   "content": {
                       "application/json": {
                           "example": {"detail": "Work item no encontrado en Jira"}
+                      }
+                  }
+              },
+              422: {
+                  "description": "Datos de entrada inválidos",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Error de validación en los datos de entrada"}
                       }
                   }
               },
@@ -930,11 +917,11 @@ async def analyze_jira_workitem(
                   "description": "Generación de casos ISTQB completada exitosamente",
                   "model": ISTQBTestGenerationResponse
               },
-              400: {
+              422: {
                   "description": "Datos de entrada inválidos",
                   "content": {
                       "application/json": {
-                          "example": {"detail": "Datos de entrada inválidos"}
+                          "example": {"detail": "Error de validación en los datos de entrada"}
                       }
                   }
               },
