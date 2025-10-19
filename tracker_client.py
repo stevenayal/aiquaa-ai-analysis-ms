@@ -59,13 +59,21 @@ class TrackerClient:
             logger.error("Jira health check failed", error=str(e))
             return False
     
-    async def get_work_item_details(self, work_item_id: str, project_key: str) -> Optional[Dict[str, Any]]:
+    async def get_work_item_details(self, work_item_id: str, project_key: str = "") -> Optional[Dict[str, Any]]:
         """Obtener detalles de un work item específico de Jira"""
         try:
+            # Extraer project key del work_item_id si no se proporciona
+            if not project_key and work_item_id:
+                # Formato típico: PROJECT-123, extraer "PROJECT"
+                if '-' in work_item_id:
+                    project_key = work_item_id.split('-')[0]
+                else:
+                    project_key = work_item_id
+            
             logger.info("Fetching work item details", work_item_id=work_item_id, project_key=project_key)
             
             # Construir JQL query para buscar el work item
-            jql_query = f"key = {work_item_id} AND project = {project_key}"
+            jql_query = f"key = {work_item_id}"
             
             # Hacer la búsqueda usando el endpoint correcto
             search_url = f"{self.jira_base_url}/rest/api/3/search/jql"
@@ -93,12 +101,26 @@ class TrackerClient:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.get(search_url, params=search_params, headers=self.jira_headers)
                 
+                logger.info("Jira API response", 
+                           status_code=response.status_code, 
+                           url=search_url,
+                           jql_query=jql_query)
+                
                 if response.status_code == 200:
                     data = response.json()
                     issues = data.get("issues", [])
+                    total = data.get("total", 0)
+                    
+                    logger.info("Jira search results", 
+                               total_issues=total, 
+                               issues_found=len(issues))
                     
                     if not issues:
-                        logger.warning("Work item not found", work_item_id=work_item_id, project_key=project_key)
+                        logger.warning("Work item not found", 
+                                     work_item_id=work_item_id, 
+                                     project_key=project_key,
+                                     jql_query=jql_query,
+                                     total_issues=total)
                         return None
                     
                     issue = issues[0]

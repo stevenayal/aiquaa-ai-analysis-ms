@@ -485,6 +485,46 @@ async def list_available_models():
             "available_models": []
         }
 
+@app.get("/jira-test/{work_item_id}", include_in_schema=False)
+async def test_jira_connection(work_item_id: str):
+    """Probar conexión con Jira y buscar un work item específico"""
+    try:
+        # Verificar configuración
+        config_status = {
+            "jira_base_url": "configured" if os.getenv("JIRA_BASE_URL") else "missing",
+            "jira_token": "configured" if os.getenv("JIRA_TOKEN") else "missing",
+            "jira_email": "configured" if os.getenv("JIRA_EMAIL") else "missing",
+            "jira_org_id": "configured" if os.getenv("JIRA_ORG_ID") else "missing"
+        }
+        
+        # Probar conexión
+        health_status = await tracker_client.health_check()
+        
+        # Buscar work item
+        work_item_data = await tracker_client.get_work_item_details(work_item_id)
+        
+        return {
+            "status": "ok",
+            "timestamp": datetime.utcnow().isoformat(),
+            "work_item_id": work_item_id,
+            "configuration": config_status,
+            "health_check": "healthy" if health_status else "unhealthy",
+            "work_item_found": work_item_data is not None,
+            "work_item_data": work_item_data
+        }
+        
+    except Exception as e:
+        logger.error("Error testing Jira connection", error=str(e))
+        return {
+            "error": f"Error testing Jira: {str(e)}",
+            "work_item_id": work_item_id,
+            "configuration": {
+                "jira_base_url": "configured" if os.getenv("JIRA_BASE_URL") else "missing",
+                "jira_token": "configured" if os.getenv("JIRA_TOKEN") else "missing",
+                "jira_email": "configured" if os.getenv("JIRA_EMAIL") else "missing"
+            }
+        }
+
 @app.post("/analyze", 
           response_model=AnalysisResponse,
           summary="Analizar contenido y generar casos de prueba",
