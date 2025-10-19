@@ -4,24 +4,12 @@ Microservicio de Análisis QA - Versión Ultra Simple
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from fastapi.middleware.cors import CORSMiddleware
 import os
 
 app = FastAPI(
     title="Microservicio de Análisis QA",
     description="API de Análisis Automatizado de Casos de Prueba",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
-)
-
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    version="1.0.0"
 )
 
 @app.get("/")
