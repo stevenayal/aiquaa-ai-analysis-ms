@@ -46,30 +46,27 @@ logger = structlog.get_logger()
 app = FastAPI(
     title="Microservicio de Análisis QA",
     description="""
-    ## API de Análisis Automatizado de Casos de Prueba con Técnicas ISTQB
+    ## API de Análisis Automatizado de Casos de Prueba
     
-    Esta API proporciona análisis inteligente de contenido (casos de prueba, requerimientos, historias de usuario) utilizando IA generativa y técnicas de diseño ISTQB Foundation Level.
+    Esta API proporciona análisis inteligente de contenido (casos de prueba, requerimientos, historias de usuario) utilizando IA generativa y técnicas avanzadas de testing.
     
     ### Características:
     - 🤖 Análisis automatizado con Google Gemini
     - 📊 Observabilidad completa con Langfuse
     - 🔗 Integración simplificada con Jira
     - 📝 Generación de casos de prueba estructurados
-    - 🎯 **NUEVO**: Generación de casos con técnicas ISTQB avanzadas
-    - 🔬 **NUEVO**: Aplicación de 9 técnicas de diseño de pruebas
-    - 📋 **NUEVO**: Formato estructurado con CSV, fichas y artefactos técnicos
+    - 🎯 **NUEVO**: Generación de casos con técnicas avanzadas
+    - 🔬 **NUEVO**: Aplicación automática de técnicas de diseño de pruebas
+    - 📋 **NUEVO**: Formato estructurado estandarizado
     - ⚡ **OPTIMIZADO**: Endpoints unificados y parámetros simplificados
     
-    ### Técnicas ISTQB Soportadas:
-    - **Equivalencia**: Partición de clases de equivalencia
-    - **Valores Límite**: Análisis de valores límite
-    - **Tabla de Decisión**: Matrices de condiciones y acciones
-    - **Transición de Estados**: Estados y transiciones del sistema
-    - **Árbol de Clasificación**: Clases y restricciones
-    - **Pairwise**: Combinaciones mínimas de pares
+    ### Técnicas Aplicadas Automáticamente:
+    - **Partición de Equivalencia**: Clases válidas e inválidas
+    - **Valores Límite**: Casos boundary y edge cases
     - **Casos de Uso**: Flujos principales y alternos
-    - **Error Guessing**: Hipótesis de fallos
-    - **Checklist**: Verificación genérica de calidad
+    - **Casos de Error**: Validaciones y manejo de errores
+    - **Casos de Integración**: Flujos end-to-end
+    - **Casos de Seguridad**: Autenticación y autorización
     
     ### Autenticación:
     No se requiere autenticación para las pruebas locales.
@@ -77,7 +74,7 @@ app = FastAPI(
     ### Uso Simplificado:
     1. **Análisis unificado**: Usa `/analyze` para cualquier tipo de contenido
     2. **Integración Jira**: Usa `/analyze-jira` para work items (solo ID requerido)
-    3. **Generación ISTQB**: Usa `/generate-istqb-tests` para casos avanzados
+    3. **Generación avanzada**: Usa `/generate-advanced-tests` para casos avanzados
     4. **Monitoreo**: Verifica el estado con `/health`
     
     ### Tipos de Contenido Soportados:
@@ -300,140 +297,38 @@ class JiraAnalysisResponse(BaseModel):
             }
         }
 
-class ISTQBTestGenerationRequest(BaseModel):
-    """Solicitud de generación de casos de prueba con técnicas ISTQB"""
-    programa: str = Field(
+class AdvancedTestGenerationRequest(BaseModel):
+    """Solicitud simplificada de generación de casos de prueba avanzados"""
+    requerimiento: str = Field(
         ..., 
-        description="Nombre del sistema/programa",
+        description="Requerimiento completo a analizar y generar casos de prueba",
+        example="El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado.",
+        min_length=50,
+        max_length=5000
+    )
+    aplicacion: str = Field(
+        ..., 
+        description="Nombre de la aplicación o sistema",
         example="SISTEMA_AUTH",
         min_length=1,
         max_length=50
-    )
-    dominio: str = Field(
-        ..., 
-        description="Breve descripción del requerimiento",
-        example="Autenticación de usuarios con validación de credenciales",
-        min_length=10,
-        max_length=200
-    )
-    modulos: List[str] = Field(
-        ..., 
-        description="Lista de módulos del sistema",
-        example=["AUTORIZACION", "VALIDACION", "AUDITORIA"],
-        min_items=1,
-        max_items=10
-    )
-    factores: Dict[str, List[str]] = Field(
-        ..., 
-        description="Factores de prueba con sus valores posibles",
-        example={
-            "TIPO_USUARIO": ["ADMIN", "USER", "GUEST"],
-            "ESTADO_CREDENCIAL": ["VALIDA", "INVALIDA", "EXPIRADA"],
-            "INTENTOS": ["OK", "ERROR_TIPO_1", "TIMEOUT"]
-        }
-    )
-    limites: Dict[str, Any] = Field(
-        ..., 
-        description="Límites del sistema",
-        example={
-            "CAMPO_USUARIO_len": {"min": 1, "max": 64},
-            "REINTENTOS": 3,
-            "TIMEOUT_MS": 5000
-        }
-    )
-    reglas: List[str] = Field(
-        ..., 
-        description="Reglas de negocio",
-        example=[
-            "R1: si TIPO_USUARIO=ADMIN y ESTADO_CREDENCIAL=VALIDA -> ACCESO_TOTAL",
-            "R2: si INTENTOS=TIMEOUT -> reintentar 1 vez y marcar pendiente",
-            "R3: si REINTENTOS supera límite -> bloquear y auditar"
-        ],
-        min_items=1
-    )
-    tecnicas: Dict[str, bool] = Field(
-        ..., 
-        description="Técnicas ISTQB a aplicar",
-        example={
-            "equivalencia": True,
-            "valores_limite": True,
-            "tabla_decision": True,
-            "transicion_estados": True,
-            "arbol_clasificacion": True,
-            "pairwise": True,
-            "casos_uso": True,
-            "error_guessing": True,
-            "checklist": True
-        }
-    )
-    priorizacion: Optional[str] = Field(
-        "Riesgo", 
-        description="Criterio de priorización",
-        example="Riesgo",
-        pattern="^(Riesgo|Impacto|Uso)$"
-    )
-    cantidad_max: Optional[int] = Field(
-        150, 
-        description="Cantidad máxima de casos de prueba a generar",
-        example=150,
-        ge=10,
-        le=500
-    )
-    salida_plan_ejecucion: Optional[Dict[str, Any]] = Field(
-        default_factory=lambda: {"incluir": True, "formato": "cursor_playwright_mcp"},
-        description="Configuración del plan de ejecución"
     )
     
     class Config:
         json_schema_extra = {
             "example": {
-                "programa": "SISTEMA_AUTH",
-                "dominio": "Autenticación de usuarios con validación de credenciales",
-                "modulos": ["AUTORIZACION", "VALIDACION", "AUDITORIA"],
-                "factores": {
-                    "TIPO_USUARIO": ["ADMIN", "USER", "GUEST"],
-                    "ESTADO_CREDENCIAL": ["VALIDA", "INVALIDA", "EXPIRADA"],
-                    "INTENTOS": ["OK", "ERROR_TIPO_1", "TIMEOUT"]
-                },
-                "limites": {
-                    "CAMPO_USUARIO_len": {"min": 1, "max": 64},
-                    "REINTENTOS": 3,
-                    "TIMEOUT_MS": 5000
-                },
-                "reglas": [
-                    "R1: si TIPO_USUARIO=ADMIN y ESTADO_CREDENCIAL=VALIDA -> ACCESO_TOTAL",
-                    "R2: si INTENTOS=TIMEOUT -> reintentar 1 vez y marcar pendiente",
-                    "R3: si REINTENTOS supera límite -> bloquear y auditar"
-                ],
-                "tecnicas": {
-                    "equivalencia": True,
-                    "valores_limite": True,
-                    "tabla_decision": True,
-                    "transicion_estados": True,
-                    "arbol_clasificacion": True,
-                    "pairwise": True,
-                    "casos_uso": True,
-                    "error_guessing": True,
-                    "checklist": True
-                },
-                "priorizacion": "Riesgo",
-                "cantidad_max": 150,
-                "salida_plan_ejecucion": {
-                    "incluir": True,
-                    "formato": "cursor_playwright_mcp"
-                }
+                "requerimiento": "El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado.",
+                "aplicacion": "SISTEMA_AUTH"
             }
         }
 
-class ISTQBTestGenerationResponse(BaseModel):
-    """Respuesta de la generación de casos de prueba ISTQB"""
-    programa: str = Field(..., description="Nombre del programa", example="SISTEMA_AUTH")
-    generation_id: str = Field(..., description="ID único de la generación", example="istqb_SISTEMA_AUTH_1760825804")
+class AdvancedTestGenerationResponse(BaseModel):
+    """Respuesta de la generación de casos de prueba avanzados"""
+    aplicacion: str = Field(..., description="Nombre de la aplicación", example="SISTEMA_AUTH")
+    generation_id: str = Field(..., description="ID único de la generación", example="advanced_SISTEMA_AUTH_1760825804")
     status: str = Field(..., description="Estado de la generación", example="completed")
-    csv_cases: List[str] = Field(..., description="Lista de casos de prueba en formato CSV")
-    fichas: List[str] = Field(..., description="Fichas detalladas de casos de prueba")
-    artefactos_tecnicos: Dict[str, Any] = Field(..., description="Artefactos técnicos generados")
-    plan_ejecucion: Dict[str, Any] = Field(..., description="Plan de ejecución (si aplica)")
+    test_cases: List[TestCase] = Field(..., description="Lista de casos de prueba generados")
+    coverage_analysis: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
     confidence_score: float = Field(..., description="Puntuación de confianza (0-1)", example=0.85)
     processing_time: float = Field(..., description="Tiempo de procesamiento en segundos", example=25.3)
     created_at: datetime = Field(..., description="Timestamp de creación")
@@ -441,24 +336,28 @@ class ISTQBTestGenerationResponse(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "programa": "SISTEMA_AUTH",
-                "generation_id": "istqb_SISTEMA_AUTH_1760825804",
+                "aplicacion": "SISTEMA_AUTH",
+                "generation_id": "advanced_SISTEMA_AUTH_1760825804",
                 "status": "completed",
-                "csv_cases": [
-                    "CP - 001 - SISTEMA_AUTH - AUTORIZACION - TIPO_USUARIO_ADMIN - AUTORIZA Y REGISTRA OPERACION",
-                    "CP - 002 - SISTEMA_AUTH - VALIDACION - ESTADO_CREDENCIAL_VALIDA - VALIDA Y PERMITE ACCESO"
+                "test_cases": [
+                    {
+                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
+                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
+                        "description": "Caso de prueba para verificar autenticación exitosa",
+                        "test_type": "functional",
+                        "priority": "high",
+                        "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
+                        "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
+                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
+                        "test_data": {"email": "test@example.com", "password": "Test123!"},
+                        "automation_potential": "high",
+                        "estimated_duration": "5-10 minutes"
+                    }
                 ],
-                "fichas": [
-                    "1 - CP - 001 - SISTEMA_AUTH - AUTORIZACION - TIPO_USUARIO_ADMIN - AUTORIZA Y REGISTRA OPERACION\n2- Precondicion: Usuario activo; datos completos; firma válida\n3- Resultado Esperado: Operación autorizada; ID transacción generado; registro persistido y auditado"
-                ],
-                "artefactos_tecnicos": {
-                    "equivalencias": "Particiones válidas/inválidas por cada factor",
-                    "valores_limite": "Casos min-1,min,min+1,max-1,max,max+1 para límites",
-                    "tabla_decision": "Matriz Condiciones→Acciones"
-                },
-                "plan_ejecucion": {
-                    "formato": "cursor_playwright_mcp",
-                    "casos": []
+                "coverage_analysis": {
+                    "functional_coverage": "90%",
+                    "edge_case_coverage": "75%",
+                    "integration_coverage": "80%"
                 },
                 "confidence_score": 0.85,
                 "processing_time": 25.3,
@@ -907,15 +806,15 @@ async def analyze_jira_workitem(
             detail=f"Error analyzing Jira work item: {str(e)}"
         )
 
-@app.post("/generate-istqb-tests", 
-          response_model=ISTQBTestGenerationResponse,
-          summary="Generar casos de prueba con técnicas ISTQB",
-          description="Genera casos de prueba aplicando técnicas de diseño ISTQB Foundation Level",
-          tags=["ISTQB", "Generación Avanzada"],
+@app.post("/generate-advanced-tests", 
+          response_model=AdvancedTestGenerationResponse,
+          summary="Generar casos de prueba con técnicas avanzadas",
+          description="Genera casos de prueba aplicando técnicas de diseño avanzadas de testing",
+          tags=["Generación Avanzada"],
           responses={
               200: {
-                  "description": "Generación de casos ISTQB completada exitosamente",
-                  "model": ISTQBTestGenerationResponse
+                  "description": "Generación de casos avanzados completada exitosamente",
+                  "model": AdvancedTestGenerationResponse
               },
               422: {
                   "description": "Datos de entrada inválidos",
@@ -934,111 +833,115 @@ async def analyze_jira_workitem(
                   }
               }
           })
-async def generate_istqb_test_cases(
-    request: ISTQBTestGenerationRequest,
+async def generate_advanced_test_cases(
+    request: AdvancedTestGenerationRequest,
     background_tasks: BackgroundTasks
 ):
     """
-    ## Generar Casos de Prueba con Técnicas ISTQB
+    ## Generar Casos de Prueba con Técnicas Avanzadas
     
-    Genera casos de prueba aplicando técnicas de diseño ISTQB Foundation Level con observabilidad completa.
+    Genera casos de prueba aplicando técnicas de diseño avanzadas de testing con observabilidad completa.
     
     ### Proceso:
-    1. **Análisis de Configuración**: Se procesa la configuración JSON del sistema
-    2. **Aplicación de Técnicas**: Se aplican las técnicas ISTQB especificadas
-    3. **Generación Estructurada**: Se crean casos en formato CSV, fichas y artefactos técnicos
-    4. **Plan de Ejecución**: Se genera plan de ejecución automatizado (opcional)
+    1. **Análisis del Requerimiento**: Se procesa el requerimiento completo con IA
+    2. **Aplicación de Técnicas**: Se aplican técnicas avanzadas de testing automáticamente
+    3. **Generación Estructurada**: Se crean casos de prueba con estructura estandarizada
+    4. **Análisis de Cobertura**: Se evalúa la cobertura de pruebas generada
     5. **Observabilidad**: Se registra en Langfuse para monitoreo y análisis
     
-    ### Técnicas ISTQB Soportadas:
-    - **Equivalencia**: Partición de clases de equivalencia válidas/inválidas
-    - **Valores Límite**: Casos min-1, min, min+1, max-1, max, max+1
-    - **Tabla de Decisión**: Matriz de condiciones y acciones
-    - **Transición de Estados**: Estados y transiciones del sistema
-    - **Árbol de Clasificación**: Clases y restricciones entre factores
-    - **Pairwise**: Combinaciones mínimas que cubren todas las parejas
+    ### Técnicas Aplicadas Automáticamente:
+    - **Partición de Equivalencia**: Clases válidas e inválidas
+    - **Valores Límite**: Casos boundary y edge cases
     - **Casos de Uso**: Flujos principales y alternos
-    - **Error Guessing**: Hipótesis de fallos del dominio
-    - **Checklist**: Verificación genérica de calidad
+    - **Casos de Error**: Validaciones y manejo de errores
+    - **Casos de Integración**: Flujos end-to-end
+    - **Casos de Seguridad**: Autenticación y autorización
     
     ### Formato de Salida:
-    - **Sección A**: CSV con casos de prueba (CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO)
-    - **Sección B**: Fichas detalladas con precondiciones y resultados esperados
-    - **Sección C**: Artefactos técnicos según técnicas seleccionadas
-    - **Sección D**: Plan de ejecución automatizado (opcional)
+    - **test_cases**: Lista de casos de prueba con estructura estandarizada
+    - **coverage_analysis**: Análisis de cobertura por tipo de prueba
+    - **confidence_score**: Puntuación de confianza (0-1)
+    - **processing_time**: Tiempo de procesamiento en segundos
     
     ### Respuesta:
-    - **csv_cases**: Lista de casos en formato CSV
-    - **fichas**: Fichas detalladas de cada caso
-    - **artefactos_tecnicos**: Artefactos generados por las técnicas
-    - **plan_ejecucion**: Plan de ejecución automatizado
+    - **test_cases**: Lista de casos de prueba generados
+    - **coverage_analysis**: Análisis de cobertura de pruebas
     - **confidence_score**: Puntuación de confianza (0-1)
     - **processing_time**: Tiempo de procesamiento en segundos
     """
     start_time = datetime.utcnow()
-    generation_id = f"istqb_{request.programa}_{int(start_time.timestamp())}"
+    generation_id = f"advanced_{request.aplicacion}_{int(start_time.timestamp())}"
     
     try:
         logger.info(
-            "Starting ISTQB test case generation",
-            programa=request.programa,
-            generation_id=generation_id,
-            modulos_count=len(request.modulos),
-            tecnicas_count=sum(1 for v in request.tecnicas.values() if v)
-        )
-        
-        # Generar prompt ISTQB
-        prompt = prompt_templates.get_istqb_test_generation_prompt(
-            programa=request.programa,
-            dominio=request.dominio,
-            modulos=request.modulos,
-            factores=request.factores,
-            limites=request.limites,
-            reglas=request.reglas,
-            tecnicas=request.tecnicas,
-            priorizacion=request.priorizacion,
-            cantidad_max=request.cantidad_max,
-            salida_plan_ejecucion=request.salida_plan_ejecucion
-        )
-        
-        # Ejecutar generación con LLM
-        generation_result = await llm_wrapper.generate_istqb_test_cases(
-            prompt=prompt,
-            programa=request.programa,
+            "Starting advanced test case generation",
+            aplicacion=request.aplicacion,
             generation_id=generation_id
         )
+        
+        # Generar prompt para análisis de requerimientos
+        prompt = prompt_templates.get_requirements_analysis_prompt(
+            requirement_content=request.requerimiento,
+            project_key=request.aplicacion,
+            priority="High",
+            test_types=["functional", "integration", "security"],
+            coverage_level="high"
+        )
+        
+        # Ejecutar análisis con LLM
+        analysis_result = await llm_wrapper.analyze_requirements(
+            prompt=prompt,
+            requirement_id=f"REQ-{request.aplicacion}",
+            analysis_id=generation_id
+        )
+        
+        # Procesar casos de prueba generados
+        test_cases = []
+        if analysis_result.get("test_cases"):
+            for tc_data in analysis_result["test_cases"]:
+                test_case = TestCase(
+                    test_case_id=tc_data.get("test_case_id", f"CP-001-{request.aplicacion}-MODULO-DATO-CONDICION-RESULTADO"),
+                    title=tc_data.get("title", f"CP - 001 - {request.aplicacion} - MODULO - DATO - CONDICION - RESULTADO"),
+                    description=tc_data.get("description", ""),
+                    test_type=tc_data.get("test_type", "functional"),
+                    priority=tc_data.get("priority", "high"),
+                    steps=tc_data.get("steps", []),
+                    expected_result=tc_data.get("expected_result", "Resultado Esperado: [Descripción específica]"),
+                    preconditions=tc_data.get("preconditions", ["Precondicion: [Descripción específica]"]),
+                    test_data=tc_data.get("test_data", {}),
+                    automation_potential=tc_data.get("automation_potential", "high"),
+                    estimated_duration=tc_data.get("estimated_duration", "5-10 minutes")
+                )
+                test_cases.append(test_case)
         
         # Calcular tiempo de procesamiento
         processing_time = (datetime.utcnow() - start_time).total_seconds()
         
         # Crear respuesta
-        response = ISTQBTestGenerationResponse(
-            programa=request.programa,
+        response = AdvancedTestGenerationResponse(
+            aplicacion=request.aplicacion,
             generation_id=generation_id,
             status="completed",
-            csv_cases=generation_result.get("csv_cases", []),
-            fichas=generation_result.get("fichas", []),
-            artefactos_tecnicos=generation_result.get("artefactos_tecnicos", {}),
-            plan_ejecucion=generation_result.get("plan_ejecucion", {}),
-            confidence_score=generation_result.get("confidence_score", 0.8),
+            test_cases=test_cases,
+            coverage_analysis=analysis_result.get("coverage_analysis", {}),
+            confidence_score=analysis_result.get("confidence_score", 0.8),
             processing_time=processing_time,
             created_at=start_time
         )
         
         # Registrar en background task para tracking
         background_tasks.add_task(
-            log_istqb_generation_completion,
+            log_advanced_generation_completion,
             generation_id,
-            request.programa,
+            request.aplicacion,
             response
         )
         
         logger.info(
-            "ISTQB test case generation completed",
-            programa=request.programa,
+            "Advanced test case generation completed",
+            aplicacion=request.aplicacion,
             generation_id=generation_id,
-            csv_cases_count=len(response.csv_cases),
-            fichas_count=len(response.fichas),
+            test_cases_count=len(test_cases),
             processing_time=processing_time
         )
         
@@ -1046,14 +949,14 @@ async def generate_istqb_test_cases(
         
     except Exception as e:
         logger.error(
-            "ISTQB test case generation failed",
-            programa=request.programa,
+            "Advanced test case generation failed",
+            aplicacion=request.aplicacion,
             generation_id=generation_id,
             error=str(e)
         )
         raise HTTPException(
             status_code=500,
-            detail=f"Error generating ISTQB test cases: {str(e)}"
+            detail=f"Error generating advanced test cases: {str(e)}"
         )
 
 
@@ -1110,7 +1013,7 @@ async def log_jira_workitem_analysis_completion(
 async def log_istqb_generation_completion(
     generation_id: str,
     programa: str,
-    response: ISTQBTestGenerationResponse
+    response: AdvancedTestGenerationResponse
 ):
     """Background task para registrar la finalización de la generación ISTQB"""
     try:
@@ -1121,16 +1024,44 @@ async def log_istqb_generation_completion(
         # - Crear casos de prueba en Jira
         # - Generar reportes de cobertura
         logger.info(
-            "ISTQB test generation completion logged",
+            "Advanced test generation completion logged",
             generation_id=generation_id,
-            programa=programa,
-            csv_cases_count=len(response.csv_cases),
-            fichas_count=len(response.fichas),
-            artefactos_count=len(response.artefactos_tecnicos)
+            aplicacion=programa,
+            test_cases_count=len(response.test_cases),
+            confidence_score=response.confidence_score,
+            processing_time=response.processing_time
         )
     except Exception as e:
         logger.error(
-            "Failed to log ISTQB generation completion",
+            "Failed to log advanced generation completion",
+            generation_id=generation_id,
+            error=str(e)
+        )
+
+async def log_advanced_generation_completion(
+    generation_id: str,
+    aplicacion: str,
+    response: AdvancedTestGenerationResponse
+):
+    """Background task para registrar la finalización de la generación avanzada"""
+    try:
+        # Aquí podrías implementar lógica adicional como:
+        # - Guardar en base de datos
+        # - Enviar notificaciones
+        # - Actualizar métricas
+        # - Crear casos de prueba en Jira
+        # - Generar reportes de cobertura
+        logger.info(
+            "Advanced test generation completion logged",
+            generation_id=generation_id,
+            aplicacion=aplicacion,
+            test_cases_count=len(response.test_cases),
+            confidence_score=response.confidence_score,
+            processing_time=response.processing_time
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to log advanced generation completion",
             generation_id=generation_id,
             error=str(e)
         )
