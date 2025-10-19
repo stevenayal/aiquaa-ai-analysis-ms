@@ -14,11 +14,11 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
-# Importar módulos locales
-from tracker_client import TrackerClient
-from llm_wrapper import LLMWrapper
-from prompt_templates import PromptTemplates
-from sanitizer import PIISanitizer
+# Importar módulos locales (comentados para versión mínima)
+# from tracker_client import TrackerClient
+# from llm_wrapper import LLMWrapper
+# from prompt_templates import PromptTemplates
+# from sanitizer import PIISanitizer
 
 # Cargar variables de entorno
 load_dotenv()
@@ -133,11 +133,11 @@ app.add_middleware(
     ]
 )
 
-# Inicializar componentes
-tracker_client = TrackerClient()
-llm_wrapper = LLMWrapper()
-prompt_templates = PromptTemplates()
-sanitizer = PIISanitizer()
+# Inicializar componentes (comentados para versión mínima)
+# tracker_client = TrackerClient()
+# llm_wrapper = LLMWrapper()
+# prompt_templates = PromptTemplates()
+# sanitizer = PIISanitizer()
 
 # Endpoint raíz que redirige a la documentación
 @app.get("/", 
@@ -432,52 +432,17 @@ class HealthResponse(BaseModel):
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Verificación de salud del servicio"""
-    try:
-        components = {}
-        
-        # Verificación básica del servicio
-        components["api"] = "healthy"
-        
-        # Verificar Langfuse (opcional)
-        try:
-            await llm_wrapper.health_check()
-            components["langfuse"] = "healthy"
-        except Exception as e:
-            logger.warning("Langfuse health check failed", error=str(e))
-            components["langfuse"] = "unhealthy"
-        
-        # Verificar Jira (opcional)
-        try:
-            await tracker_client.health_check()
-            components["jira"] = "healthy"
-        except Exception as e:
-            logger.warning("Jira health check failed", error=str(e))
-            components["jira"] = "unhealthy"
-        
-        # Verificar LLM (opcional)
-        try:
-            await llm_wrapper.test_connection()
-            components["llm"] = "healthy"
-        except Exception as e:
-            logger.warning("LLM health check failed", error=str(e))
-            components["llm"] = "unhealthy"
-        
-        overall_status = "healthy" if components.get("api") == "healthy" else "degraded"
-        
-        return HealthResponse(
-            status=overall_status,
-            timestamp=datetime.utcnow(),
-            version="1.0.0",
-            components=components
-        )
-    except Exception as e:
-        logger.error("Health check failed", error=str(e))
-        return HealthResponse(
-            status="unhealthy",
-            timestamp=datetime.utcnow(),
-            version="1.0.0",
-            components={"api": "unhealthy", "error": str(e)}
-        )
+    return HealthResponse(
+        status="healthy",
+        timestamp=datetime.utcnow(),
+        version="1.0.0",
+        components={
+            "api": "healthy",
+            "database": "not_configured",
+            "llm": "not_configured",
+            "jira": "not_configured"
+        }
+    )
 
 @app.post("/analyze", 
           response_model=AnalysisResponse,
@@ -1157,16 +1122,16 @@ if __name__ == "__main__":
         log_level = os.getenv("LOG_LEVEL", "info").lower()
         is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production"
         
-        logger.info("Starting Microservicio de Análisis QA", port=port, log_level=log_level, is_production=is_production)
+        print(f"Starting Microservicio de Análisis QA - Port: {port}, Log Level: {log_level}, Production: {is_production}")
         
         uvicorn.run(
-            "main:app",
+            "main_simple:app",
             host="0.0.0.0",
             port=port,
-            reload=not is_production,
+            reload=False,
             log_level=log_level,
             access_log=True
         )
     except Exception as e:
-        logger.error("Failed to start server", error=str(e))
+        print(f"Failed to start server: {e}")
         raise
