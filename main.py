@@ -180,7 +180,7 @@ class AnalysisRequest(BaseModel):
     )
     
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "content_id": "TC-001",
                 "content": "Verificar que el usuario pueda iniciar sesión con credenciales válidas. Pasos: 1) Abrir la página de login, 2) Ingresar usuario válido, 3) Ingresar contraseña válida, 4) Hacer clic en 'Iniciar Sesión'. Resultado esperado: Usuario logueado exitosamente y redirigido al dashboard.",
@@ -224,7 +224,7 @@ class AnalysisResponse(BaseModel):
     created_at: datetime = Field(..., description="Timestamp de creación del análisis")
     
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "content_id": "TC-001",
                 "analysis_id": "analysis_TC001_1760825804",
