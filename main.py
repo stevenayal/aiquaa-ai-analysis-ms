@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import structlog
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
@@ -371,6 +372,12 @@ class HealthResponse(BaseModel):
     timestamp: datetime
     version: str
     components: Dict[str, str]
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """Redirigir a la documentación de Swagger"""
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health", response_model=HealthResponse)
