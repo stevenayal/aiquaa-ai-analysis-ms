@@ -13,8 +13,8 @@ venv\Scripts\activate
 pip install -r requirements.txt
 
 # 3. Configurar variables de entorno
-copy .env.example .env
-# Editar .env con tus credenciales
+copy config.env .env
+# Editar .env con tus credenciales (NUNCA subir credenciales reales al repositorio)
 
 # 4. Iniciar servicio
 python -m uvicorn main:app --reload
@@ -33,6 +33,24 @@ start http://localhost:8000/docs
 - ✅ **Structlog** - Logging estructurado
 - ✅ **Docker** - Containerización
 - 🎯 **ISTQB** - Técnicas de diseño de pruebas Foundation Level
+
+## 🔒 Seguridad
+
+**IMPORTANTE**: Este proyecto NO incluye credenciales reales por seguridad.
+
+### Variables de Entorno Requeridas:
+- `GOOGLE_API_KEY` - API key de Google Gemini (REQUERIDA)
+- `GEMINI_MODEL` - Modelo de Gemini (por defecto: gemini-1.5-flash)
+
+### Variables Opcionales:
+- `LANGFUSE_PUBLIC_KEY` - Para observabilidad
+- `LANGFUSE_SECRET_KEY` - Para observabilidad  
+- `JIRA_BASE_URL` - Para integración con Jira
+- `JIRA_TOKEN` - Token de Jira
+- `JIRA_ORG_ID` - ID de organización de Jira
+
+### Para Railway:
+Ver [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) para configuración completa.
 
 ## 🔗 Endpoints Principales
 

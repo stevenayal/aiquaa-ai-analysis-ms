@@ -38,7 +38,7 @@ class LLMWrapper:
         
         # Configurar Gemini
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
-        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-pro")
+        self.gemini_model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
         
         if self.google_api_key:
             genai.configure(api_key=self.google_api_key)
@@ -66,7 +66,10 @@ class LLMWrapper:
         """Probar conexión con el modelo LLM"""
         try:
             if not self.model:
-                raise Exception("Model not configured")
+                if not self.google_api_key:
+                    raise Exception("Google API key not configured. Please set GOOGLE_API_KEY environment variable.")
+                else:
+                    raise Exception("Model initialization failed. Check GOOGLE_API_KEY and GEMINI_MODEL configuration.")
             
             # Test simple con el modelo
             response = await self._generate_response("Test connection")

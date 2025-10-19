@@ -426,6 +426,26 @@ async def health_check():
         components=components
     )
 
+@app.get("/config", include_in_schema=False)
+async def config_check():
+    """Verificar configuración del servicio (solo para diagnóstico)"""
+    config_status = {
+        "google_api_key": "configured" if os.getenv("GOOGLE_API_KEY") else "missing",
+        "gemini_model": os.getenv("GEMINI_MODEL", "gemini-1.5-flash"),
+        "langfuse_public_key": "configured" if os.getenv("LANGFUSE_PUBLIC_KEY") else "missing",
+        "langfuse_secret_key": "configured" if os.getenv("LANGFUSE_SECRET_KEY") else "missing",
+        "jira_base_url": "configured" if os.getenv("JIRA_BASE_URL") else "missing",
+        "jira_token": "configured" if os.getenv("JIRA_TOKEN") else "missing",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "port": os.getenv("PORT", "8000")
+    }
+    
+    return {
+        "status": "ok",
+        "timestamp": datetime.utcnow().isoformat(),
+        "configuration": config_status
+    }
+
 @app.post("/analyze", 
           response_model=AnalysisResponse,
           summary="Analizar contenido y generar casos de prueba",
@@ -893,6 +913,13 @@ async def generate_advanced_test_cases(
             aplicacion=request.aplicacion,
             generation_id=generation_id
         )
+        
+        # Verificar que el modelo esté configurado
+        if not llm_wrapper.model:
+            raise HTTPException(
+                status_code=503,
+                detail="AI model not configured. Please check GOOGLE_API_KEY environment variable."
+            )
         
         # Generar prompt para análisis de requerimientos
         prompt = prompt_templates.get_requirements_analysis_prompt(
