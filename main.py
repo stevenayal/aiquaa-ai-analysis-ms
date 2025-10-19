@@ -49,39 +49,25 @@ app = FastAPI(
     description="""
     ## API de Análisis Automatizado de Casos de Prueba
     
-    Esta API proporciona análisis inteligente de contenido (casos de prueba, requerimientos, historias de usuario) utilizando IA generativa y técnicas avanzadas de testing.
+    Análisis inteligente de contenido usando IA generativa y técnicas avanzadas de testing.
     
     ### Características:
     - 🤖 Análisis automatizado con Google Gemini
-    - 📊 Observabilidad completa con Langfuse
-    - 🔗 Integración simplificada con Jira
-    - 📝 Generación de casos de prueba estructurados
-    - 🎯 **NUEVO**: Generación de casos con técnicas avanzadas
-    - 🔬 **NUEVO**: Aplicación automática de técnicas de diseño de pruebas
-    - 📋 **NUEVO**: Formato estructurado estandarizado
-    - ⚡ **OPTIMIZADO**: Endpoints unificados y parámetros simplificados
+    - 📊 Observabilidad con Langfuse
+    - 🔗 Integración con Jira
+    - 📝 Generación de casos estructurados
+    - 🎯 Técnicas avanzadas de testing
     
-    ### Técnicas Aplicadas Automáticamente:
-    - **Partición de Equivalencia**: Clases válidas e inválidas
-    - **Valores Límite**: Casos boundary y edge cases
-    - **Casos de Uso**: Flujos principales y alternos
-    - **Casos de Error**: Validaciones y manejo de errores
-    - **Casos de Integración**: Flujos end-to-end
-    - **Casos de Seguridad**: Autenticación y autorización
+    ### Endpoints:
+    - `/analyze` - Análisis unificado de contenido
+    - `/analyze-jira` - Análisis de work items de Jira
+    - `/generate-advanced-tests` - Generación con técnicas avanzadas
+    - `/health` - Estado del servicio
     
-    ### Autenticación:
-    No se requiere autenticación para las pruebas locales.
-    
-    ### Uso Simplificado:
-    1. **Análisis unificado**: Usa `/analyze` para cualquier tipo de contenido
-    2. **Integración Jira**: Usa `/analyze-jira` para work items (solo ID requerido)
-    3. **Generación avanzada**: Usa `/generate-advanced-tests` para casos avanzados
-    4. **Monitoreo**: Verifica el estado con `/health`
-    
-    ### Tipos de Contenido Soportados:
-    - **test_case**: Análisis de casos de prueba existentes
-    - **requirement**: Análisis de requerimientos
-    - **user_story**: Análisis de historias de usuario
+    ### Tipos de Contenido:
+    - **test_case** - Casos de prueba existentes
+    - **requirement** - Requerimientos
+    - **user_story** - Historias de usuario
     """,
     version="1.0.0",
     docs_url="/docs",
