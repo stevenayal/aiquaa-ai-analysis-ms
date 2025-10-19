@@ -3,6 +3,7 @@ Microservicio de Análisis QA - Versión Ultra Simple
 """
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 import os
 
 app = FastAPI(
@@ -13,7 +14,8 @@ app = FastAPI(
 
 @app.get("/")
 async def root():
-    return {"message": "Microservicio de Análisis QA", "status": "running"}
+    """Redirige automáticamente a la documentación de Swagger"""
+    return RedirectResponse(url="/docs")
 
 @app.get("/health")
 async def health():

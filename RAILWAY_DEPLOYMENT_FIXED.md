@@ -36,12 +36,15 @@ CMD ["python", "app_simple.py"]
 ## Verificación Local
 ✅ El servicio funciona correctamente en `http://localhost:8080`
 ✅ El endpoint `/health` responde con `{"status":"healthy","message":"Service is running"}`
+✅ La redirección automática de `/` a `/docs` funciona (Status 307)
+✅ Swagger UI es accesible en `/docs`
 
 ## Próximos Pasos
 1. Hacer commit y push de los cambios
 2. Railway debería detectar automáticamente los cambios y redesplegar
 3. Verificar que el health check pase
 4. Probar acceso a Swagger UI en `https://ia-analisis-production.up.railway.app/docs`
+5. Verificar que `https://ia-analisis-production.up.railway.app/` redirija automáticamente a Swagger
 
 ## Estructura de Archivos
 ```
@@ -61,5 +64,6 @@ curl http://localhost:8080/health
 
 # Railway (después del despliegue)
 curl https://ia-analisis-production.up.railway.app/health
+curl -I https://ia-analisis-production.up.railway.app/  # Verificar redirección
 curl https://ia-analisis-production.up.railway.app/docs
 ```
