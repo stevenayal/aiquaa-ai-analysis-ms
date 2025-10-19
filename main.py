@@ -73,6 +73,14 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    swagger_ui_parameters={
+        "deepLinking": True,
+        "displayRequestDuration": True,
+        "tryItOutEnabled": True,
+        "requestSnippetsEnabled": True,
+        "syntaxHighlight.theme": "agate",
+        "theme": "dark"
+    },
     contact={
         "name": "Equipo de QA",
         "email": "qa-team@company.com",
@@ -364,6 +372,16 @@ class HealthResponse(BaseModel):
 async def root():
     """Redirigir a la documentación de Swagger"""
     return RedirectResponse(url="/docs")
+
+@app.get("/docs-dark", include_in_schema=False)
+async def docs_dark():
+    """Documentación de Swagger en modo oscuro"""
+    return RedirectResponse(url="/docs?theme=dark")
+
+@app.get("/docs-light", include_in_schema=False)
+async def docs_light():
+    """Documentación de Swagger en modo claro"""
+    return RedirectResponse(url="/docs?theme=light")
 
 
 @app.get("/health", response_model=HealthResponse)
