@@ -159,15 +159,15 @@ class Suggestion(BaseModel):
     category: str = Field(..., description="Categoría de la mejora", example="improvement")
 
 class TestCase(BaseModel):
-    """Caso de prueba generado"""
-    test_case_id: str = Field(..., description="ID del caso de prueba", example="TC-AUTH-001")
-    title: str = Field(..., description="Título del caso de prueba", example="Verificar login con credenciales válidas")
+    """Caso de prueba generado con estructura estandarizada"""
+    test_case_id: str = Field(..., description="ID del caso de prueba", example="CP-001-APLICACION-MODULO-DATO-CONDICION-RESULTADO")
+    title: str = Field(..., description="Título del caso de prueba en formato CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado", example="CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado")
     description: str = Field(..., description="Descripción detallada del caso de prueba")
     test_type: str = Field(..., description="Tipo de prueba", example="functional")
     priority: str = Field(..., description="Prioridad del caso de prueba", example="high")
     steps: List[str] = Field(..., description="Pasos detallados del caso de prueba")
-    expected_result: str = Field(..., description="Resultado esperado")
-    preconditions: List[str] = Field(default_factory=list, description="Precondiciones necesarias")
+    expected_result: str = Field(..., description="Resultado esperado en formato 'Resultado Esperado: [descripción]'", example="Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard")
+    preconditions: List[str] = Field(default_factory=list, description="Precondiciones en formato 'Precondicion: [descripción]'", example=["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"])
     test_data: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Datos de prueba específicos")
     automation_potential: str = Field(..., description="Potencial de automatización", example="high")
     estimated_duration: str = Field(..., description="Duración estimada", example="5-10 minutes")
@@ -192,14 +192,14 @@ class AnalysisResponse(BaseModel):
                 "status": "completed",
                 "test_cases": [
                     {
-                        "test_case_id": "TC-AUTH-001",
-                        "title": "Verificar login con credenciales válidas",
+                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
+                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
                         "description": "Caso de prueba para verificar autenticación exitosa",
                         "test_type": "functional",
                         "priority": "high",
                         "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
-                        "expected_result": "Usuario autenticado exitosamente",
-                        "preconditions": ["Usuario existe en BD"],
+                        "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
+                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
                         "test_data": {"email": "test@example.com", "password": "Test123!"},
                         "automation_potential": "high",
                         "estimated_duration": "5-10 minutes"
@@ -276,14 +276,14 @@ class JiraAnalysisResponse(BaseModel):
                 "status": "completed",
                 "test_cases": [
                     {
-                        "test_case_id": "TC-AUTH-001",
-                        "title": "Verificar login con credenciales válidas",
+                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
+                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
                         "description": "Caso de prueba para verificar autenticación exitosa",
                         "test_type": "functional",
                         "priority": "high",
                         "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
-                        "expected_result": "Usuario autenticado exitosamente",
-                        "preconditions": ["Usuario existe en BD"],
+                        "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
+                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
                         "test_data": {"email": "test@example.com", "password": "Test123!"},
                         "automation_potential": "high",
                         "estimated_duration": "5-10 minutes"

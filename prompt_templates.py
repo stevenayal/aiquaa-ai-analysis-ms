@@ -325,6 +325,15 @@ FORMATO DE RESPUESTA JSON:
             "related_standards": ["ISO 25010", "ISTQB", "IEEE 829"]
         }}
     ],
+    "improved_test_cases": [
+        {{
+            "test_case_id": "CP-001-APLICACION-MODULO-DATO-CONDICION-RESULTADO",
+            "title": "CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado",
+            "preconditions": "Precondicion: [Descripción específica de las precondiciones necesarias]",
+            "expected_result": "Resultado Esperado: [Descripción específica del resultado esperado]",
+            "description": "Descripción detallada del caso de prueba mejorado"
+        }}
+    ],
     "quality_metrics": {{
         "clarity_score": 0.85,
         "completeness_score": 0.90,
@@ -710,8 +719,8 @@ FORMATO DE RESPUESTA JSON:
 {{
     "test_cases": [
         {{
-            "test_case_id": "TC-{project_key}-001",
-            "title": "Título descriptivo y específico del caso de prueba",
+            "test_case_id": "CP-001-{project_key}-MODULO-DATO-CONDICION-RESULTADO",
+            "title": "CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado",
             "description": "Descripción detallada que explique el propósito y alcance del caso",
             "test_type": "functional|integration|ui|api|security|performance|usability|accessibility",
             "priority": "critical|high|medium|low",
@@ -720,11 +729,9 @@ FORMATO DE RESPUESTA JSON:
                 "Paso 2: Acción específica y verificable",
                 "Paso N: Verificación del resultado"
             ],
-            "expected_result": "Resultado esperado específico, medible y verificable",
+            "expected_result": "Resultado Esperado: [Descripción específica del resultado esperado]",
             "preconditions": [
-                "Estado del sistema requerido",
-                "Datos de prueba necesarios",
-                "Configuraciones específicas"
+                "Precondicion: [Descripción específica de las precondiciones necesarias]"
             ],
             "test_data": {{
                 "input_data": "Datos de entrada específicos",
@@ -764,6 +771,17 @@ REGLAS DE CALIDAD:
 - Incluye casos de error, validación y recuperación
 - Considera aspectos de usabilidad y accesibilidad
 - Evalúa el impacto en el negocio y el nivel de riesgo
+
+ESTRUCTURA OBLIGATORIA DE CASOS DE PRUEBA:
+- **test_case_id**: Formato "CP-001-APLICACION-MODULO-DATO-CONDICION-RESULTADO"
+- **title**: Formato "CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado"
+- **expected_result**: Formato "Resultado Esperado: [descripción específica]"
+- **preconditions**: Formato "Precondicion: [descripción específica]"
+- **Aplicacion**: Nombre de la aplicación o sistema
+- **Modulo**: Módulo o componente específico
+- **Dato**: Tipo de dato o entrada específica
+- **Condicion**: Condición específica a probar
+- **Resultado**: Resultado esperado específico
 
 BUENAS PRÁCTICAS APLICADAS:
 - Naming convention consistente y descriptivo
@@ -882,8 +900,8 @@ FORMATO DE RESPUESTA JSON:
 {{
     "test_cases": [
         {{
-            "test_case_id": "TC-{project_key}-001",
-            "title": "Título descriptivo y específico del caso de prueba",
+            "test_case_id": "CP-001-{project_key}-MODULO-DATO-CONDICION-RESULTADO",
+            "title": "CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado",
             "description": "Descripción detallada que explique el propósito y alcance del caso",
             "test_type": "functional|integration|ui|api|security|performance|usability|accessibility|regression",
             "priority": "critical|high|medium|low",
@@ -892,12 +910,9 @@ FORMATO DE RESPUESTA JSON:
                 "Paso 2: Acción específica y verificable",
                 "Paso N: Verificación del resultado"
             ],
-            "expected_result": "Resultado esperado específico, medible y verificable",
+            "expected_result": "Resultado Esperado: [Descripción específica del resultado esperado]",
             "preconditions": [
-                "Estado del sistema requerido",
-                "Datos de prueba necesarios",
-                "Configuraciones específicas",
-                "Dependencias de otros work items"
+                "Precondicion: [Descripción específica de las precondiciones necesarias]"
             ],
             "test_data": {{
                 "input_data": "Datos de entrada específicos",
@@ -960,6 +975,17 @@ REGLAS ESPECÍFICAS PARA JIRA:
 - Evalúa el impacto en el negocio y el nivel de riesgo
 - Incluye criterios de aceptación y Definition of Done
 - Considera dependencias con otros work items
+
+ESTRUCTURA OBLIGATORIA DE CASOS DE PRUEBA:
+- **test_case_id**: Formato "CP-001-APLICACION-MODULO-DATO-CONDICION-RESULTADO"
+- **title**: Formato "CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado"
+- **expected_result**: Formato "Resultado Esperado: [descripción específica]"
+- **preconditions**: Formato "Precondicion: [descripción específica]"
+- **Aplicacion**: Nombre de la aplicación o sistema
+- **Modulo**: Módulo o componente específico
+- **Dato**: Tipo de dato o entrada específica
+- **Condicion**: Condición específica a probar
+- **Resultado**: Resultado esperado específico
 
 BUENAS PRÁCTICAS APLICADAS:
 - Análisis basado en metodologías ágiles (Scrum, Kanban)
