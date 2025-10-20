@@ -48,4 +48,4 @@ La investigación realizada de **buena fe** siguiendo esta política **no será 
 ---
 
 ## Contacto de emergencia
-Para incidencias activas en producción que afecten a usuarios: **security@aiquaa.com** con asunto `[URGENTE]`.
+Para incidencias activas en producción que afecten a usuarios: **admin@aiquaa.com** con asunto `[URGENTE]`.
