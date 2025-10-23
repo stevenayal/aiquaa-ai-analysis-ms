@@ -1,378 +1,316 @@
-# Documentación del Sistema ISTQB para Generación de Casos de Prueba
+# Análisis Estático de Requisitos ISTQB
 
-## Descripción General
+## Descripción
 
-El sistema ISTQB integrado en el microservicio de análisis QA proporciona generación avanzada de casos de prueba aplicando técnicas de diseño ISTQB Foundation Level. Esta implementación combina la potencia de la IA generativa con metodologías probadas de testing.
+El endpoint `/analysis/requirements/istqb-check` implementa un análisis estático de requisitos siguiendo los estándares **ISTQB Foundation Level v4.0**. Este endpoint evalúa la calidad de requerimientos escritos en lenguaje natural, detectando ambigüedades, malas prácticas y riesgos.
 
 ## Características Principales
 
-### 🎯 Técnicas ISTQB Implementadas
+### 🎯 Criterios de Evaluación
+- **Claridad**: No ambiguo, términos específicos
+- **Completitud**: Entradas, salidas, reglas, restricciones, NFR
+- **Consistencia**: Sin contradicciones internas/externas
+- **Factibilidad**: Técnica y operativamente viable
+- **Testabilidad**: Criterios de aceptación medibles
 
-1. **Equivalencia**: Partición de clases de equivalencia válidas/inválidas
-2. **Valores Límite**: Análisis de casos min-1, min, min+1, max-1, max, max+1
-3. **Tabla de Decisión**: Matrices compactas de condiciones y acciones
-4. **Transición de Estados**: Estados y transiciones principales del sistema
-5. **Árbol de Clasificación**: Clases/atributos y restricciones entre factores
-6. **Pairwise**: Combinaciones mínimas que cubren todas las parejas
-7. **Casos de Uso**: Flujos principales y alternos relevantes
-8. **Error Guessing**: Hipótesis de fallos del dominio
-9. **Checklist**: Verificación genérica de calidad
+### 🔍 Heurísticas de Ambigüedad Detectadas
+- Términos vagos: rápido, fácil, robusto, óptimo
+- Cuantificadores difusos: algunos, varios, suficiente
+- Rangos abiertos: <, >, alrededor de, aproximadamente
+- Pronombres sin antecedente: esto, eso, ellos
+- Voz pasiva sin responsable: se realizará, será procesado
+- Deixis temporal/espacial: pronto, en breve, más adelante
 
-### 📋 Formato de Salida Estructurado
+### ⚡ Validaciones Automáticas
+- Longitud mínima del requerimiento (30 caracteres)
+- Detección de términos vagos
+- Verificación de métricas en requerimientos de rendimiento
+- Análisis de completitud básica
 
-- **Sección A**: CSV con casos de prueba (CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO)
-- **Sección B**: Fichas detalladas con precondiciones y resultados esperados
-- **Sección C**: Artefactos técnicos según técnicas seleccionadas
-- **Sección D**: Plan de ejecución automatizado (opcional)
+## Endpoint
 
-## Uso de la API
-
-### Endpoint Principal
-
-```http
-POST /generate-istqb-tests
+```
+POST /analysis/requirements/istqb-check
 ```
 
-### Estructura de la Solicitud
+### Headers Sugeridos
+```
+Content-Type: application/json
+X-Model: gpt-4
+X-Analysis-Version: istqb-v1
+Content-Language: es-PY
+```
+
+### Estructura de Entrada
 
 ```json
 {
-  "programa": "SISTEMA_AUTH",
-  "dominio": "Autenticación de usuarios con validación de credenciales",
-  "modulos": ["AUTORIZACION", "VALIDACION", "AUDITORIA"],
-  "factores": {
-    "TIPO_USUARIO": ["ADMIN", "USER", "GUEST"],
-    "ESTADO_CREDENCIAL": ["VALIDA", "INVALIDA", "EXPIRADA"],
-    "INTENTOS": ["OK", "ERROR_TIPO_1", "TIMEOUT"]
+  "requirement_id": "REQ-123",
+  "requirement_text": "Texto completo del requerimiento (mínimo 30 caracteres)",
+  "context": {
+    "product": "Sistema de Autenticación",
+    "module": "Login",
+    "stakeholders": ["PO", "QA", "Dev"],
+    "constraints": ["PCI DSS", "LGPD", "SLA 200ms p95"],
+    "dependencies": ["API Clientes v2"]
   },
-  "limites": {
-    "CAMPO_USUARIO_len": {"min": 1, "max": 64},
-    "REINTENTOS": 3,
-    "TIMEOUT_MS": 5000
+  "glossary": {
+    "NroDoc": "Número de documento nacional",
+    "ClienteVIP": "Cliente con score >= 800"
   },
-  "reglas": [
-    "R1: si TIPO_USUARIO=ADMIN y ESTADO_CREDENCIAL=VALIDA -> ACCESO_TOTAL",
-    "R2: si INTENTOS=TIMEOUT -> reintentar 1 vez y marcar pendiente",
-    "R3: si REINTENTOS supera límite -> bloquear y auditar"
-  ],
-  "tecnicas": {
-    "equivalencia": true,
-    "valores_limite": true,
-    "tabla_decision": true,
-    "transicion_estados": true,
-    "arbol_clasificacion": true,
-    "pairwise": true,
-    "casos_uso": true,
-    "error_guessing": true,
-    "checklist": true
-  },
-  "priorizacion": "Riesgo",
-  "cantidad_max": 150,
-  "salida_plan_ejecucion": {
-    "incluir": true,
-    "formato": "cursor_playwright_mcp"
-  }
+  "acceptance_template": "Dado/Cuando/Entonces",
+  "non_functional_expectations": ["p95<=300ms", "TLS1.3", "a11y WCAG AA"]
 }
 ```
 
-### Estructura de la Respuesta
+### Estructura de Salida
 
 ```json
 {
-  "programa": "SISTEMA_AUTH",
-  "generation_id": "istqb_SISTEMA_AUTH_1760825804",
-  "status": "completed",
-  "csv_cases": [
-    "CP - 001 - SISTEMA_AUTH - AUTORIZACION - TIPO_USUARIO_ADMIN - AUTORIZA Y REGISTRA OPERACION",
-    "CP - 002 - SISTEMA_AUTH - VALIDACION - ESTADO_CREDENCIAL_VALIDA - VALIDA Y PERMITE ACCESO"
-  ],
-  "fichas": [
-    "1 - CP - 001 - SISTEMA_AUTH - AUTORIZACION - TIPO_USUARIO_ADMIN - AUTORIZA Y REGISTRA OPERACION\n2- Precondicion: Usuario activo; datos completos; firma válida\n3- Resultado Esperado: Operación autorizada; ID transacción generado; registro persistido y auditado"
-  ],
-  "artefactos_tecnicos": {
-    "equivalencias": "Particiones válidas/inválidas por cada factor",
-    "valores_limite": "Casos min-1,min,min+1,max-1,max,max+1 para límites",
-    "tabla_decision": "Matriz Condiciones→Acciones"
+  "requirement_id": "REQ-123",
+  "quality_score": {
+    "overall": 85,
+    "clarity": 90,
+    "completeness": 80,
+    "consistency": 85,
+    "feasibility": 90,
+    "testability": 75
   },
-  "plan_ejecucion": {
-    "formato": "cursor_playwright_mcp",
-    "casos": []
+  "issues": [
+    {
+      "id": "ISS-001",
+      "type": "Ambiguity",
+      "heuristic": "VagueTerm",
+      "excerpt": "término vago: 'rápido'",
+      "explanation": "El término 'rápido' es ambiguo según ISTQB - debe ser cuantificado",
+      "impact_area": ["Value", "Testability"],
+      "risk": {
+        "severity": "Medium",
+        "likelihood": "High",
+        "rpn": 12
+      },
+      "fix_suggestion": "Especificar tiempo máximo de respuesta: 'p95 ≤ 300ms'",
+      "proposed_rewrite": "El sistema debe responder en p95 ≤ 300ms"
+    }
+  ],
+  "coverage": {
+    "inputs_defined": true,
+    "outputs_defined": true,
+    "business_rules": ["BR-001", "BR-002"],
+    "error_handling_defined": true,
+    "roles_responsibilities_defined": false,
+    "data_contracts_defined": true,
+    "nfr_defined": ["performance", "security"]
   },
-  "confidence_score": 0.85,
-  "processing_time": 25.3,
-  "created_at": "2025-10-18T19:16:44.520862"
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "format": "GWT",
+      "criterion": "Dado un usuario válido Cuando ingresa credenciales correctas Entonces debe autenticarse exitosamente",
+      "measurable": true,
+      "test_oracle": "Verificar redirección al dashboard y token de sesión válido",
+      "example_data": {
+        "input": "usuario: test@example.com, password: Test123!",
+        "expected": "Redirección a /dashboard, token JWT válido"
+      }
+    }
+  ],
+  "traceability": {
+    "glossary_terms_used": ["Credenciales", "Autenticación"],
+    "external_refs_needed": ["PCI DSS", "LGPD"],
+    "dependencies_touched": ["API Clientes v2"]
+  },
+  "summary": "Requerimiento con buena estructura pero necesita especificación de métricas de rendimiento y manejo de errores más detallado. Prioridad: Media.",
+  "proposed_clean_version": "El sistema debe permitir autenticación de usuarios con credenciales válidas, respondiendo en p95 ≤ 300ms, con manejo de errores específico y validación contra base de datos LDAP.",
+  "analysis_id": "istqb_REQ-123_1640995200",
+  "processing_time": 8.5,
+  "created_at": "2025-01-18T10:00:00Z"
 }
 ```
+
+## Códigos de Respuesta
+
+| Código | Descripción |
+|--------|-------------|
+| 200 | Análisis completado exitosamente |
+| 400 | JSON inválido o requirement_text vacío |
+| 422 | Texto ilegible (idioma no soportado) |
+| 500 | Error interno del analizador |
+
+## Tipos de Issues Detectados
+
+### Ambiguity
+- **VagueTerm**: Términos vagos (rápido, fácil, óptimo)
+- **FuzzyQuantifier**: Cuantificadores difusos (algunos, varios)
+- **OpenRange**: Rangos abiertos (<, >, alrededor de)
+- **PronounWithoutAntecedent**: Pronombres sin antecedente
+- **PassiveVoice**: Voz pasiva sin responsable
+- **TemporalDeixis**: Deixis temporal/espacial
+
+### Omission
+- **MissingInputOutput**: Falta definición de entradas/salidas
+- **MissingErrorHandling**: Falta manejo de errores
+- **UndefinedRole**: Roles no definidos
+
+### Inconsistency
+- **RuleConflict**: Conflictos entre reglas
+
+### NFRGap
+- **MissingInputOutput**: Falta especificación de NFRs
+
+### DataSpecGap
+- **MissingInputOutput**: Falta especificación de datos
+
+### ResponsibilityGap
+- **UndefinedRole**: Responsabilidades no definidas
+
+## Niveles de Riesgo
+
+### Severidad
+- **Low**: Impacto mínimo
+- **Medium**: Impacto moderado
+- **High**: Impacto alto
+- **Critical**: Impacto crítico
+
+### Probabilidad
+- **Low**: Baja probabilidad
+- **Medium**: Probabilidad media
+- **High**: Alta probabilidad
+
+### RPN (Risk Priority Number)
+- **1-9**: Riesgo bajo
+- **10-18**: Riesgo medio
+- **19-27**: Riesgo alto
 
 ## Ejemplos de Uso
 
-### Ejemplo 1: Sistema de E-commerce
+### Ejemplo 1: Requerimiento Típico
+```python
+import requests
 
-```json
-{
-  "programa": "ECOMMERCE_PLATFORM",
-  "dominio": "Procesamiento de pedidos con validación de inventario",
-  "modulos": ["INVENTARIO", "PAGOS", "ENVIO"],
-  "factores": {
-    "ESTADO_PRODUCTO": ["DISPONIBLE", "AGOTADO", "DESCONTINUADO"],
-    "METODO_PAGO": ["TARJETA", "PAYPAL", "TRANSFERENCIA"],
-    "ZONA_ENVIO": ["NACIONAL", "INTERNACIONAL", "RESTRINGIDA"]
-  },
-  "limites": {
-    "CANTIDAD_MAX": 100,
-    "MONTO_MAX": 10000,
-    "TIEMPO_PROCESAMIENTO_MS": 30000
-  },
-  "reglas": [
-    "R1: si ESTADO_PRODUCTO=DISPONIBLE y CANTIDAD<=STOCK -> PROCESAR_PEDIDO",
-    "R2: si METODO_PAGO=TARJETA -> VALIDAR_TARJETA",
-    "R3: si ZONA_ENVIO=RESTRINGIDA -> REQUERIR_AUTORIZACION"
-  ],
-  "tecnicas": {
-    "equivalencia": true,
-    "valores_limite": true,
-    "tabla_decision": true,
-    "transicion_estados": true,
-    "arbol_clasificacion": false,
-    "pairwise": true,
-    "casos_uso": true,
-    "error_guessing": true,
-    "checklist": true
-  },
-  "priorizacion": "Riesgo",
-  "cantidad_max": 100
+payload = {
+    "requirement_id": "REQ-AUTH-001",
+    "requirement_text": "El sistema debe permitir autenticación de usuarios con credenciales válidas, validando contra la base de datos y mostrando mensajes de error apropiados.",
+    "context": {
+        "product": "Sistema de Autenticación",
+        "module": "Login",
+        "stakeholders": ["PO", "QA", "Dev"],
+        "constraints": ["PCI DSS", "LGPD"],
+        "dependencies": ["API Usuarios v2"]
+    },
+    "glossary": {
+        "Credenciales": "Usuario y contraseña",
+        "Autenticación": "Verificación de identidad"
+    },
+    "acceptance_template": "Dado/Cuando/Entonces",
+    "non_functional_expectations": ["p95<=300ms", "TLS1.3"]
 }
+
+response = requests.post(
+    "http://localhost:8000/analysis/requirements/istqb-check",
+    json=payload,
+    headers={
+        "Content-Type": "application/json",
+        "X-Model": "gpt-4",
+        "X-Analysis-Version": "istqb-v1",
+        "Content-Language": "es-PY"
+    }
+)
+
+resultado = response.json()
+print(f"Puntuación: {resultado['quality_score']['overall']}/100")
+print(f"Issues: {len(resultado['issues'])}")
 ```
 
-### Ejemplo 2: Sistema de Reservas
-
-```json
-{
-  "programa": "HOTEL_RESERVATIONS",
-  "dominio": "Sistema de reservas de habitaciones con validación de disponibilidad",
-  "modulos": ["DISPONIBILIDAD", "RESERVAS", "FACTURACION"],
-  "factores": {
-    "TIPO_HABITACION": ["SIMPLE", "DOBLE", "SUITE"],
-    "ESTADO_RESERVA": ["PENDIENTE", "CONFIRMADA", "CANCELADA"],
-    "TEMPORADA": ["ALTA", "MEDIA", "BAJA"]
-  },
-  "limites": {
-    "ANTICIPACION_MAX_DIAS": 365,
-    "ESTANCIA_MAX_DIAS": 30,
-    "HABITACIONES_MAX": 10
-  },
-  "reglas": [
-    "R1: si TIPO_HABITACION=SUITE y TEMPORADA=ALTA -> APLICAR_RECARGO",
-    "R2: si ESTADO_RESERVA=PENDIENTE y ANTIGUEDAD>24h -> CANCELAR_AUTOMATICO",
-    "R3: si HABITACIONES>5 -> REQUERIR_APROBACION_MANAGER"
-  ],
-  "tecnicas": {
-    "equivalencia": true,
-    "valores_limite": true,
-    "tabla_decision": true,
-    "transicion_estados": true,
-    "arbol_clasificacion": true,
-    "pairwise": true,
-    "casos_uso": true,
-    "error_guessing": true,
-    "checklist": true
-  },
-  "priorizacion": "Impacto",
-  "cantidad_max": 200
+### Ejemplo 2: Requerimiento Problemático
+```python
+payload = {
+    "requirement_id": "REQ-BAD-001",
+    "requirement_text": "El sistema debe ser rápido y fácil de usar.",
+    "context": {
+        "product": "Sistema de Pruebas",
+        "module": "Interfaz",
+        "stakeholders": ["PO"],
+        "constraints": [],
+        "dependencies": []
+    },
+    "glossary": {},
+    "acceptance_template": "Dado/Cuando/Entonces",
+    "non_functional_expectations": []
 }
-```
 
-## Integración con Langfuse
-
-### Observabilidad
-
-El sistema está completamente integrado con Langfuse para proporcionar:
-
-- **Trazabilidad completa** de cada generación de casos
-- **Métricas de rendimiento** y tiempos de procesamiento
-- **Análisis de calidad** de los prompts generados
-- **Monitoreo de uso** de las diferentes técnicas ISTQB
-- **Alertas automáticas** en caso de errores o degradación
-
-### Metadatos Capturados
-
-```json
-{
-  "trace_name": "istqb_test_generation",
-  "user_id": "programa_SISTEMA_AUTH",
-  "tags": ["qa", "istqb", "test_generation", "advanced_techniques"],
-  "metadata": {
-    "programa": "SISTEMA_AUTH",
-    "generation_id": "istqb_SISTEMA_AUTH_1760825804",
-    "timestamp": "2025-10-18T19:16:44.520862",
-    "csv_cases_count": 45,
-    "fichas_count": 45,
-    "artefactos_count": 9,
-    "confidence_score": 0.85
-  }
-}
+# Este requerimiento generará múltiples issues:
+# - Términos vagos: "rápido", "fácil"
+# - Falta de especificaciones
+# - Sin criterios de aceptación
 ```
 
 ## Mejores Prácticas
 
-### 1. Definición de Factores
+### ✅ Requerimientos Buenos
+- Términos específicos y cuantificables
+- Entradas y salidas claramente definidas
+- Manejo de errores especificado
+- Criterios de aceptación SMART
+- Roles y responsabilidades definidos
+- NFRs con métricas específicas
 
-- **Granularidad apropiada**: Los factores deben ser atómicos y específicos
-- **Valores representativos**: Incluir valores válidos, inválidos y límite
-- **Cobertura completa**: Asegurar que todos los escenarios importantes estén cubiertos
+### ❌ Requerimientos Problemáticos
+- Términos vagos (rápido, fácil, óptimo)
+- Falta de especificaciones técnicas
+- Sin manejo de errores
+- Criterios de aceptación no medibles
+- Roles no definidos
+- NFRs sin métricas
 
-### 2. Configuración de Técnicas
+## Integración con Herramientas
 
-- **Selección estratégica**: Activar solo las técnicas relevantes para el dominio
-- **Balance de cobertura**: Combinar técnicas para máxima cobertura con mínima redundancia
-- **Priorización**: Usar criterios de riesgo, impacto o uso según el contexto
-
-### 3. Límites del Sistema
-
-- **Valores realistas**: Basar límites en restricciones reales del sistema
-- **Rangos apropiados**: Definir rangos que permitan testing efectivo
-- **Documentación clara**: Explicar el origen y justificación de cada límite
-
-### 4. Reglas de Negocio
-
-- **Claridad**: Usar sintaxis clara y consistente
-- **Completitud**: Cubrir todos los escenarios de decisión importantes
-- **Mantenibilidad**: Estructurar reglas de forma que sean fáciles de actualizar
-
-## Casos de Uso Avanzados
-
-### 1. Testing de APIs
-
-```json
-{
-  "programa": "API_GATEWAY",
-  "dominio": "Validación y enrutamiento de requests HTTP",
-  "modulos": ["AUTHENTICATION", "RATE_LIMITING", "ROUTING"],
-  "factores": {
-    "HTTP_METHOD": ["GET", "POST", "PUT", "DELETE"],
-    "AUTH_STATUS": ["VALID", "INVALID", "EXPIRED", "MISSING"],
-    "RATE_LIMIT": ["WITHIN_LIMIT", "EXCEEDED", "BLOCKED"]
-  },
-  "limites": {
-    "REQUEST_SIZE_MAX": 10485760,
-    "RATE_LIMIT_PER_MINUTE": 100,
-    "TIMEOUT_MS": 5000
-  },
-  "reglas": [
-    "R1: si AUTH_STATUS=VALID y RATE_LIMIT=WITHIN_LIMIT -> PROCESS_REQUEST",
-    "R2: si AUTH_STATUS=INVALID -> RETURN_401",
-    "R3: si RATE_LIMIT=EXCEEDED -> RETURN_429"
-  ],
-  "tecnicas": {
-    "equivalencia": true,
-    "valores_limite": true,
-    "tabla_decision": true,
-    "transicion_estados": true,
-    "arbol_clasificacion": false,
-    "pairwise": true,
-    "casos_uso": true,
-    "error_guessing": true,
-    "checklist": true
-  }
-}
+### Jira
+```python
+# Crear issue en Jira basado en issues detectados
+for issue in resultado['issues']:
+    if issue['risk']['severity'] in ['High', 'Critical']:
+        jira_issue = {
+            "summary": f"[ISTQB] {issue['type']}: {issue['excerpt']}",
+            "description": f"{issue['explanation']}\n\nSugerencia: {issue['fix_suggestion']}",
+            "priority": issue['risk']['severity'],
+            "labels": ["istqb", "requirement-quality"]
+        }
+        # Crear issue en Jira
 ```
 
-### 2. Testing de Microservicios
-
-```json
-{
-  "programa": "USER_SERVICE",
-  "dominio": "Gestión de usuarios con validación de datos",
-  "modulos": ["REGISTRATION", "PROFILE_UPDATE", "ACCOUNT_DELETION"],
-  "factores": {
-    "USER_STATUS": ["ACTIVE", "INACTIVE", "SUSPENDED", "PENDING"],
-    "DATA_VALIDITY": ["VALID", "INVALID", "INCOMPLETE"],
-    "OPERATION_TYPE": ["CREATE", "UPDATE", "DELETE", "READ"]
-  },
-  "limites": {
-    "USERNAME_LENGTH": {"min": 3, "max": 50},
-    "EMAIL_LENGTH": {"min": 5, "max": 254},
-    "PROFILE_FIELDS_MAX": 20
-  },
-  "reglas": [
-    "R1: si USER_STATUS=ACTIVE y DATA_VALIDITY=VALID -> ALLOW_OPERATION",
-    "R2: si USER_STATUS=SUSPENDED -> BLOCK_OPERATION",
-    "R3: si DATA_VALIDITY=INCOMPLETE y OPERATION_TYPE=CREATE -> REQUEST_COMPLETION"
-  ],
-  "tecnicas": {
-    "equivalencia": true,
-    "valores_limite": true,
-    "tabla_decision": true,
-    "transicion_estados": true,
-    "arbol_clasificacion": true,
-    "pairwise": true,
-    "casos_uso": true,
-    "error_guessing": true,
-    "checklist": true
-  }
+### Confluence
+```python
+# Generar reporte de calidad
+reporte = {
+    "requirement_id": resultado['requirement_id'],
+    "quality_score": resultado['quality_score']['overall'],
+    "issues_count": len(resultado['issues']),
+    "critical_issues": [i for i in resultado['issues'] if i['risk']['severity'] == 'Critical'],
+    "recommendations": [i['fix_suggestion'] for i in resultado['issues']]
 }
+# Guardar en Confluence
 ```
 
-## Monitoreo y Alertas
+## Monitoreo y Observabilidad
 
-### Métricas Clave
+El endpoint está integrado con Langfuse para observabilidad completa:
+- Tracking de análisis
+- Métricas de calidad
+- Tiempo de procesamiento
+- Patrones de issues detectados
 
-- **Tiempo de procesamiento**: Tiempo promedio de generación de casos
-- **Tasa de éxito**: Porcentaje de generaciones exitosas
-- **Calidad de casos**: Puntuación de confianza promedio
-- **Uso de técnicas**: Frecuencia de uso de cada técnica ISTQB
-- **Cobertura**: Número de casos generados por módulo
+## Limitaciones
 
-### Alertas Configurables
+- Requiere texto en español para mejor análisis
+- Dependiente de la calidad del modelo de IA
+- Análisis basado en heurísticas predefinidas
+- No reemplaza revisión humana experta
 
-- **Degradación de rendimiento**: Tiempo de procesamiento > 30 segundos
-- **Baja calidad**: Confidence score < 0.7
-- **Errores frecuentes**: Tasa de éxito < 95%
-- **Uso ineficiente**: Técnicas no utilizadas consistentemente
+## Roadmap
 
-## Troubleshooting
-
-### Problemas Comunes
-
-1. **Timeout en generación**
-   - Verificar configuración de límites
-   - Reducir cantidad_max si es necesario
-   - Revisar complejidad de reglas de negocio
-
-2. **Calidad baja de casos generados**
-   - Mejorar definición de factores
-   - Ajustar reglas de negocio
-   - Verificar coherencia entre módulos y factores
-
-3. **Cobertura insuficiente**
-   - Activar técnicas adicionales
-   - Aumentar cantidad_max
-   - Revisar definición de límites
-
-### Logs y Debugging
-
-El sistema genera logs estructurados que incluyen:
-
-```json
-{
-  "level": "info",
-  "message": "ISTQB test case generation completed",
-  "programa": "SISTEMA_AUTH",
-  "generation_id": "istqb_SISTEMA_AUTH_1760825804",
-  "csv_cases_count": 45,
-  "fichas_count": 45,
-  "processing_time": 25.3,
-  "timestamp": "2025-10-18T19:16:44.520862"
-}
-```
-
-## Conclusión
-
-El sistema ISTQB integrado proporciona una solución robusta y escalable para la generación de casos de prueba de alta calidad. La combinación de técnicas probadas de testing con IA generativa y observabilidad completa permite a los equipos de QA:
-
-- Generar casos de prueba más completos y sistemáticos
-- Aplicar metodologías estándar de la industria
-- Monitorear y mejorar continuamente el proceso
-- Escalar la generación de casos de prueba de forma eficiente
-
-Para más información o soporte, consulta la documentación de la API en `/docs` o contacta al equipo de QA.
+- [ ] Soporte para múltiples idiomas
+- [ ] Integración con herramientas de gestión de requisitos
+- [ ] Análisis de dependencias entre requisitos
+- [ ] Métricas de tendencia de calidad
+- [ ] Exportación a formatos estándar (ReqIF, etc.)

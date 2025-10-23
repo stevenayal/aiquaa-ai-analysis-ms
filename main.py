@@ -62,6 +62,7 @@ app = FastAPI(
     - `/analyze` - Análisis unificado de contenido
     - `/analyze-jira` - Análisis de work items de Jira
     - `/generate-advanced-tests` - Generación con técnicas avanzadas
+    - `/analysis/requirements/istqb-check` - Análisis estático de requisitos ISTQB
     - `/health` - Estado del servicio
     
     ### Tipos de Contenido:
@@ -370,6 +371,94 @@ class HealthResponse(BaseModel):
     timestamp: datetime
     version: str
     components: Dict[str, str]
+
+# Modelos para análisis ISTQB de requisitos
+class RequirementContext(BaseModel):
+    """Contexto del requerimiento"""
+    product: str = Field(..., description="Producto o sistema", example="Sistema de Autenticación")
+    module: str = Field(..., description="Módulo o componente", example="Login")
+    stakeholders: List[str] = Field(default_factory=list, description="Stakeholders involucrados", example=["PO", "QA", "Dev"])
+    constraints: List[str] = Field(default_factory=list, description="Restricciones o estándares", example=["PCI DSS", "LGPD", "SLA 200ms p95"])
+    dependencies: List[str] = Field(default_factory=list, description="Dependencias", example=["API Clientes v2"])
+
+class RequirementGlossary(BaseModel):
+    """Glosario de términos del requerimiento"""
+    pass  # Se implementará como Dict[str, str] en el modelo principal
+
+class RequirementInput(BaseModel):
+    """Estructura de entrada para análisis ISTQB de requisitos"""
+    requirement_id: str = Field(..., description="ID único del requerimiento", example="REQ-123")
+    requirement_text: str = Field(..., description="Texto completo del requerimiento", min_length=30, max_length=10000)
+    context: RequirementContext = Field(..., description="Contexto del requerimiento")
+    glossary: Dict[str, str] = Field(default_factory=dict, description="Glosario de términos", example={"NroDoc": "Número de documento nacional", "ClienteVIP": "Cliente con score >= 800"})
+    acceptance_template: str = Field(default="Dado/Cuando/Entonces", description="Template para criterios de aceptación")
+    non_functional_expectations: List[str] = Field(default_factory=list, description="Expectativas no funcionales", example=["p95<=300ms", "TLS1.3", "a11y WCAG AA"])
+
+class QualityScore(BaseModel):
+    """Puntuación de calidad del requerimiento"""
+    overall: int = Field(..., description="Puntuación general (0-100)", ge=0, le=100)
+    clarity: int = Field(..., description="Claridad (0-100)", ge=0, le=100)
+    completeness: int = Field(..., description="Completitud (0-100)", ge=0, le=100)
+    consistency: int = Field(..., description="Consistencia (0-100)", ge=0, le=100)
+    feasibility: int = Field(..., description="Factibilidad (0-100)", ge=0, le=100)
+    testability: int = Field(..., description="Testabilidad (0-100)", ge=0, le=100)
+
+class IssueRisk(BaseModel):
+    """Evaluación de riesgo de un issue"""
+    severity: str = Field(..., description="Severidad del issue", pattern="^(Low|Medium|High|Critical)$")
+    likelihood: str = Field(..., description="Probabilidad del issue", pattern="^(Low|Medium|High)$")
+    rpn: int = Field(..., description="Risk Priority Number (1-27)", ge=1, le=27)
+
+class RequirementIssue(BaseModel):
+    """Issue detectado en el requerimiento"""
+    id: str = Field(..., description="ID único del issue", example="ISS-001")
+    type: str = Field(..., description="Tipo de issue", pattern="^(Ambiguity|Omission|Inconsistency|NFRGap|DataSpecGap|ResponsibilityGap|RuleConflict)$")
+    heuristic: str = Field(..., description="Heurística aplicada", pattern="^(VagueTerm|FuzzyQuantifier|OpenRange|PronounWithoutAntecedent|PassiveVoice|TemporalDeixis|MissingInputOutput|MissingErrorHandling|UndefinedRole|ImplicitBusinessRule)$")
+    excerpt: str = Field(..., description="Fragmento exacto del texto problemático")
+    explanation: str = Field(..., description="Explicación del problema según ISTQB")
+    impact_area: List[str] = Field(..., description="Áreas de impacto", example=["Value", "Compliance", "Security"])
+    risk: IssueRisk = Field(..., description="Evaluación de riesgo")
+    fix_suggestion: str = Field(..., description="Sugerencia de corrección")
+    proposed_rewrite: str = Field(..., description="Versión reescrita del fragmento")
+
+class CoverageAnalysis(BaseModel):
+    """Análisis de cobertura del requerimiento"""
+    inputs_defined: bool = Field(..., description="Entradas definidas")
+    outputs_defined: bool = Field(..., description="Salidas definidas")
+    business_rules: List[str] = Field(default_factory=list, description="Reglas de negocio identificadas")
+    error_handling_defined: bool = Field(..., description="Manejo de errores definido")
+    roles_responsibilities_defined: bool = Field(..., description="Roles y responsabilidades definidos")
+    data_contracts_defined: bool = Field(..., description="Contratos de datos definidos")
+    nfr_defined: List[str] = Field(default_factory=list, description="NFRs definidos", example=["performance", "security", "usability"])
+
+class AcceptanceCriterion(BaseModel):
+    """Criterio de aceptación"""
+    id: str = Field(..., description="ID del criterio", example="AC-1")
+    format: str = Field(..., description="Formato del criterio", pattern="^(GWT|Checklist)$")
+    criterion: str = Field(..., description="Criterio en formato Dado/Cuando/Entonces")
+    measurable: bool = Field(..., description="Es medible")
+    test_oracle: str = Field(..., description="Oráculo de prueba")
+    example_data: Dict[str, Any] = Field(default_factory=dict, description="Datos de ejemplo")
+
+class TraceabilityAnalysis(BaseModel):
+    """Análisis de trazabilidad"""
+    glossary_terms_used: List[str] = Field(default_factory=list, description="Términos del glosario utilizados")
+    external_refs_needed: List[str] = Field(default_factory=list, description="Referencias externas necesarias")
+    dependencies_touched: List[str] = Field(default_factory=list, description="Dependencias tocadas")
+
+class ISTQBAnalysisResponse(BaseModel):
+    """Respuesta del análisis ISTQB de requisitos"""
+    requirement_id: str = Field(..., description="ID del requerimiento analizado")
+    quality_score: QualityScore = Field(..., description="Puntuación de calidad")
+    issues: List[RequirementIssue] = Field(default_factory=list, description="Issues detectados")
+    coverage: CoverageAnalysis = Field(..., description="Análisis de cobertura")
+    acceptance_criteria: List[AcceptanceCriterion] = Field(default_factory=list, description="Criterios de aceptación")
+    traceability: TraceabilityAnalysis = Field(..., description="Análisis de trazabilidad")
+    summary: str = Field(..., description="Resumen ejecutivo")
+    proposed_clean_version: str = Field(..., description="Versión limpia propuesta del requerimiento")
+    analysis_id: str = Field(..., description="ID único del análisis")
+    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos")
+    created_at: datetime = Field(..., description="Timestamp de creación")
 
 
 @app.get("/", include_in_schema=False)
@@ -1078,6 +1167,477 @@ async def generate_advanced_test_cases(
         raise HTTPException(
             status_code=500,
             detail=f"Error generating advanced test cases: {str(e)}"
+        )
+
+@app.post("/analysis/requirements/istqb-check", 
+          response_model=ISTQBAnalysisResponse,
+          summary="Análisis estático de requisitos ISTQB",
+          description="Evalúa la calidad de un requerimiento siguiendo estándares ISTQB Foundation Level v4.0",
+          tags=["Análisis ISTQB"],
+          responses={
+              200: {
+                  "description": "Análisis ISTQB completado exitosamente",
+                  "model": ISTQBAnalysisResponse
+              },
+              400: {
+                  "description": "JSON inválido o requirement_text vacío",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "requirement_text debe tener al menos 30 caracteres"}
+                      }
+                  }
+              },
+              422: {
+                  "description": "Texto ilegible (idioma no soportado)",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "El texto del requerimiento no es legible o está en un idioma no soportado"}
+                      }
+                  }
+              },
+              500: {
+                  "description": "Error interno del analizador",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Error interno del servidor"}
+                      }
+                  }
+              }
+          })
+async def analyze_requirement_istqb(
+    request: RequirementInput,
+    background_tasks: BackgroundTasks
+):
+    """
+    ## Análisis Estático de Requisitos ISTQB
+    
+    Evalúa la calidad de un requerimiento siguiendo estándares ISTQB Foundation Level v4.0.
+    Detecta ambigüedades, malas prácticas y riesgos en requerimientos escritos en lenguaje natural.
+    
+    ### Proceso de Análisis:
+    1. **Validación Automática**: Se aplican criterios automáticos de calidad
+    2. **Análisis IA**: Se procesa con Google Gemini usando prompts especializados ISTQB
+    3. **Detección de Issues**: Se identifican problemas según heurísticas ISTQB
+    4. **Evaluación de Riesgo**: Se asigna severidad y probabilidad a cada hallazgo
+    5. **Generación de Criterios**: Se crean criterios de aceptación SMART
+    6. **Propuesta de Mejora**: Se genera versión limpia del requerimiento
+    
+    ### Criterios de Evaluación:
+    - **Claridad**: No ambiguo, términos específicos
+    - **Completitud**: Entradas, salidas, reglas, restricciones, NFR
+    - **Consistencia**: Sin contradicciones internas/externas
+    - **Factibilidad**: Técnica y operativamente viable
+    - **Testabilidad**: Criterios de aceptación medibles
+    
+    ### Heurísticas de Ambigüedad Detectadas:
+    - Términos vagos: rápido, fácil, robusto, óptimo
+    - Cuantificadores difusos: algunos, varios, suficiente
+    - Rangos abiertos: <, >, alrededor de, aproximadamente
+    - Pronombres sin antecedente: esto, eso, ellos
+    - Voz pasiva sin responsable: se realizará, será procesado
+    - Deixis temporal/espacial: pronto, en breve, más adelante
+    
+    ### Respuesta:
+    - **quality_score**: Puntuación de calidad por dimensión (0-100)
+    - **issues**: Lista de issues detectados con riesgo y correcciones
+    - **coverage**: Análisis de cobertura de elementos del requerimiento
+    - **acceptance_criteria**: Criterios de aceptación SMART generados
+    - **proposed_clean_version**: Versión limpia y testeable del requerimiento
+    """
+    start_time = datetime.utcnow()
+    analysis_id = f"istqb_{request.requirement_id}_{int(start_time.timestamp())}"
+    
+    try:
+        logger.info(
+            "Starting ISTQB requirement analysis",
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id
+        )
+        
+        # Validaciones automáticas según criterios ISTQB
+        validation_issues = _validate_requirement_automatically(request.requirement_text)
+        
+        # Sanitizar contenido sensible
+        sanitized_content = sanitizer.sanitize(request.requirement_text)
+        
+        # Generar prompt para análisis ISTQB
+        prompt = _generate_istqb_analysis_prompt(
+            requirement_text=sanitized_content,
+            context=request.context,
+            glossary=request.glossary,
+            acceptance_template=request.acceptance_template,
+            non_functional_expectations=request.non_functional_expectations
+        )
+        
+        # Ejecutar análisis con LLM
+        analysis_result = await llm_wrapper.analyze_requirements(
+            prompt=prompt,
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id
+        )
+        
+        # Procesar respuesta del LLM y crear estructura ISTQB
+        response = _process_istqb_analysis_result(
+            analysis_result=analysis_result,
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id,
+            validation_issues=validation_issues,
+            processing_time=(datetime.utcnow() - start_time).total_seconds(),
+            created_at=start_time
+        )
+        
+        # Registrar en background task para tracking
+        background_tasks.add_task(
+            log_istqb_analysis_completion,
+            analysis_id,
+            request.requirement_id,
+            response
+        )
+        
+        logger.info(
+            "ISTQB requirement analysis completed",
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id,
+            issues_count=len(response.issues),
+            quality_score=response.quality_score.overall,
+            processing_time=response.processing_time
+        )
+        
+        return response
+        
+    except Exception as e:
+        logger.error(
+            "ISTQB requirement analysis failed",
+            requirement_id=request.requirement_id,
+            analysis_id=analysis_id,
+            error=str(e)
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing requirement with ISTQB: {str(e)}"
+        )
+
+# Funciones auxiliares para análisis ISTQB
+def _validate_requirement_automatically(requirement_text: str) -> List[Dict[str, Any]]:
+    """Validaciones automáticas según criterios ISTQB"""
+    issues = []
+    
+    # Validación de longitud mínima
+    if len(requirement_text) < 30:
+        issues.append({
+            "type": "Omission",
+            "heuristic": "MissingInputOutput",
+            "excerpt": requirement_text[:50] + "..." if len(requirement_text) > 50 else requirement_text,
+            "explanation": "El requerimiento es demasiado corto para ser completo según ISTQB",
+            "severity": "High",
+            "likelihood": "High",
+            "rpn": 15
+        })
+    
+    # Detectar términos vagos
+    vague_terms = ["rápido", "fácil", "óptimo", "adecuado", "aprox", "algunos", "varios", "lo antes posible"]
+    for term in vague_terms:
+        if term.lower() in requirement_text.lower():
+            issues.append({
+                "type": "Ambiguity",
+                "heuristic": "VagueTerm",
+                "excerpt": f"término vago: '{term}'",
+                "explanation": f"El término '{term}' es ambiguo según ISTQB - debe ser cuantificado",
+                "severity": "Medium",
+                "likelihood": "High",
+                "rpn": 12
+            })
+    
+    # Detectar falta de números en rendimiento
+    performance_keywords = ["rendimiento", "capacidad", "tiempo", "velocidad", "procesamiento"]
+    has_performance = any(keyword in requirement_text.lower() for keyword in performance_keywords)
+    has_numbers = any(char.isdigit() for char in requirement_text)
+    
+    if has_performance and not has_numbers:
+        issues.append({
+            "type": "NFRGap",
+            "heuristic": "MissingInputOutput",
+            "excerpt": "menciona rendimiento sin métricas",
+            "explanation": "Se menciona rendimiento pero no se especifican métricas cuantificables",
+            "severity": "Medium",
+            "likelihood": "Medium",
+            "rpn": 9
+        })
+    
+    return issues
+
+def _generate_istqb_analysis_prompt(
+    requirement_text: str,
+    context: RequirementContext,
+    glossary: Dict[str, str],
+    acceptance_template: str,
+    non_functional_expectations: List[str]
+) -> str:
+    """Generar prompt especializado para análisis ISTQB"""
+    
+    glossary_text = ""
+    if glossary:
+        glossary_text = "\nGlosario de términos:\n"
+        for term, definition in glossary.items():
+            glossary_text += f"- {term}: {definition}\n"
+    
+    constraints_text = ""
+    if context.constraints:
+        constraints_text = "\nRestricciones aplicables:\n"
+        for constraint in context.constraints:
+            constraints_text += f"- {constraint}\n"
+    
+    nfr_text = ""
+    if non_functional_expectations:
+        nfr_text = "\nExpectativas no funcionales:\n"
+        for nfr in non_functional_expectations:
+            nfr_text += f"- {nfr}\n"
+    
+    prompt = f"""
+Eres un analista de calidad siguiendo ISTQB Foundation Level (v4.0). Tu tarea es evaluar la calidad de un requerimiento escrito en lenguaje natural y detectar ambigüedades, malas prácticas y riesgos. Responde exclusivamente en JSON válido con el esquema indicado.
+
+CONTEXTO DEL REQUERIMIENTO:
+- Producto: {context.product}
+- Módulo: {context.module}
+- Stakeholders: {', '.join(context.stakeholders)}
+- Dependencias: {', '.join(context.dependencies)}
+{constraints_text}{nfr_text}{glossary_text}
+
+REQUERIMIENTO A ANALIZAR:
+{requirement_text}
+
+OBJETIVO:
+Determinar si el requerimiento es:
+- Claro (no ambiguo)
+- Completo (entradas, salidas, reglas, restricciones, NFR)
+- Consistente (sin contradicciones internas/externas)
+- Factible (técnica y operativamente)
+- Verificable/Testeable (criterios de aceptación medibles)
+
+GUÍAS ISTQB A APLICAR:
+1. Revisiones estáticas: checklist de defectos de requisitos (ambigüedad, omisiones, inconsistencias, redundancias)
+2. Testabilidad: cada criterio debe ser observable, medible y con oráculos definidos
+3. Atributos de buena especificación: claro, completo, consistente, correcto, verificable, necesario, rastreable
+4. Gestión de riesgo: asigna severidad y probabilidad a cada hallazgo; prioriza lo que afecta a valor, conformidad o seguridad
+5. Especificación de datos: define formatos, rangos, unidades, precisión, codificaciones, reglas de negocio
+6. NFR (desempeño, seguridad, usabilidad, compatibilidad, confiabilidad, mantenibilidad, portabilidad): identificar si faltan o son vagos
+
+HEURÍSTICAS DE AMBIGÜEDAD (marcar si aparecen):
+- Términos vagos: rápido, fácil, robusto, óptimo, adecuado, pronto
+- Cuantificadores difusos: algunos, varios, suficiente, mínimo necesario
+- Rango abierto o sin umbrales: <, >, alrededor de, aproximadamente
+- Pronombres sin antecedente: esto, eso, ellos
+- Pasiva sin responsable: se realizará, será procesado
+- Deixis temporal/espacial: pronto, en breve, más adelante
+- Omisiones: entradas/salidas, errores, estados, roles/responsables
+- Reglas de negocio implícitas o externas no citadas
+- Criterios de aceptación no SMART
+
+RESPONDE EN JSON CON ESTA ESTRUCTURA EXACTA:
+{{
+  "requirement_id": "REQ-123",
+  "quality_score": {{
+    "overall": 0-100,
+    "clarity": 0-100,
+    "completeness": 0-100,
+    "consistency": 0-100,
+    "feasibility": 0-100,
+    "testability": 0-100
+  }},
+  "issues": [
+    {{
+      "id": "ISS-001",
+      "type": "Ambiguity|Omission|Inconsistency|NFRGap|DataSpecGap|ResponsibilityGap|RuleConflict",
+      "heuristic": "VagueTerm|FuzzyQuantifier|OpenRange|PronounWithoutAntecedent|PassiveVoice|TemporalDeixis|MissingInputOutput|MissingErrorHandling|UndefinedRole|ImplicitBusinessRule",
+      "excerpt": "texto exacto/fragmento",
+      "explanation": "por qué es un problema según ISTQB",
+      "impact_area": ["Value","Compliance","Security","Performance","UX","Operability","Testability"],
+      "risk": {{
+        "severity": "Low|Medium|High|Critical",
+        "likelihood": "Low|Medium|High",
+        "rpn": 1-27
+      }},
+      "fix_suggestion": "recomendación concreta",
+      "proposed_rewrite": "versión reescrita, clara y testeable"
+    }}
+  ],
+  "coverage": {{
+    "inputs_defined": true/false,
+    "outputs_defined": true/false,
+    "business_rules": ["BR-..."],
+    "error_handling_defined": true/false,
+    "roles_responsibilities_defined": true/false,
+    "data_contracts_defined": true/false,
+    "nfr_defined": ["performance","security","usability", "..."]
+  }},
+  "acceptance_criteria": [
+    {{
+      "id": "AC-1",
+      "format": "GWT|Checklist",
+      "criterion": "Dado ... Cuando ... Entonces ...",
+      "measurable": true/false,
+      "test_oracle": "cómo verificar/medir",
+      "example_data": {{"input":"...","expected":"..."}}
+    }}
+  ],
+  "traceability": {{
+    "glossary_terms_used": ["..."],
+    "external_refs_needed": ["norma/regla/código"],
+    "dependencies_touched": ["API Clientes v2"]
+  }},
+  "summary": "resumen ejecutivo en 3-4 líneas con prioridad de corrección",
+  "proposed_clean_version": "Requerimiento completo, claro, consistente y testeable (versión final sugerida)."
+}}
+
+REGLAS DE EVALUACIÓN Y REESCRITURA:
+- Si detectas un término vago, sustitúyelo por un umbral/valor/SLI (p.ej., "rápido" → "p95 ≤ 300 ms en 24h")
+- Toda condición debe tener datos de ejemplo, precondiciones y oráculo
+- Explicita roles/responsables (quién ejecuta/consume/autoriza)
+- Define formatos y rangos (ej.: monto: decimal(12,2), moneda=PYG, rango 0–50,000,000)
+- Añade manejo de errores y mensajes (códigos, causas, acciones)
+- Criterios de aceptación SMART; si faltan, propón 2–5 AC
+- Marca contradicciones internas/externas con explicación y resolución
+- Prioriza correcciones según riesgo (RPN)
+
+NOTAS DE ESTILO:
+- No incluyas texto fuera del JSON
+- Usa excerpt literalmente del requerimiento original
+- proposed_rewrite debe quedar lista para pasar a diseño y pruebas
+"""
+    
+    return prompt
+
+def _process_istqb_analysis_result(
+    analysis_result: Dict[str, Any],
+    requirement_id: str,
+    analysis_id: str,
+    validation_issues: List[Dict[str, Any]],
+    processing_time: float,
+    created_at: datetime
+) -> ISTQBAnalysisResponse:
+    """Procesar resultado del análisis ISTQB y crear respuesta estructurada"""
+    
+    # Extraer datos del resultado del LLM
+    quality_score_data = analysis_result.get("quality_score", {})
+    issues_data = analysis_result.get("issues", [])
+    coverage_data = analysis_result.get("coverage", {})
+    acceptance_criteria_data = analysis_result.get("acceptance_criteria", [])
+    traceability_data = analysis_result.get("traceability", {})
+    
+    # Crear QualityScore
+    quality_score = QualityScore(
+        overall=quality_score_data.get("overall", 50),
+        clarity=quality_score_data.get("clarity", 50),
+        completeness=quality_score_data.get("completeness", 50),
+        consistency=quality_score_data.get("consistency", 50),
+        feasibility=quality_score_data.get("feasibility", 50),
+        testability=quality_score_data.get("testability", 50)
+    )
+    
+    # Procesar issues (combinar con validaciones automáticas)
+    all_issues = []
+    
+    # Agregar issues de validación automática
+    for i, issue in enumerate(validation_issues):
+        all_issues.append(RequirementIssue(
+            id=f"ISS-AUTO-{i+1:03d}",
+            type=issue["type"],
+            heuristic=issue["heuristic"],
+            excerpt=issue["excerpt"],
+            explanation=issue["explanation"],
+            impact_area=["Testability"],
+            risk=IssueRisk(
+                severity=issue["severity"],
+                likelihood=issue["likelihood"],
+                rpn=issue["rpn"]
+            ),
+            fix_suggestion="Revisar y completar el requerimiento según estándares ISTQB",
+            proposed_rewrite="[Requiere reescritura completa del requerimiento]"
+        ))
+    
+    # Agregar issues del LLM
+    for issue_data in issues_data:
+        all_issues.append(RequirementIssue(
+            id=issue_data.get("id", f"ISS-{len(all_issues)+1:03d}"),
+            type=issue_data.get("type", "Ambiguity"),
+            heuristic=issue_data.get("heuristic", "VagueTerm"),
+            excerpt=issue_data.get("excerpt", ""),
+            explanation=issue_data.get("explanation", ""),
+            impact_area=issue_data.get("impact_area", ["Testability"]),
+            risk=IssueRisk(
+                severity=issue_data.get("risk", {}).get("severity", "Medium"),
+                likelihood=issue_data.get("risk", {}).get("likelihood", "Medium"),
+                rpn=issue_data.get("risk", {}).get("rpn", 9)
+            ),
+            fix_suggestion=issue_data.get("fix_suggestion", ""),
+            proposed_rewrite=issue_data.get("proposed_rewrite", "")
+        ))
+    
+    # Crear CoverageAnalysis
+    coverage = CoverageAnalysis(
+        inputs_defined=coverage_data.get("inputs_defined", False),
+        outputs_defined=coverage_data.get("outputs_defined", False),
+        business_rules=coverage_data.get("business_rules", []),
+        error_handling_defined=coverage_data.get("error_handling_defined", False),
+        roles_responsibilities_defined=coverage_data.get("roles_responsibilities_defined", False),
+        data_contracts_defined=coverage_data.get("data_contracts_defined", False),
+        nfr_defined=coverage_data.get("nfr_defined", [])
+    )
+    
+    # Procesar criterios de aceptación
+    acceptance_criteria = []
+    for ac_data in acceptance_criteria_data:
+        acceptance_criteria.append(AcceptanceCriterion(
+            id=ac_data.get("id", f"AC-{len(acceptance_criteria)+1}"),
+            format=ac_data.get("format", "GWT"),
+            criterion=ac_data.get("criterion", ""),
+            measurable=ac_data.get("measurable", False),
+            test_oracle=ac_data.get("test_oracle", ""),
+            example_data=ac_data.get("example_data", {})
+        ))
+    
+    # Crear TraceabilityAnalysis
+    traceability = TraceabilityAnalysis(
+        glossary_terms_used=traceability_data.get("glossary_terms_used", []),
+        external_refs_needed=traceability_data.get("external_refs_needed", []),
+        dependencies_touched=traceability_data.get("dependencies_touched", [])
+    )
+    
+    # Crear respuesta final
+    return ISTQBAnalysisResponse(
+        requirement_id=requirement_id,
+        quality_score=quality_score,
+        issues=all_issues,
+        coverage=coverage,
+        acceptance_criteria=acceptance_criteria,
+        traceability=traceability,
+        summary=analysis_result.get("summary", "Análisis completado según estándares ISTQB"),
+        proposed_clean_version=analysis_result.get("proposed_clean_version", ""),
+        analysis_id=analysis_id,
+        processing_time=processing_time,
+        created_at=created_at
+    )
+
+async def log_istqb_analysis_completion(
+    analysis_id: str,
+    requirement_id: str,
+    response: ISTQBAnalysisResponse
+):
+    """Background task para registrar la finalización del análisis ISTQB"""
+    try:
+        logger.info(
+            "ISTQB analysis completion logged",
+            analysis_id=analysis_id,
+            requirement_id=requirement_id,
+            issues_count=len(response.issues),
+            quality_score=response.quality_score.overall,
+            processing_time=response.processing_time
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to log ISTQB analysis completion",
+            analysis_id=analysis_id,
+            error=str(e)
         )
 
 

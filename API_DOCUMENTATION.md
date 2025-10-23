@@ -66,6 +66,94 @@ Analiza un requerimiento de software y genera casos de prueba estructurados.
 #### `POST /analyze-jira-workitem`
 Analiza un work item de Jira y genera casos de prueba estructurados.
 
+#### `POST /analysis/requirements/istqb-check`
+Análisis estático de requisitos siguiendo estándares ISTQB Foundation Level v4.0.
+
+**Request Body para `/analysis/requirements/istqb-check`:**
+```json
+{
+  "requirement_id": "REQ-123",
+  "requirement_text": "El sistema debe permitir autenticación de usuarios con credenciales válidas, validando contra la base de datos y mostrando mensajes de error apropiados.",
+  "context": {
+    "product": "Sistema de Autenticación",
+    "module": "Login",
+    "stakeholders": ["PO", "QA", "Dev"],
+    "constraints": ["PCI DSS", "LGPD", "SLA 200ms p95"],
+    "dependencies": ["API Clientes v2"]
+  },
+  "glossary": {
+    "Credenciales": "Usuario y contraseña del sistema",
+    "Autenticación": "Proceso de verificación de identidad"
+  },
+  "acceptance_template": "Dado/Cuando/Entonces",
+  "non_functional_expectations": ["p95<=300ms", "TLS1.3", "a11y WCAG AA"]
+}
+```
+
+**Response para `/analysis/requirements/istqb-check`:**
+```json
+{
+  "requirement_id": "REQ-123",
+  "quality_score": {
+    "overall": 85,
+    "clarity": 90,
+    "completeness": 80,
+    "consistency": 85,
+    "feasibility": 90,
+    "testability": 75
+  },
+  "issues": [
+    {
+      "id": "ISS-001",
+      "type": "Ambiguity",
+      "heuristic": "VagueTerm",
+      "excerpt": "término vago: 'apropiados'",
+      "explanation": "El término 'apropiados' es ambiguo según ISTQB - debe ser especificado",
+      "impact_area": ["Value", "Testability"],
+      "risk": {
+        "severity": "Medium",
+        "likelihood": "High",
+        "rpn": 12
+      },
+      "fix_suggestion": "Especificar mensajes de error concretos",
+      "proposed_rewrite": "mostrar mensaje 'Credenciales inválidas' con código de error 401"
+    }
+  ],
+  "coverage": {
+    "inputs_defined": true,
+    "outputs_defined": true,
+    "business_rules": ["BR-001"],
+    "error_handling_defined": true,
+    "roles_responsibilities_defined": false,
+    "data_contracts_defined": true,
+    "nfr_defined": ["performance", "security"]
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "format": "GWT",
+      "criterion": "Dado un usuario válido Cuando ingresa credenciales correctas Entonces debe autenticarse exitosamente",
+      "measurable": true,
+      "test_oracle": "Verificar redirección al dashboard y token de sesión válido",
+      "example_data": {
+        "input": "usuario: test@example.com, password: Test123!",
+        "expected": "Redirección a /dashboard, token JWT válido"
+      }
+    }
+  ],
+  "traceability": {
+    "glossary_terms_used": ["Credenciales", "Autenticación"],
+    "external_refs_needed": ["PCI DSS", "LGPD"],
+    "dependencies_touched": ["API Clientes v2"]
+  },
+  "summary": "Requerimiento con buena estructura pero necesita especificación de mensajes de error y roles. Prioridad: Media.",
+  "proposed_clean_version": "El sistema debe permitir autenticación de usuarios con credenciales válidas, validando contra la base de datos LDAP y mostrando mensaje específico 'Credenciales inválidas' (código 401) para credenciales incorrectas.",
+  "analysis_id": "istqb_REQ-123_1640995200",
+  "processing_time": 8.5,
+  "created_at": "2025-01-18T10:00:00Z"
+}
+```
+
 **Request Body para `/analyze`:**
 ```json
 {
