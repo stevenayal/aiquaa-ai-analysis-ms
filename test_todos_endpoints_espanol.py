@@ -14,7 +14,7 @@ BASE_URL = "http://localhost:8000"
 
 # Ejemplos para cada endpoint
 EJEMPLOS_ENDPOINTS = {
-    "/analyze": [
+    "/analizar": [
         {
             "nombre": "Análisis de Caso de Prueba",
             "datos": {
@@ -43,7 +43,7 @@ EJEMPLOS_ENDPOINTS = {
             }
         }
     ],
-    "/analyze-jira": [
+    "/analizar-jira": [
         {
             "nombre": "Análisis de Work Item",
             "datos": {
@@ -59,7 +59,7 @@ EJEMPLOS_ENDPOINTS = {
             }
         }
     ],
-    "/generate-advanced-tests": [
+    "/generar-pruebas-avanzadas": [
         {
             "nombre": "Generación Avanzada - Autenticación",
             "datos": {
@@ -75,7 +75,7 @@ EJEMPLOS_ENDPOINTS = {
             }
         }
     ],
-    "/analysis/requirements/istqb-check": [
+    "/analisis/requisitos/verificacion-istqb": [
         {
             "nombre": "Análisis ISTQB - Requerimiento Simple",
             "datos": {
@@ -118,7 +118,7 @@ EJEMPLOS_ENDPOINTS = {
             }
         }
     ],
-    "/analyze-jira-confluence": [
+    "/analizar-jira-confluence": [
         {
             "nombre": "Análisis Jira-Confluence - Plan de Pruebas",
             "datos": {
@@ -149,7 +149,7 @@ EJEMPLOS_ENDPOINTS = {
 CASOS_VALIDACION = [
     {
         "nombre": "ID Contenido Vacío",
-        "endpoint": "/analyze",
+        "endpoint": "/analizar",
         "datos": {
             "id_contenido": "",
             "contenido": "Contenido de prueba",
@@ -159,7 +159,7 @@ CASOS_VALIDACION = [
     },
     {
         "nombre": "Contenido Muy Corto",
-        "endpoint": "/analyze",
+        "endpoint": "/analizar",
         "datos": {
             "id_contenido": "TC-001",
             "contenido": "Corto",
@@ -169,7 +169,7 @@ CASOS_VALIDACION = [
     },
     {
         "nombre": "Tipo de Contenido Inválido",
-        "endpoint": "/analyze",
+        "endpoint": "/analizar",
         "datos": {
             "id_contenido": "TC-001",
             "contenido": "Contenido de prueba válido con suficiente longitud para pasar la validación",
@@ -179,7 +179,7 @@ CASOS_VALIDACION = [
     },
     {
         "nombre": "ID Work Item Vacío",
-        "endpoint": "/analyze-jira",
+        "endpoint": "/analizar-jira",
         "datos": {
             "id_work_item": "",
             "nivel_analisis": "high"
@@ -188,7 +188,7 @@ CASOS_VALIDACION = [
     },
     {
         "nombre": "Requerimiento Vacío",
-        "endpoint": "/generate-advanced-tests",
+        "endpoint": "/generar-pruebas-avanzadas",
         "datos": {
             "requerimiento": "",
             "aplicacion": "TEST"
@@ -197,7 +197,7 @@ CASOS_VALIDACION = [
     },
     {
         "nombre": "Aplicación Vacía",
-        "endpoint": "/generate-advanced-tests",
+        "endpoint": "/generar-pruebas-avanzadas",
         "datos": {
             "requerimiento": "Requerimiento válido con suficiente longitud para pasar la validación",
             "aplicacion": ""
@@ -361,7 +361,7 @@ async def verificar_servidor():
     
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(f"{BASE_URL}/health")
+            response = await client.get(f"{BASE_URL}/salud")
             
             if response.status_code == 200:
                 health_data = response.json()

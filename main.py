@@ -59,12 +59,12 @@ app = FastAPI(
     - 🎯 Técnicas avanzadas de testing
     
     ### Endpoints:
-    - `/analyze` - Análisis unificado de contenido
-    - `/analyze-jira` - Análisis de work items de Jira
-    - `/analyze-jira-confluence` - Análisis de Jira y diseño de planes de prueba para Confluence
-    - `/generate-advanced-tests` - Generación con técnicas avanzadas
-    - `/analysis/requirements/istqb-check` - Análisis estático de requisitos ISTQB
-    - `/health` - Estado del servicio
+    - `/analizar` - Análisis unificado de contenido
+    - `/analizar-jira` - Análisis de work items de Jira
+    - `/analizar-jira-confluence` - Análisis de Jira y diseño de planes de prueba para Confluence
+    - `/generar-pruebas-avanzadas` - Generación con técnicas avanzadas
+    - `/analisis/requisitos/verificacion-istqb` - Análisis estático de requisitos ISTQB
+    - `/salud` - Estado del servicio
     
     ### Tipos de Contenido:
     - **test_case** - Casos de prueba existentes
@@ -582,7 +582,7 @@ async def docs_light():
     return RedirectResponse(url="/docs?theme=light")
 
 
-@app.get("/health", response_model=HealthResponse)
+@app.get("/salud", response_model=HealthResponse)
 async def health_check():
     """Verificación de salud del servicio"""
     components = {}
@@ -719,7 +719,7 @@ async def test_jira_connection(work_item_id: str):
             }
         }
 
-@app.post("/analyze", 
+@app.post("/analizar", 
           response_model=AnalysisResponse,
           summary="Analizar contenido y generar casos de prueba",
           description="Analiza cualquier tipo de contenido (caso de prueba, requerimiento, historia de usuario) y genera casos de prueba usando IA",
@@ -913,7 +913,7 @@ async def analyze_content(
             detail=f"Error analyzing content: {str(e)}"
         )
 
-@app.post("/analyze-jira", 
+@app.post("/analizar-jira", 
           response_model=JiraAnalysisResponse,
           summary="Analizar work item de Jira y generar casos de prueba",
           description="Obtiene un work item de Jira y genera casos de prueba estructurados usando IA",
@@ -1114,7 +1114,7 @@ async def analyze_jira_workitem(
             detail=f"Error analyzing Jira work item: {str(e)}"
         )
 
-@app.post("/generate-advanced-tests", 
+@app.post("/generar-pruebas-avanzadas", 
           response_model=AdvancedTestGenerationResponse,
           summary="Generar casos de prueba con técnicas avanzadas",
           description="Genera casos de prueba aplicando técnicas de diseño avanzadas de testing",
@@ -1274,7 +1274,7 @@ async def generate_advanced_test_cases(
             detail=f"Error generating advanced test cases: {str(e)}"
         )
 
-@app.post("/analysis/requirements/istqb-check", 
+@app.post("/analisis/requisitos/verificacion-istqb", 
           response_model=ISTQBAnalysisResponse,
           summary="Análisis estático de requisitos ISTQB",
           description="Evalúa la calidad de un requerimiento siguiendo estándares ISTQB Foundation Level v4.0",
@@ -1422,7 +1422,7 @@ async def analyze_requirement_istqb(
             detail=f"Error analyzing requirement with ISTQB: {str(e)}"
         )
 
-@app.post("/analyze-jira-confluence", 
+@app.post("/analizar-jira-confluence",
           response_model=ConfluenceTestPlanResponse,
           summary="Analizar issue de Jira y diseñar plan de pruebas para Confluence",
           description="Analiza un issue de Jira y genera un plan de pruebas completo y estructurado para documentar en Confluence",

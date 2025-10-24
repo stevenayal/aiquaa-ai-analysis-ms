@@ -12,9 +12,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/health",
+          "raw": "{{base_url}}/salud",
           "host": ["{{base_url}}"],
-          "path": ["health"]
+          "path": ["salud"]
         }
       },
       "response": []
@@ -34,9 +34,9 @@
           "raw": "{\n  \"id_contenido\": \"TC-001\",\n  \"contenido\": \"Verificar que el usuario pueda iniciar sesión con credenciales válidas. Pasos: 1) Abrir la página de login, 2) Ingresar usuario válido, 3) Ingresar contraseña válida, 4) Hacer clic en 'Iniciar Sesión'. Resultado esperado: Usuario logueado exitosamente y redirigido al dashboard.\",\n  \"tipo_contenido\": \"test_case\",\n  \"nivel_analisis\": \"high\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze",
+          "raw": "{{base_url}}/analizar",
           "host": ["{{base_url}}"],
-          "path": ["analyze"]
+          "path": ["analizar"]
         }
       },
       "response": []
@@ -56,9 +56,9 @@
           "raw": "{\n  \"id_contenido\": \"REQ-001\",\n  \"contenido\": \"El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado.\",\n  \"tipo_contenido\": \"requirement\",\n  \"nivel_analisis\": \"comprehensive\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze",
+          "raw": "{{base_url}}/analizar",
           "host": ["{{base_url}}"],
-          "path": ["analyze"]
+          "path": ["analizar"]
         }
       },
       "response": []
@@ -78,9 +78,9 @@
           "raw": "{\n  \"id_contenido\": \"US-001\",\n  \"contenido\": \"Como usuario del sistema, quiero poder recuperar mi contraseña olvidada para poder acceder a mi cuenta nuevamente. Criterios de aceptación: 1) El usuario debe poder solicitar recuperación desde la página de login, 2) Debe recibir un email con instrucciones, 3) Debe poder establecer una nueva contraseña, 4) La nueva contraseña debe cumplir con los criterios de seguridad.\",\n  \"tipo_contenido\": \"user_story\",\n  \"nivel_analisis\": \"high\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze",
+          "raw": "{{base_url}}/analizar",
           "host": ["{{base_url}}"],
-          "path": ["analyze"]
+          "path": ["analizar"]
         }
       },
       "response": []
@@ -100,9 +100,9 @@
           "raw": "{\n  \"id_work_item\": \"AUTH-123\",\n  \"nivel_analisis\": \"high\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze-jira",
+          "raw": "{{base_url}}/analizar-jira",
           "host": ["{{base_url}}"],
-          "path": ["analyze-jira"]
+          "path": ["analizar-jira"]
         }
       },
       "response": []
@@ -122,9 +122,9 @@
           "raw": "{\n  \"id_work_item\": \"EPIC-001\",\n  \"nivel_analisis\": \"comprehensive\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze-jira",
+          "raw": "{{base_url}}/analizar-jira",
           "host": ["{{base_url}}"],
-          "path": ["analyze-jira"]
+          "path": ["analizar-jira"]
         }
       },
       "response": []
@@ -144,9 +144,9 @@
           "raw": "{\n  \"requerimiento\": \"El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado. El sistema debe implementar bloqueo de cuenta después de 3 intentos fallidos y permitir recuperación de contraseña.\",\n  \"aplicacion\": \"SISTEMA_AUTH\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/generate-advanced-tests",
+          "raw": "{{base_url}}/generar-pruebas-avanzadas",
           "host": ["{{base_url}}"],
-          "path": ["generate-advanced-tests"]
+          "path": ["generar-pruebas-avanzadas"]
         }
       },
       "response": []
@@ -166,9 +166,9 @@
           "raw": "{\n  \"requerimiento\": \"El sistema de e-commerce debe permitir a los usuarios agregar productos al carrito, modificar cantidades, aplicar cupones de descuento, calcular impuestos según la ubicación, procesar pagos con múltiples métodos (tarjeta, PayPal, transferencia), generar órdenes y enviar confirmaciones por email.\",\n  \"aplicacion\": \"ECOMMERCE_PLATFORM\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/generate-advanced-tests",
+          "raw": "{{base_url}}/generar-pruebas-avanzadas",
           "host": ["{{base_url}}"],
-          "path": ["generate-advanced-tests"]
+          "path": ["generar-pruebas-avanzadas"]
         }
       },
       "response": []
@@ -188,9 +188,9 @@
           "raw": "{\n  \"requirement_id\": \"REQ-001\",\n  \"requirement_text\": \"El sistema debe permitir a los usuarios iniciar sesión con email y contraseña.\",\n  \"context\": {\n    \"producto\": \"Sistema de Autenticación\",\n    \"modulo\": \"Login\",\n    \"stakeholders\": [\"PO\", \"QA\", \"Dev\"],\n    \"restricciones\": [\"PCI DSS\", \"LGPD\"],\n    \"dependencias\": [\"API Clientes v2\"]\n  },\n  \"glossary\": {\n    \"usuario\": \"Persona que accede al sistema\",\n    \"autenticación\": \"Proceso de verificación de identidad\"\n  },\n  \"acceptance_template\": \"Dado [condición] cuando [acción] entonces [resultado]\",\n  \"non_functional_expectations\": [\"Rendimiento\", \"Seguridad\", \"Usabilidad\"]\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analysis/requirements/istqb-check",
+          "raw": "{{base_url}}/analisis/requisitos/verificacion-istqb",
           "host": ["{{base_url}}"],
-          "path": ["analysis", "requirements", "istqb-check"]
+          "path": ["analisis", "requisitos", "verificacion-istqb"]
         }
       },
       "response": []
@@ -210,9 +210,9 @@
           "raw": "{\n  \"requirement_id\": \"REQ-002\",\n  \"requirement_text\": \"El sistema de pagos debe procesar transacciones de tarjeta de crédito de manera segura, validando la información del usuario contra la base de datos, verificando fondos disponibles, aplicando reglas de negocio específicas por tipo de transacción, generando logs de auditoría completos y notificando al usuario del resultado dentro de 5 segundos.\",\n  \"context\": {\n    \"producto\": \"Sistema de Pagos\",\n    \"modulo\": \"Procesamiento de Transacciones\",\n    \"stakeholders\": [\"PO\", \"QA\", \"Dev\", \"Compliance\"],\n    \"restricciones\": [\"PCI DSS\", \"SOX\", \"GDPR\"],\n    \"dependencias\": [\"Gateway de Pagos\", \"Sistema de Auditoría\"]\n  },\n  \"glossary\": {\n    \"transacción\": \"Operación de pago entre usuario y comercio\",\n    \"auditoría\": \"Registro de actividades para cumplimiento\",\n    \"gateway\": \"Servicio externo de procesamiento de pagos\"\n  },\n  \"acceptance_template\": \"Dado [condición] cuando [acción] entonces [resultado]\",\n  \"non_functional_expectations\": [\"Rendimiento\", \"Seguridad\", \"Confiabilidad\", \"Auditabilidad\"]\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analysis/requirements/istqb-check",
+          "raw": "{{base_url}}/analisis/requisitos/verificacion-istqb",
           "host": ["{{base_url}}"],
-          "path": ["analysis", "requirements", "istqb-check"]
+          "path": ["analisis", "requisitos", "verificacion-istqb"]
         }
       },
       "response": []
@@ -232,9 +232,9 @@
           "raw": "{\n  \"id_issue_jira\": \"PROJ-123\",\n  \"espacio_confluence\": \"QA\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Autenticación de Usuarios\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze-jira-confluence",
+          "raw": "{{base_url}}/analizar-jira-confluence",
           "host": ["{{base_url}}"],
-          "path": ["analyze-jira-confluence"]
+          "path": ["analizar-jira-confluence"]
         }
       },
       "response": []
@@ -254,9 +254,9 @@
           "raw": "{\n  \"id_issue_jira\": \"AUTH-001\",\n  \"espacio_confluence\": \"QA\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze-jira-confluence",
+          "raw": "{{base_url}}/analizar-jira-confluence",
           "host": ["{{base_url}}"],
-          "path": ["analyze-jira-confluence"]
+          "path": ["analizar-jira-confluence"]
         }
       },
       "response": []
@@ -276,9 +276,9 @@
           "raw": "{\n  \"id_issue_jira\": \"EPIC-001\",\n  \"espacio_confluence\": \"PRODUCT\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Nueva Funcionalidad de E-commerce\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze-jira-confluence",
+          "raw": "{{base_url}}/analizar-jira-confluence",
           "host": ["{{base_url}}"],
-          "path": ["analyze-jira-confluence"]
+          "path": ["analizar-jira-confluence"]
         }
       },
       "response": []
@@ -298,9 +298,9 @@
           "raw": "{\n  \"id_contenido\": \"\",\n  \"contenido\": \"Contenido de prueba\",\n  \"tipo_contenido\": \"test_case\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze",
+          "raw": "{{base_url}}/analizar",
           "host": ["{{base_url}}"],
-          "path": ["analyze"]
+          "path": ["analizar"]
         }
       },
       "response": []
@@ -320,9 +320,9 @@
           "raw": "{\n  \"id_contenido\": \"TC-001\",\n  \"contenido\": \"Corto\",\n  \"tipo_contenido\": \"test_case\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze",
+          "raw": "{{base_url}}/analizar",
           "host": ["{{base_url}}"],
-          "path": ["analyze"]
+          "path": ["analizar"]
         }
       },
       "response": []
@@ -342,9 +342,9 @@
           "raw": "{\n  \"id_contenido\": \"TC-001\",\n  \"contenido\": \"Contenido de prueba válido con suficiente longitud para pasar la validación\",\n  \"tipo_contenido\": \"invalid_type\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/analyze",
+          "raw": "{{base_url}}/analizar",
           "host": ["{{base_url}}"],
-          "path": ["analyze"]
+          "path": ["analizar"]
         }
       },
       "response": []
