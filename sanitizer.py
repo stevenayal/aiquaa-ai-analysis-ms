@@ -322,3 +322,50 @@ class PIISanitizer:
             logger.info("PII pattern removed", name=name)
         else:
             logger.warning("PII pattern not found", name=name)
+    
+    def sanitize_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Sanitizar un diccionario recursivamente
+        
+        Args:
+            data: Diccionario a sanitizar
+            
+        Returns:
+            Diccionario sanitizado
+        """
+        if not isinstance(data, dict):
+            return data
+        
+        sanitized_data = {}
+        
+        for key, value in data.items():
+            if isinstance(value, str):
+                # Sanitizar strings
+                sanitized_data[key] = self.sanitize(value)
+            elif isinstance(value, dict):
+                # Recursivamente sanitizar diccionarios anidados
+                sanitized_data[key] = self.sanitize_dict(value)
+            elif isinstance(value, list):
+                # Sanitizar listas
+                sanitized_data[key] = self._sanitize_list(value)
+            else:
+                # Mantener otros tipos sin cambios
+                sanitized_data[key] = value
+        
+        return sanitized_data
+    
+    def _sanitize_list(self, data: List[Any]) -> List[Any]:
+        """Sanitizar una lista recursivamente"""
+        sanitized_list = []
+        
+        for item in data:
+            if isinstance(item, str):
+                sanitized_list.append(self.sanitize(item))
+            elif isinstance(item, dict):
+                sanitized_list.append(self.sanitize_dict(item))
+            elif isinstance(item, list):
+                sanitized_list.append(self._sanitize_list(item))
+            else:
+                sanitized_list.append(item)
+        
+        return sanitized_list

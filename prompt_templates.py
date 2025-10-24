@@ -64,6 +64,11 @@ class PromptTemplates:
                 "version": "1.0.0",
                 "template": self._get_istqb_test_generation_template(),
                 "variables": ["programa", "dominio", "modulos", "factores", "limites", "reglas", "tecnicas", "priorizacion", "cantidad_max", "salida_plan_ejecucion"]
+            },
+            "confluence_test_plan": {
+                "version": "1.0.0",
+                "template": self._get_confluence_test_plan_template(),
+                "variables": ["jira_data", "test_plan_title", "test_strategy", "include_automation", "include_performance", "include_security", "confluence_space_key"]
             }
         }
     
@@ -1207,4 +1212,306 @@ Formato de salida:
 A) CSV con casos
 B) Fichas detalladas
 C) Artefactos técnicos básicos
+        """
+    
+    def get_confluence_test_plan_prompt(
+        self,
+        jira_data: Dict[str, Any],
+        test_plan_title: str,
+        test_strategy: str = "comprehensive",
+        include_automation: bool = True,
+        include_performance: bool = False,
+        include_security: bool = True,
+        confluence_space_key: str = "QA"
+    ) -> str:
+        """Obtener prompt para análisis de Jira y diseño de plan de pruebas para Confluence"""
+        try:
+            template_data = self.templates["confluence_test_plan"]
+            template = template_data["template"]
+            
+            # Reemplazar variables en el template
+            prompt = template.format(
+                jira_data=jira_data,
+                test_plan_title=test_plan_title,
+                test_strategy=test_strategy,
+                include_automation=str(include_automation).lower(),
+                include_performance=str(include_performance).lower(),
+                include_security=str(include_security).lower(),
+                confluence_space_key=confluence_space_key,
+                timestamp=datetime.utcnow().isoformat()
+            )
+            
+            logger.info("Confluence test plan prompt generated", 
+                       test_plan_title=test_plan_title, 
+                       test_strategy=test_strategy,
+                       confluence_space_key=confluence_space_key)
+            return prompt
+            
+        except Exception as e:
+            logger.error("Error generating Confluence test plan prompt", error=str(e))
+            return self._get_fallback_confluence_prompt(jira_data, test_plan_title)
+    
+    def _get_confluence_test_plan_template(self) -> str:
+        """Template para análisis de Jira y diseño de plan de pruebas para Confluence"""
+        return """
+Eres un experto en QA y testing con especialización en análisis de issues de Jira y diseño de planes de prueba estructurados para Confluence.
+Analiza el siguiente issue de Jira y diseña un plan de pruebas completo y profesional para documentar en Confluence.
+
+DATOS DEL ISSUE DE JIRA:
+{jira_data}
+
+CONFIGURACIÓN DEL PLAN:
+- Título del Plan: {test_plan_title}
+- Estrategia de Testing: {test_strategy}
+- Espacio de Confluence: {confluence_space_key}
+- Incluir Automatización: {include_automation}
+- Incluir Rendimiento: {include_performance}
+- Incluir Seguridad: {include_security}
+- Timestamp: {timestamp}
+
+METODOLOGÍA DE DISEÑO DEL PLAN:
+
+1. **ANÁLISIS DEL ISSUE DE JIRA**:
+   - Identifica el tipo de issue (Story, Task, Bug, Epic)
+   - Extrae criterios de aceptación explícitos e implícitos
+   - Analiza la descripción y campos personalizados
+   - Considera la prioridad, estado y dependencias
+   - Identifica stakeholders y responsables
+
+2. **DISEÑO DE ESTRATEGIA DE TESTING**:
+   - Define el enfoque de testing según la estrategia solicitada
+   - Identifica tipos de pruebas necesarios (funcionales, no funcionales)
+   - Establece criterios de entrada y salida
+   - Define niveles de testing (unit, integration, system, acceptance)
+   - Considera aspectos de automatización, rendimiento y seguridad
+
+3. **ESTRUCTURA DEL PLAN DE PRUEBAS**:
+   - Resumen ejecutivo y objetivos
+   - Alcance y criterios de cobertura
+   - Estrategia de testing detallada
+   - Plan de ejecución por fases
+   - Casos de prueba estructurados
+   - Criterios de aceptación y Definition of Done
+   - Gestión de riesgos y mitigaciones
+   - Recursos y cronograma
+
+4. **FORMATO CONFLUENCE**:
+   - Utiliza macros de Confluence para estructura
+   - Incluye tablas, listas y elementos visuales
+   - Aplica formato profesional y legible
+   - Incluye enlaces y referencias cruzadas
+   - Optimiza para colaboración y revisión
+
+FORMATO DE RESPUESTA JSON:
+{{
+    "test_plan_sections": [
+        {{
+            "section_id": "overview",
+            "title": "Resumen Ejecutivo",
+            "content": "Contenido en formato Confluence con macros",
+            "order": 1
+        }},
+        {{
+            "section_id": "scope",
+            "title": "Alcance y Criterios de Cobertura",
+            "content": "Contenido detallado del alcance",
+            "order": 2
+        }},
+        {{
+            "section_id": "strategy",
+            "title": "Estrategia de Testing",
+            "content": "Estrategia detallada con enfoques",
+            "order": 3
+        }},
+        {{
+            "section_id": "execution",
+            "title": "Plan de Ejecución",
+            "content": "Fases y cronograma de ejecución",
+            "order": 4
+        }},
+        {{
+            "section_id": "test_cases",
+            "title": "Casos de Prueba",
+            "content": "Lista estructurada de casos de prueba",
+            "order": 5
+        }},
+        {{
+            "section_id": "acceptance",
+            "title": "Criterios de Aceptación",
+            "content": "Criterios y Definition of Done",
+            "order": 6
+        }},
+        {{
+            "section_id": "risks",
+            "title": "Gestión de Riesgos",
+            "content": "Riesgos identificados y mitigaciones",
+            "order": 7
+        }},
+        {{
+            "section_id": "resources",
+            "title": "Recursos y Cronograma",
+            "content": "Recursos necesarios y timeline",
+            "order": 8
+        }}
+    ],
+    "test_execution_phases": [
+        {{
+            "phase_name": "Fase 1: Preparación y Setup",
+            "duration": "1-2 días",
+            "test_cases_count": 5,
+            "responsible": "Equipo de QA",
+            "dependencies": ["Entorno de testing configurado"]
+        }},
+        {{
+            "phase_name": "Fase 2: Pruebas Funcionales",
+            "duration": "3-5 días",
+            "test_cases_count": 15,
+            "responsible": "Equipo de QA",
+            "dependencies": ["Fase 1 completada"]
+        }},
+        {{
+            "phase_name": "Fase 3: Pruebas de Integración",
+            "duration": "2-3 días",
+            "test_cases_count": 8,
+            "responsible": "Equipo de QA + Desarrollo",
+            "dependencies": ["Fase 2 completada"]
+        }},
+        {{
+            "phase_name": "Fase 4: Pruebas de Aceptación",
+            "duration": "1-2 días",
+            "test_cases_count": 5,
+            "responsible": "Product Owner + Stakeholders",
+            "dependencies": ["Fase 3 completada"]
+        }}
+    ],
+    "test_cases": [
+        {{
+            "test_case_id": "CP-001-{confluence_space_key}-MODULO-DATO-CONDICION-RESULTADO",
+            "title": "CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado",
+            "description": "Descripción detallada del caso de prueba",
+            "test_type": "functional|integration|ui|api|security|performance|usability|accessibility|regression",
+            "priority": "critical|high|medium|low",
+            "steps": [
+                "Paso 1: Acción específica y verificable",
+                "Paso 2: Acción específica y verificable",
+                "Paso N: Verificación del resultado"
+            ],
+            "expected_result": "Resultado Esperado: [Descripción específica del resultado esperado]",
+            "preconditions": [
+                "Precondicion: [Descripción específica de las precondiciones necesarias]"
+            ],
+            "test_data": {{
+                "input_data": "Datos de entrada específicos",
+                "environment": "Configuración del entorno",
+                "user_roles": "Roles de usuario necesarios"
+            }},
+            "automation_potential": "high|medium|low",
+            "estimated_duration": "X-Y minutes",
+            "risk_level": "high|medium|low",
+            "business_impact": "critical|high|medium|low"
+        }}
+    ],
+    "confluence_content": "Contenido completo del plan en formato Confluence con macros y formato",
+    "confluence_markup": "Markup específico de Confluence para crear la página",
+    "total_test_cases": 25,
+    "estimated_duration": "1-2 semanas",
+    "risk_level": "medium",
+    "confidence_score": 0.85,
+    "coverage_analysis": {{
+        "functional_coverage": "90%",
+        "edge_case_coverage": "75%",
+        "integration_coverage": "80%",
+        "security_coverage": "85%",
+        "ui_coverage": "70%",
+        "usability_coverage": "65%",
+        "accessibility_coverage": "60%",
+        "automation_coverage": "70%"
+    }},
+    "automation_potential": {{
+        "high_automation": 15,
+        "medium_automation": 8,
+        "low_automation": 2,
+        "automation_percentage": "70%",
+        "recommended_tools": ["Selenium", "Playwright", "Cypress", "Jest"],
+        "implementation_effort": "medium"
+    }},
+    "jira_analysis": {{
+        "issue_type": "Story|Task|Bug|Epic",
+        "priority_level": "Highest|High|Medium|Low|Lowest",
+        "complexity": "low|medium|high",
+        "business_value": "high|medium|low",
+        "technical_risk": "high|medium|low",
+        "dependencies": ["Dependencia 1", "Dependencia 2"],
+        "stakeholders": ["Stakeholder 1", "Stakeholder 2"]
+    }}
+}}
+
+REGLAS ESPECÍFICAS PARA CONFLUENCE:
+
+1. **FORMATO CONFLUENCE**:
+   - Utiliza macros de Confluence (info, warning, note, panel)
+   - Aplica tablas estructuradas para casos de prueba
+   - Incluye enlaces a issues de Jira relacionados
+   - Usa elementos visuales (iconos, colores) apropiadamente
+   - Optimiza para lectura en pantalla y impresión
+
+2. **ESTRUCTURA DEL PLAN**:
+   - Resumen ejecutivo claro y conciso
+   - Alcance bien definido con criterios de entrada/salida
+   - Estrategia de testing detallada y justificada
+   - Plan de ejecución realista con dependencias
+   - Casos de prueba estructurados y ejecutables
+   - Criterios de aceptación medibles
+   - Gestión de riesgos proactiva
+
+3. **CASOS DE PRUEBA**:
+   - Formato estándar: CP - NNN - APLICACION - MODULO - DATO - CONDICION - RESULTADO
+   - Pasos claros, específicos y verificables
+   - Resultados esperados medibles
+   - Precondiciones completas
+   - Datos de prueba realistas
+   - Evaluación de automatización
+
+4. **COLABORACIÓN**:
+   - Incluye secciones para comentarios y feedback
+   - Define roles y responsabilidades claramente
+   - Establece criterios de aprobación
+   - Facilita la revisión y actualización
+
+5. **MÉTRICAS Y ANÁLISIS**:
+   - Cobertura de pruebas cuantificada
+   - Análisis de riesgo detallado
+   - Potencial de automatización evaluado
+   - Estimaciones realistas de tiempo y recursos
+
+BUENAS PRÁCTICAS APLICADAS:
+- Análisis basado en metodologías ágiles (Scrum, Kanban)
+- Consideración del contexto de usuario y valor de negocio
+- Aplicación de técnicas BDD (Behavior-Driven Development)
+- Evaluación de viabilidad de automatización
+- Consideración de aspectos de seguridad y rendimiento
+- Formato profesional optimizado para Confluence
+- Estructura colaborativa y mantenible
+
+Genera la respuesta JSON ahora:
+        """
+    
+    def _get_fallback_confluence_prompt(self, jira_data: Dict[str, Any], test_plan_title: str) -> str:
+        """Prompt de fallback para análisis de Confluence"""
+        return f"""
+Analiza el siguiente issue de Jira y diseña un plan de pruebas para Confluence:
+
+ISSUE: {jira_data.get('key', 'N/A')} - {jira_data.get('summary', 'N/A')}
+DESCRIPCIÓN: {jira_data.get('description', 'N/A')}
+
+TÍTULO DEL PLAN: {test_plan_title}
+
+Genera un plan de pruebas en formato JSON con:
+- test_plan_sections (secciones del plan)
+- test_execution_phases (fases de ejecución)
+- test_cases (casos de prueba)
+- confluence_content (contenido para Confluence)
+- confluence_markup (markup de Confluence)
+
+Incluye también coverage_analysis, automation_potential y jira_analysis.
         """

@@ -61,6 +61,7 @@ app = FastAPI(
     ### Endpoints:
     - `/analyze` - Análisis unificado de contenido
     - `/analyze-jira` - Análisis de work items de Jira
+    - `/analyze-jira-confluence` - Análisis de Jira y diseño de planes de prueba para Confluence
     - `/generate-advanced-tests` - Generación con técnicas avanzadas
     - `/analysis/requirements/istqb-check` - Análisis estático de requisitos ISTQB
     - `/health` - Estado del servicio
@@ -459,6 +460,133 @@ class ISTQBAnalysisResponse(BaseModel):
     analysis_id: str = Field(..., description="ID único del análisis")
     processing_time: float = Field(..., description="Tiempo de procesamiento en segundos")
     created_at: datetime = Field(..., description="Timestamp de creación")
+
+# Modelos para análisis de Jira y diseño de planes de prueba en Confluence
+class ConfluenceTestPlanRequest(BaseModel):
+    """Solicitud de análisis de Jira y diseño de plan de pruebas para Confluence"""
+    jira_issue_id: str = Field(
+        ..., 
+        description="ID del issue de Jira a analizar",
+        example="PROJ-123",
+        min_length=1,
+        max_length=50
+    )
+    confluence_space_key: str = Field(
+        ..., 
+        description="Clave del espacio de Confluence donde crear el plan",
+        example="QA",
+        min_length=1,
+        max_length=20
+    )
+    test_plan_title: str = Field(
+        ..., 
+        description="Título del plan de pruebas en Confluence",
+        example="Plan de Pruebas - Autenticación de Usuarios",
+        min_length=5,
+        max_length=200
+    )
+    test_strategy: Optional[str] = Field(
+        "comprehensive",
+        description="Estrategia de testing a aplicar",
+        example="comprehensive",
+        pattern="^(basic|standard|comprehensive|agile)$"
+    )
+    include_automation: bool = Field(
+        True,
+        description="Incluir casos de automatización en el plan"
+    )
+    include_performance: bool = Field(
+        False,
+        description="Incluir casos de rendimiento en el plan"
+    )
+    include_security: bool = Field(
+        True,
+        description="Incluir casos de seguridad en el plan"
+    )
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "jira_issue_id": "PROJ-123",
+                "confluence_space_key": "QA",
+                "test_plan_title": "Plan de Pruebas - Autenticación de Usuarios",
+                "test_strategy": "comprehensive",
+                "include_automation": True,
+                "include_performance": False,
+                "include_security": True
+            }
+        }
+
+class TestPlanSection(BaseModel):
+    """Sección del plan de pruebas"""
+    section_id: str = Field(..., description="ID de la sección", example="overview")
+    title: str = Field(..., description="Título de la sección", example="Resumen Ejecutivo")
+    content: str = Field(..., description="Contenido de la sección en formato Confluence")
+    order: int = Field(..., description="Orden de la sección", example=1)
+
+class TestExecutionPhase(BaseModel):
+    """Fase de ejecución de pruebas"""
+    phase_name: str = Field(..., description="Nombre de la fase", example="Fase 1: Pruebas Unitarias")
+    duration: str = Field(..., description="Duración estimada", example="2-3 días")
+    test_cases_count: int = Field(..., description="Número de casos de prueba", example=15)
+    responsible: str = Field(..., description="Responsable de la fase", example="Equipo de Desarrollo")
+    dependencies: List[str] = Field(default_factory=list, description="Dependencias de la fase")
+
+class ConfluenceTestPlanResponse(BaseModel):
+    """Respuesta del análisis de Jira y diseño de plan de pruebas para Confluence"""
+    jira_issue_id: str = Field(..., description="ID del issue de Jira analizado")
+    confluence_space_key: str = Field(..., description="Clave del espacio de Confluence")
+    test_plan_title: str = Field(..., description="Título del plan de pruebas")
+    analysis_id: str = Field(..., description="ID único del análisis")
+    status: str = Field(..., description="Estado del análisis", example="completed")
+    
+    # Datos del issue de Jira
+    jira_data: Dict[str, Any] = Field(..., description="Datos obtenidos de Jira")
+    
+    # Plan de pruebas estructurado
+    test_plan_sections: List[TestPlanSection] = Field(..., description="Secciones del plan de pruebas")
+    test_execution_phases: List[TestExecutionPhase] = Field(..., description="Fases de ejecución")
+    test_cases: List[TestCase] = Field(..., description="Casos de prueba generados")
+    
+    # Metadatos del plan
+    total_test_cases: int = Field(..., description="Total de casos de prueba generados")
+    estimated_duration: str = Field(..., description="Duración total estimada", example="1-2 semanas")
+    risk_level: str = Field(..., description="Nivel de riesgo del plan", example="medium")
+    confidence_score: float = Field(..., description="Puntuación de confianza (0-1)", example=0.85)
+    
+    # Contenido para Confluence
+    confluence_content: str = Field(..., description="Contenido completo del plan en formato Confluence")
+    confluence_markup: str = Field(..., description="Markup de Confluence para crear la página")
+    
+    # Métricas y análisis
+    coverage_analysis: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
+    automation_potential: Dict[str, Any] = Field(..., description="Análisis de potencial de automatización")
+    
+    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos")
+    created_at: datetime = Field(..., description="Timestamp de creación")
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "jira_issue_id": "PROJ-123",
+                "confluence_space_key": "QA",
+                "test_plan_title": "Plan de Pruebas - Autenticación de Usuarios",
+                "analysis_id": "confluence_plan_PROJ123_1760825804",
+                "status": "completed",
+                "jira_data": {
+                    "summary": "Implementar autenticación de usuarios",
+                    "description": "El sistema debe permitir...",
+                    "issue_type": "Story",
+                    "priority": "High"
+                },
+                "total_test_cases": 25,
+                "estimated_duration": "1-2 semanas",
+                "risk_level": "medium",
+                "confidence_score": 0.85,
+                "processing_time": 45.2,
+                "created_at": "2025-10-18T19:16:44.520862"
+            }
+        }
 
 
 @app.get("/", include_in_schema=False)
@@ -1317,6 +1445,239 @@ async def analyze_requirement_istqb(
             detail=f"Error analyzing requirement with ISTQB: {str(e)}"
         )
 
+@app.post("/analyze-jira-confluence", 
+          response_model=ConfluenceTestPlanResponse,
+          summary="Analizar issue de Jira y diseñar plan de pruebas para Confluence",
+          description="Analiza un issue de Jira y genera un plan de pruebas completo y estructurado para documentar en Confluence",
+          tags=["Integración Confluence"],
+          responses={
+              200: {
+                  "description": "Análisis de Jira y diseño de plan de pruebas completado exitosamente",
+                  "model": ConfluenceTestPlanResponse
+              },
+              404: {
+                  "description": "Issue de Jira no encontrado",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Issue de Jira no encontrado"}
+                      }
+                  }
+              },
+              422: {
+                  "description": "Datos de entrada inválidos",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Error de validación en los datos de entrada"}
+                      }
+                  }
+              },
+              500: {
+                  "description": "Error interno del servidor",
+                  "content": {
+                      "application/json": {
+                          "example": {"detail": "Error interno del servidor"}
+                      }
+                  }
+              }
+          })
+async def analyze_jira_confluence_test_plan(
+    request: ConfluenceTestPlanRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    ## Analizar Issue de Jira y Diseñar Plan de Pruebas para Confluence
+    
+    Analiza un issue específico de Jira y genera un plan de pruebas completo y estructurado para documentar en Confluence.
+    
+    ### Proceso:
+    1. **Obtención de Jira**: Se recupera el issue desde Jira API
+    2. **Análisis del Issue**: Se analiza el contenido, criterios de aceptación y contexto
+    3. **Diseño del Plan**: Se diseña un plan de pruebas estructurado usando IA
+    4. **Formato Confluence**: Se genera contenido optimizado para Confluence
+    5. **Casos de Prueba**: Se crean casos de prueba detallados y ejecutables
+    
+    ### Datos Obtenidos de Jira:
+    - **Summary**: Título del issue
+    - **Description**: Descripción detallada
+    - **Acceptance Criteria**: Criterios de aceptación (si están disponibles)
+    - **Issue Type**: Tipo de issue (Story, Task, Bug, Epic)
+    - **Priority**: Prioridad del issue
+    - **Status**: Estado actual
+    - **Dependencies**: Dependencias con otros issues
+    
+    ### Estrategias de Testing:
+    - **basic**: Plan básico con casos esenciales
+    - **standard**: Plan estándar con casos funcionales y de integración
+    - **comprehensive**: Plan completo con todos los tipos de pruebas
+    - **agile**: Plan ágil optimizado para metodologías ágiles
+    
+    ### Características del Plan:
+    - **Secciones Estructuradas**: Resumen, alcance, estrategia, ejecución, casos, criterios, riesgos, recursos
+    - **Fases de Ejecución**: Plan detallado por fases con duraciones y responsables
+    - **Casos de Prueba**: Casos estructurados con pasos, resultados esperados y datos de prueba
+    - **Formato Confluence**: Contenido optimizado con macros, tablas y elementos visuales
+    - **Análisis de Cobertura**: Métricas de cobertura por tipo de prueba
+    - **Potencial de Automatización**: Evaluación de casos automatizables
+    
+    ### Respuesta:
+    - **test_plan_sections**: Secciones del plan de pruebas
+    - **test_execution_phases**: Fases de ejecución con cronograma
+    - **test_cases**: Casos de prueba generados
+    - **confluence_content**: Contenido completo en formato Confluence
+    - **confluence_markup**: Markup específico para crear la página
+    - **coverage_analysis**: Análisis de cobertura de pruebas
+    - **automation_potential**: Análisis de potencial de automatización
+    """
+    start_time = datetime.utcnow()
+    analysis_id = f"confluence_plan_{request.jira_issue_id.replace('-', '')}_{int(start_time.timestamp())}"
+    
+    try:
+        logger.info(
+            "Starting Jira-Confluence test plan analysis",
+            jira_issue_id=request.jira_issue_id,
+            confluence_space_key=request.confluence_space_key,
+            test_plan_title=request.test_plan_title,
+            test_strategy=request.test_strategy,
+            analysis_id=analysis_id
+        )
+        
+        # Obtener datos del issue desde Jira
+        jira_data = await tracker_client.get_work_item_details(
+            work_item_id=request.jira_issue_id,
+            project_key=""  # Se detecta automáticamente del jira_issue_id
+        )
+        
+        if not jira_data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Issue de Jira {request.jira_issue_id} not found"
+            )
+        
+        # Sanitizar contenido sensible
+        sanitized_jira_data = sanitizer.sanitize_dict(jira_data)
+        
+        # Generar prompt para análisis de Jira y diseño de plan de pruebas
+        prompt = prompt_templates.get_confluence_test_plan_prompt(
+            jira_data=sanitized_jira_data,
+            test_plan_title=request.test_plan_title,
+            test_strategy=request.test_strategy,
+            include_automation=request.include_automation,
+            include_performance=request.include_performance,
+            include_security=request.include_security,
+            confluence_space_key=request.confluence_space_key
+        )
+        
+        # Ejecutar análisis con LLM
+        analysis_result = await llm_wrapper.analyze_requirements(
+            prompt=prompt,
+            requirement_id=request.jira_issue_id,
+            analysis_id=analysis_id
+        )
+        
+        # Procesar secciones del plan de pruebas
+        test_plan_sections = []
+        if analysis_result.get("test_plan_sections"):
+            for section_data in analysis_result["test_plan_sections"]:
+                section = TestPlanSection(
+                    section_id=section_data.get("section_id", "section"),
+                    title=section_data.get("title", ""),
+                    content=section_data.get("content", ""),
+                    order=section_data.get("order", 1)
+                )
+                test_plan_sections.append(section)
+        
+        # Procesar fases de ejecución
+        test_execution_phases = []
+        if analysis_result.get("test_execution_phases"):
+            for phase_data in analysis_result["test_execution_phases"]:
+                phase = TestExecutionPhase(
+                    phase_name=phase_data.get("phase_name", ""),
+                    duration=phase_data.get("duration", ""),
+                    test_cases_count=phase_data.get("test_cases_count", 0),
+                    responsible=phase_data.get("responsible", ""),
+                    dependencies=phase_data.get("dependencies", [])
+                )
+                test_execution_phases.append(phase)
+        
+        # Procesar casos de prueba generados
+        test_cases = []
+        if analysis_result.get("test_cases"):
+            for tc_data in analysis_result["test_cases"]:
+                test_case = TestCase(
+                    test_case_id=tc_data.get("test_case_id", f"CP-001-{request.jira_issue_id}-001"),
+                    title=tc_data.get("title", ""),
+                    description=tc_data.get("description", ""),
+                    test_type=tc_data.get("test_type", "functional"),
+                    priority=tc_data.get("priority", "medium"),
+                    steps=tc_data.get("steps", []),
+                    expected_result=tc_data.get("expected_result", ""),
+                    preconditions=tc_data.get("preconditions", []),
+                    test_data=tc_data.get("test_data", {}),
+                    automation_potential=tc_data.get("automation_potential", "medium"),
+                    estimated_duration=tc_data.get("estimated_duration", "5-10 minutes")
+                )
+                test_cases.append(test_case)
+        
+        # Calcular tiempo de procesamiento
+        processing_time = (datetime.utcnow() - start_time).total_seconds()
+        
+        # Crear respuesta
+        response = ConfluenceTestPlanResponse(
+            jira_issue_id=request.jira_issue_id,
+            confluence_space_key=request.confluence_space_key,
+            test_plan_title=request.test_plan_title,
+            analysis_id=analysis_id,
+            status="completed",
+            jira_data=jira_data,
+            test_plan_sections=test_plan_sections,
+            test_execution_phases=test_execution_phases,
+            test_cases=test_cases,
+            total_test_cases=len(test_cases),
+            estimated_duration=analysis_result.get("estimated_duration", "1-2 semanas"),
+            risk_level=analysis_result.get("risk_level", "medium"),
+            confidence_score=analysis_result.get("confidence_score", 0.8),
+            confluence_content=analysis_result.get("confluence_content", ""),
+            confluence_markup=analysis_result.get("confluence_markup", ""),
+            coverage_analysis=analysis_result.get("coverage_analysis", {}),
+            automation_potential=analysis_result.get("automation_potential", {}),
+            processing_time=processing_time,
+            created_at=start_time
+        )
+        
+        # Registrar en background task para tracking
+        background_tasks.add_task(
+            log_confluence_test_plan_completion,
+            analysis_id,
+            request.jira_issue_id,
+            response
+        )
+        
+        logger.info(
+            "Jira-Confluence test plan analysis completed",
+            jira_issue_id=request.jira_issue_id,
+            analysis_id=analysis_id,
+            test_plan_sections_count=len(test_plan_sections),
+            test_execution_phases_count=len(test_execution_phases),
+            test_cases_count=len(test_cases),
+            processing_time=processing_time
+        )
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            "Jira-Confluence test plan analysis failed",
+            jira_issue_id=request.jira_issue_id,
+            analysis_id=analysis_id,
+            error=str(e)
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error analyzing Jira issue and designing Confluence test plan: {str(e)}"
+        )
+
 # Funciones auxiliares para análisis ISTQB
 def _validate_requirement_automatically(requirement_text: str) -> List[Dict[str, Any]]:
     """Validaciones automáticas según criterios ISTQB"""
@@ -1744,6 +2105,36 @@ async def log_advanced_generation_completion(
         logger.error(
             "Failed to log advanced generation completion",
             generation_id=generation_id,
+            error=str(e)
+        )
+
+async def log_confluence_test_plan_completion(
+    analysis_id: str,
+    jira_issue_id: str,
+    response: ConfluenceTestPlanResponse
+):
+    """Background task para registrar la finalización del análisis de Confluence"""
+    try:
+        # Aquí podrías implementar lógica adicional como:
+        # - Guardar en base de datos
+        # - Enviar notificaciones
+        # - Actualizar métricas
+        # - Crear página en Confluence
+        # - Enviar notificaciones a stakeholders
+        logger.info(
+            "Confluence test plan analysis completion logged",
+            analysis_id=analysis_id,
+            jira_issue_id=jira_issue_id,
+            test_plan_sections_count=len(response.test_plan_sections),
+            test_execution_phases_count=len(response.test_execution_phases),
+            test_cases_count=len(response.test_cases),
+            confluence_space_key=response.confluence_space_key,
+            processing_time=response.processing_time
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to log Confluence test plan analysis completion",
+            analysis_id=analysis_id,
             error=str(e)
         )
 
