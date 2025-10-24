@@ -49,7 +49,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jira_issue_id\": \"{{jira_issue_id}}\",\n  \"confluence_space_key\": \"{{confluence_space_key}}\"\n}"
+          "raw": "{\n  \"id_issue_jira\": \"{{jira_issue_id}}\",\n  \"espacio_confluence\": \"{{confluence_space_key}}\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/analyze-jira-confluence",
@@ -72,7 +72,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jira_issue_id\": \"{{jira_issue_id}}\",\n  \"confluence_space_key\": \"{{confluence_space_key}}\",\n  \"test_plan_title\": \"Plan de Pruebas - Autenticación de Usuarios\"\n}"
+          "raw": "{\n  \"id_issue_jira\": \"{{jira_issue_id}}\",\n  \"espacio_confluence\": \"{{confluence_space_key}}\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Autenticación de Usuarios\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/analyze-jira-confluence",
@@ -95,7 +95,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jira_issue_id\": \"AUTH-001\",\n  \"confluence_space_key\": \"QA\",\n  \"test_plan_title\": \"Plan de Pruebas - Sistema de Autenticación\"\n}"
+          "raw": "{\n  \"id_issue_jira\": \"AUTH-001\",\n  \"espacio_confluence\": \"QA\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Sistema de Autenticación\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/analyze-jira-confluence",
@@ -118,7 +118,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jira_issue_id\": \"API-002\",\n  \"confluence_space_key\": \"DEV\",\n  \"test_plan_title\": \"Plan de Pruebas - Integración API de Pagos\"\n}"
+          "raw": "{\n  \"id_issue_jira\": \"API-002\",\n  \"espacio_confluence\": \"DEV\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Integración API de Pagos\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/analyze-jira-confluence",
@@ -141,7 +141,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jira_issue_id\": \"PERF-003\",\n  \"confluence_space_key\": \"QA\",\n  \"test_plan_title\": \"Plan de Pruebas - Optimización de Rendimiento\"\n}"
+          "raw": "{\n  \"id_issue_jira\": \"PERF-003\",\n  \"espacio_confluence\": \"QA\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Optimización de Rendimiento\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/analyze-jira-confluence",
@@ -164,7 +164,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jira_issue_id\": \"EPIC-001\",\n  \"confluence_space_key\": \"PRODUCT\",\n  \"test_plan_title\": \"Plan de Pruebas - Nueva Funcionalidad de E-commerce\"\n}"
+          "raw": "{\n  \"id_issue_jira\": \"EPIC-001\",\n  \"espacio_confluence\": \"PRODUCT\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Nueva Funcionalidad de E-commerce\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/analyze-jira-confluence",
@@ -187,7 +187,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jira_issue_id\": \"INVALID-999\",\n  \"confluence_space_key\": \"QA\"\n}"
+          "raw": "{\n  \"id_issue_jira\": \"INVALID-999\",\n  \"espacio_confluence\": \"QA\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/analyze-jira-confluence",
@@ -210,7 +210,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"jira_issue_id\": \"\",\n  \"confluence_space_key\": \"QA\"\n}"
+          "raw": "{\n  \"id_issue_jira\": \"\",\n  \"espacio_confluence\": \"QA\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/analyze-jira-confluence",
@@ -263,50 +263,50 @@
           "",
           "pm.test('Response has required fields', function () {",
           "    const jsonData = pm.response.json();",
-          "    pm.expect(jsonData).to.have.property('analysis_id');",
-          "    pm.expect(jsonData).to.have.property('jira_issue_id');",
-          "    pm.expect(jsonData).to.have.property('confluence_space_key');",
-          "    pm.expect(jsonData).to.have.property('status');",
+          "    pm.expect(jsonData).to.have.property('id_analisis');",
+          "    pm.expect(jsonData).to.have.property('id_issue_jira');",
+          "    pm.expect(jsonData).to.have.property('espacio_confluence');",
+          "    pm.expect(jsonData).to.have.property('estado');",
           "});",
           "",
           "pm.test('Response contains test plan sections', function () {",
           "    const jsonData = pm.response.json();",
-          "    pm.expect(jsonData).to.have.property('test_plan_sections');",
-          "    pm.expect(jsonData.test_plan_sections).to.be.an('array');",
-          "    pm.expect(jsonData.test_plan_sections.length).to.be.above(0);",
+          "    pm.expect(jsonData).to.have.property('secciones_plan_pruebas');",
+          "    pm.expect(jsonData.secciones_plan_pruebas).to.be.an('array');",
+          "    pm.expect(jsonData.secciones_plan_pruebas.length).to.be.above(0);",
           "});",
           "",
           "pm.test('Response contains test cases', function () {",
           "    const jsonData = pm.response.json();",
-          "    pm.expect(jsonData).to.have.property('test_cases');",
-          "    pm.expect(jsonData.test_cases).to.be.an('array');",
-          "    pm.expect(jsonData.test_cases.length).to.be.above(0);",
+          "    pm.expect(jsonData).to.have.property('casos_prueba');",
+          "    pm.expect(jsonData.casos_prueba).to.be.an('array');",
+          "    pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
           "});",
           "",
           "pm.test('Response contains confluence content', function () {",
           "    const jsonData = pm.response.json();",
-          "    pm.expect(jsonData).to.have.property('confluence_content');",
-          "    pm.expect(jsonData.confluence_content).to.be.a('string');",
-          "    pm.expect(jsonData.confluence_content.length).to.be.above(0);",
+          "    pm.expect(jsonData).to.have.property('contenido_confluence');",
+          "    pm.expect(jsonData.contenido_confluence).to.be.a('string');",
+          "    pm.expect(jsonData.contenido_confluence.length).to.be.above(0);",
           "});",
           "",
           "pm.test('Response contains coverage analysis', function () {",
           "    const jsonData = pm.response.json();",
-          "    pm.expect(jsonData).to.have.property('coverage_analysis');",
-          "    pm.expect(jsonData.coverage_analysis).to.be.an('object');",
+          "    pm.expect(jsonData).to.have.property('analisis_cobertura');",
+          "    pm.expect(jsonData.analisis_cobertura).to.be.an('object');",
           "});",
           "",
           "pm.test('Response contains automation potential', function () {",
           "    const jsonData = pm.response.json();",
-          "    pm.expect(jsonData).to.have.property('automation_potential');",
-          "    pm.expect(jsonData.automation_potential).to.be.an('object');",
+          "    pm.expect(jsonData).to.have.property('potencial_automatizacion');",
+          "    pm.expect(jsonData.potencial_automatizacion).to.be.an('object');",
           "});",
           "",
           "pm.test('Confidence score is between 0 and 1', function () {",
           "    const jsonData = pm.response.json();",
-          "    pm.expect(jsonData).to.have.property('confidence_score');",
-          "    pm.expect(jsonData.confidence_score).to.be.a('number');",
-          "    pm.expect(jsonData.confidence_score).to.be.within(0, 1);",
+          "    pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+          "    pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+          "    pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
           "});",
           "",
           "pm.test('Processing time is reasonable', function () {",

@@ -111,27 +111,27 @@ sanitizer = PIISanitizer()
 # Modelos Pydantic
 class AnalysisRequest(BaseModel):
     """Solicitud unificada de análisis de contenido para generar casos de prueba"""
-    content_id: str = Field(
+    id_contenido: str = Field(
         ..., 
         description="ID único del contenido a analizar",
         example="TC-001",
         min_length=1,
         max_length=50
     )
-    content: str = Field(
+    contenido: str = Field(
         ..., 
         description="Contenido a analizar (caso de prueba, requerimiento, historia de usuario)",
         example="Verificar que el usuario pueda iniciar sesión con credenciales válidas",
         min_length=10,
         max_length=10000
     )
-    content_type: str = Field(
+    tipo_contenido: str = Field(
         "test_case",
         description="Tipo de contenido a analizar",
         example="test_case",
         pattern="^(test_case|requirement|user_story)$"
     )
-    analysis_level: Optional[str] = Field(
+    nivel_analisis: Optional[str] = Field(
         "medium",
         description="Nivel de análisis y cobertura",
         example="high",
@@ -141,98 +141,98 @@ class AnalysisRequest(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "content_id": "TC-001",
-                "content": "Verificar que el usuario pueda iniciar sesión con credenciales válidas. Pasos: 1) Abrir la página de login, 2) Ingresar usuario válido, 3) Ingresar contraseña válida, 4) Hacer clic en 'Iniciar Sesión'. Resultado esperado: Usuario logueado exitosamente y redirigido al dashboard.",
-                "content_type": "test_case",
-                "analysis_level": "high"
+                "id_contenido": "TC-001",
+                "contenido": "Verificar que el usuario pueda iniciar sesión con credenciales válidas. Pasos: 1) Abrir la página de login, 2) Ingresar usuario válido, 3) Ingresar contraseña válida, 4) Hacer clic en 'Iniciar Sesión'. Resultado esperado: Usuario logueado exitosamente y redirigido al dashboard.",
+                "tipo_contenido": "test_case",
+                "nivel_analisis": "high"
             }
         }
 
 class Suggestion(BaseModel):
     """Sugerencia de mejora para un caso de prueba"""
-    type: str = Field(..., description="Tipo de sugerencia", example="clarity")
-    title: str = Field(..., description="Título de la sugerencia", example="Definir datos de prueba específicos")
-    description: str = Field(..., description="Descripción detallada", example="El caso de prueba debe incluir datos específicos de usuario y contraseña")
-    priority: str = Field(..., description="Prioridad de la sugerencia", example="high")
-    category: str = Field(..., description="Categoría de la mejora", example="improvement")
+    tipo: str = Field(..., description="Tipo de sugerencia", example="clarity")
+    titulo: str = Field(..., description="Título de la sugerencia", example="Definir datos de prueba específicos")
+    descripcion: str = Field(..., description="Descripción detallada", example="El caso de prueba debe incluir datos específicos de usuario y contraseña")
+    prioridad: str = Field(..., description="Prioridad de la sugerencia", example="high")
+    categoria: str = Field(..., description="Categoría de la mejora", example="improvement")
 
 class TestCase(BaseModel):
     """Caso de prueba generado con estructura estandarizada"""
-    test_case_id: str = Field(..., description="ID del caso de prueba", example="CP-001-APLICACION-MODULO-DATO-CONDICION-RESULTADO")
-    title: str = Field(..., description="Título del caso de prueba en formato CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado", example="CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado")
-    description: str = Field(..., description="Descripción detallada del caso de prueba")
-    test_type: str = Field(..., description="Tipo de prueba", example="functional")
-    priority: str = Field(..., description="Prioridad del caso de prueba", example="high")
-    steps: List[str] = Field(..., description="Pasos detallados del caso de prueba")
-    expected_result: str = Field(..., description="Resultado esperado en formato 'Resultado Esperado: [descripción]'", example="Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard")
-    preconditions: List[str] = Field(default_factory=list, description="Precondiciones en formato 'Precondicion: [descripción]'", example=["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"])
-    test_data: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Datos de prueba específicos")
-    automation_potential: str = Field(..., description="Potencial de automatización", example="high")
-    estimated_duration: str = Field(..., description="Duración estimada", example="5-10 minutes")
+    id_caso_prueba: str = Field(..., description="ID del caso de prueba", example="CP-001-APLICACION-MODULO-DATO-CONDICION-RESULTADO")
+    titulo: str = Field(..., description="Título del caso de prueba en formato CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado", example="CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado")
+    descripcion: str = Field(..., description="Descripción detallada del caso de prueba")
+    tipo_prueba: str = Field(..., description="Tipo de prueba", example="functional")
+    prioridad: str = Field(..., description="Prioridad del caso de prueba", example="high")
+    pasos: List[str] = Field(..., description="Pasos detallados del caso de prueba")
+    resultado_esperado: str = Field(..., description="Resultado esperado en formato 'Resultado Esperado: [descripción]'", example="Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard")
+    precondiciones: List[str] = Field(default_factory=list, description="Precondiciones en formato 'Precondicion: [descripción]'", example=["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"])
+    datos_prueba: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Datos de prueba específicos")
+    potencial_automatizacion: str = Field(..., description="Potencial de automatización", example="high")
+    duracion_estimada: str = Field(..., description="Duración estimada", example="5-10 minutes")
 
 class AnalysisResponse(BaseModel):
     """Respuesta unificada del análisis de contenido"""
-    content_id: str = Field(..., description="ID del contenido analizado", example="TC-001")
-    analysis_id: str = Field(..., description="ID único del análisis", example="analysis_TC001_1760825804")
-    status: str = Field(..., description="Estado del análisis", example="completed")
-    test_cases: List[TestCase] = Field(default_factory=list, description="Lista de casos de prueba generados")
-    suggestions: List[Suggestion] = Field(default_factory=list, description="Lista de sugerencias de mejora")
-    coverage_analysis: Dict[str, Any] = Field(default_factory=dict, description="Análisis de cobertura de pruebas")
-    confidence_score: float = Field(..., description="Puntuación de confianza del análisis (0-1)", example=0.85)
-    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos", example=8.81)
-    created_at: datetime = Field(..., description="Timestamp de creación del análisis")
+    id_contenido: str = Field(..., description="ID del contenido analizado", example="TC-001")
+    id_analisis: str = Field(..., description="ID único del análisis", example="analysis_TC001_1760825804")
+    estado: str = Field(..., description="Estado del análisis", example="completed")
+    casos_prueba: List[TestCase] = Field(default_factory=list, description="Lista de casos de prueba generados")
+    sugerencias: List[Suggestion] = Field(default_factory=list, description="Lista de sugerencias de mejora")
+    analisis_cobertura: Dict[str, Any] = Field(default_factory=dict, description="Análisis de cobertura de pruebas")
+    puntuacion_confianza: float = Field(..., description="Puntuación de confianza del análisis (0-1)", example=0.85)
+    tiempo_procesamiento: float = Field(..., description="Tiempo de procesamiento en segundos", example=8.81)
+    fecha_creacion: datetime = Field(..., description="Timestamp de creación del análisis")
     
     class Config:
         schema_extra = {
             "example": {
-                "content_id": "TC-001",
-                "analysis_id": "analysis_TC001_1760825804",
-                "status": "completed",
-                "test_cases": [
+                "id_contenido": "TC-001",
+                "id_analisis": "analysis_TC001_1760825804",
+                "estado": "completed",
+                "casos_prueba": [
                     {
-                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
-                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
-                        "description": "Caso de prueba para verificar autenticación exitosa",
-                        "test_type": "functional",
-                        "priority": "high",
-                        "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
-                        "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
-                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
-                        "test_data": {"email": "test@example.com", "password": "Test123!"},
-                        "automation_potential": "high",
-                        "estimated_duration": "5-10 minutes"
+                        "id_caso_prueba": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
+                        "titulo": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
+                        "descripcion": "Caso de prueba para verificar autenticación exitosa",
+                        "tipo_prueba": "functional",
+                        "prioridad": "high",
+                        "pasos": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
+                        "resultado_esperado": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
+                        "precondiciones": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
+                        "datos_prueba": {"email": "test@example.com", "password": "Test123!"},
+                        "potencial_automatizacion": "high",
+                        "duracion_estimada": "5-10 minutes"
                     }
                 ],
-                "suggestions": [
+                "sugerencias": [
                     {
-                        "type": "clarity",
-                        "title": "Definir datos de prueba específicos",
-                        "description": "El caso de prueba debe incluir datos específicos de usuario y contraseña",
-                        "priority": "high",
-                        "category": "improvement"
+                        "tipo": "clarity",
+                        "titulo": "Definir datos de prueba específicos",
+                        "descripcion": "El caso de prueba debe incluir datos específicos de usuario y contraseña",
+                        "prioridad": "high",
+                        "categoria": "improvement"
                     }
                 ],
-                "coverage_analysis": {
+                "analisis_cobertura": {
                     "functional_coverage": "90%",
                     "edge_case_coverage": "75%",
                     "integration_coverage": "80%"
                 },
-                "confidence_score": 0.85,
-                "processing_time": 8.81,
-                "created_at": "2025-10-18T19:16:44.520862"
+                "puntuacion_confianza": 0.85,
+                "tiempo_procesamiento": 8.81,
+                "fecha_creacion": "2025-10-18T19:16:44.520862"
             }
         }
 
 class JiraAnalysisRequest(BaseModel):
     """Solicitud simplificada de análisis de work item de Jira"""
-    work_item_id: str = Field(
+    id_work_item: str = Field(
         ..., 
         description="ID del work item en Jira (ej: PROJ-123)",
         example="AUTH-123",
         min_length=1,
         max_length=50
     )
-    analysis_level: Optional[str] = Field(
+    nivel_analisis: Optional[str] = Field(
         "medium",
         description="Nivel de análisis y cobertura",
         example="high",
@@ -242,59 +242,59 @@ class JiraAnalysisRequest(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "work_item_id": "AUTH-123",
-                "analysis_level": "high"
+                "id_work_item": "AUTH-123",
+                "nivel_analisis": "high"
             }
         }
 
 class JiraAnalysisResponse(BaseModel):
     """Respuesta del análisis de work item de Jira"""
-    work_item_id: str = Field(..., description="ID del work item analizado", example="AUTH-123")
-    jira_data: Dict[str, Any] = Field(..., description="Datos obtenidos de Jira")
-    analysis_id: str = Field(..., description="ID único del análisis", example="jira_analysis_AUTH123_1760825804")
-    status: str = Field(..., description="Estado del análisis", example="completed")
-    test_cases: List[TestCase] = Field(..., description="Lista de casos de prueba generados")
-    coverage_analysis: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
-    confidence_score: float = Field(..., description="Puntuación de confianza del análisis (0-1)", example=0.85)
-    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos", example=15.5)
-    created_at: datetime = Field(..., description="Timestamp de creación del análisis")
+    id_work_item: str = Field(..., description="ID del work item analizado", example="AUTH-123")
+    datos_jira: Dict[str, Any] = Field(..., description="Datos obtenidos de Jira")
+    id_analisis: str = Field(..., description="ID único del análisis", example="jira_analysis_AUTH123_1760825804")
+    estado: str = Field(..., description="Estado del análisis", example="completed")
+    casos_prueba: List[TestCase] = Field(..., description="Lista de casos de prueba generados")
+    analisis_cobertura: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
+    puntuacion_confianza: float = Field(..., description="Puntuación de confianza del análisis (0-1)", example=0.85)
+    tiempo_procesamiento: float = Field(..., description="Tiempo de procesamiento en segundos", example=15.5)
+    fecha_creacion: datetime = Field(..., description="Timestamp de creación del análisis")
     
     class Config:
         json_schema_extra = {
             "example": {
-                "work_item_id": "AUTH-123",
-                "jira_data": {
+                "id_work_item": "AUTH-123",
+                "datos_jira": {
                     "summary": "Implementar autenticación de usuarios",
                     "description": "El sistema debe permitir a los usuarios autenticarse...",
                     "issue_type": "Story",
                     "priority": "High",
                     "status": "In Progress"
                 },
-                "analysis_id": "jira_analysis_AUTH123_1760825804",
-                "status": "completed",
-                "test_cases": [
+                "id_analisis": "jira_analysis_AUTH123_1760825804",
+                "estado": "completed",
+                "casos_prueba": [
                     {
-                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
-                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
-                        "description": "Caso de prueba para verificar autenticación exitosa",
-                        "test_type": "functional",
-                        "priority": "high",
-                        "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
-                        "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
-                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
-                        "test_data": {"email": "test@example.com", "password": "Test123!"},
-                        "automation_potential": "high",
-                        "estimated_duration": "5-10 minutes"
+                        "id_caso_prueba": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
+                        "titulo": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
+                        "descripcion": "Caso de prueba para verificar autenticación exitosa",
+                        "tipo_prueba": "functional",
+                        "prioridad": "high",
+                        "pasos": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
+                        "resultado_esperado": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
+                        "precondiciones": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
+                        "datos_prueba": {"email": "test@example.com", "password": "Test123!"},
+                        "potencial_automatizacion": "high",
+                        "duracion_estimada": "5-10 minutes"
                     }
                 ],
-                "coverage_analysis": {
+                "analisis_cobertura": {
                     "functional_coverage": "90%",
                     "edge_case_coverage": "75%",
                     "integration_coverage": "80%"
                 },
-                "confidence_score": 0.85,
-                "processing_time": 15.5,
-                "created_at": "2025-10-18T19:16:44.520862"
+                "puntuacion_confianza": 0.85,
+                "tiempo_procesamiento": 15.5,
+                "fecha_creacion": "2025-10-18T19:16:44.520862"
             }
         }
 
@@ -326,61 +326,61 @@ class AdvancedTestGenerationRequest(BaseModel):
 class AdvancedTestGenerationResponse(BaseModel):
     """Respuesta de la generación de casos de prueba avanzados"""
     aplicacion: str = Field(..., description="Nombre de la aplicación", example="SISTEMA_AUTH")
-    generation_id: str = Field(..., description="ID único de la generación", example="advanced_SISTEMA_AUTH_1760825804")
-    status: str = Field(..., description="Estado de la generación", example="completed")
-    test_cases: List[TestCase] = Field(..., description="Lista de casos de prueba generados")
-    coverage_analysis: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
-    confidence_score: float = Field(..., description="Puntuación de confianza (0-1)", example=0.85)
-    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos", example=25.3)
-    created_at: datetime = Field(..., description="Timestamp de creación")
+    id_generacion: str = Field(..., description="ID único de la generación", example="advanced_SISTEMA_AUTH_1760825804")
+    estado: str = Field(..., description="Estado de la generación", example="completed")
+    casos_prueba: List[TestCase] = Field(..., description="Lista de casos de prueba generados")
+    analisis_cobertura: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
+    puntuacion_confianza: float = Field(..., description="Puntuación de confianza (0-1)", example=0.85)
+    tiempo_procesamiento: float = Field(..., description="Tiempo de procesamiento en segundos", example=25.3)
+    fecha_creacion: datetime = Field(..., description="Timestamp de creación")
     
     class Config:
         json_schema_extra = {
             "example": {
                 "aplicacion": "SISTEMA_AUTH",
-                "generation_id": "advanced_SISTEMA_AUTH_1760825804",
-                "status": "completed",
-                "test_cases": [
+                "id_generacion": "advanced_SISTEMA_AUTH_1760825804",
+                "estado": "completed",
+                "casos_prueba": [
                     {
-                        "test_case_id": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
-                        "title": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
-                        "description": "Caso de prueba para verificar autenticación exitosa",
-                        "test_type": "functional",
-                        "priority": "high",
-                        "steps": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
-                        "expected_result": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
-                        "preconditions": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
-                        "test_data": {"email": "test@example.com", "password": "Test123!"},
-                        "automation_potential": "high",
-                        "estimated_duration": "5-10 minutes"
+                        "id_caso_prueba": "CP-001-AUTH-LOGIN-CREDENCIALES_VALIDAS-AUTENTICACION_EXITOSA",
+                        "titulo": "CP - 001 - AUTH - LOGIN - CREDENCIALES_VALIDAS - AUTENTICACION_EXITOSA",
+                        "descripcion": "Caso de prueba para verificar autenticación exitosa",
+                        "tipo_prueba": "functional",
+                        "prioridad": "high",
+                        "pasos": ["Navegar a login", "Ingresar credenciales", "Hacer clic en login"],
+                        "resultado_esperado": "Resultado Esperado: Usuario autenticado exitosamente y redirigido al dashboard",
+                        "precondiciones": ["Precondicion: Usuario existe en la base de datos", "Precondicion: Sistema de autenticación activo"],
+                        "datos_prueba": {"email": "test@example.com", "password": "Test123!"},
+                        "potencial_automatizacion": "high",
+                        "duracion_estimada": "5-10 minutes"
                     }
                 ],
-                "coverage_analysis": {
+                "analisis_cobertura": {
                     "functional_coverage": "90%",
                     "edge_case_coverage": "75%",
                     "integration_coverage": "80%"
                 },
-                "confidence_score": 0.85,
-                "processing_time": 25.3,
-                "created_at": "2025-10-18T19:16:44.520862"
+                "puntuacion_confianza": 0.85,
+                "tiempo_procesamiento": 25.3,
+                "fecha_creacion": "2025-10-18T19:16:44.520862"
             }
         }
 
 class HealthResponse(BaseModel):
     """Respuesta de salud del servicio"""
-    status: str
+    estado: str
     timestamp: datetime
     version: str
-    components: Dict[str, str]
+    componentes: Dict[str, str]
 
 # Modelos para análisis ISTQB de requisitos
 class RequirementContext(BaseModel):
     """Contexto del requerimiento"""
-    product: str = Field(..., description="Producto o sistema", example="Sistema de Autenticación")
-    module: str = Field(..., description="Módulo o componente", example="Login")
+    producto: str = Field(..., description="Producto o sistema", example="Sistema de Autenticación")
+    modulo: str = Field(..., description="Módulo o componente", example="Login")
     stakeholders: List[str] = Field(default_factory=list, description="Stakeholders involucrados", example=["PO", "QA", "Dev"])
-    constraints: List[str] = Field(default_factory=list, description="Restricciones o estándares", example=["PCI DSS", "LGPD", "SLA 200ms p95"])
-    dependencies: List[str] = Field(default_factory=list, description="Dependencias", example=["API Clientes v2"])
+    restricciones: List[str] = Field(default_factory=list, description="Restricciones o estándares", example=["PCI DSS", "LGPD", "SLA 200ms p95"])
+    dependencias: List[str] = Field(default_factory=list, description="Dependencias", example=["API Clientes v2"])
 
 class RequirementGlossary(BaseModel):
     """Glosario de términos del requerimiento"""
@@ -449,36 +449,36 @@ class TraceabilityAnalysis(BaseModel):
 
 class ISTQBAnalysisResponse(BaseModel):
     """Respuesta del análisis ISTQB de requisitos"""
-    requirement_id: str = Field(..., description="ID del requerimiento analizado")
-    quality_score: QualityScore = Field(..., description="Puntuación de calidad")
+    id_requerimiento: str = Field(..., description="ID del requerimiento analizado")
+    puntuacion_calidad: QualityScore = Field(..., description="Puntuación de calidad")
     issues: List[RequirementIssue] = Field(default_factory=list, description="Issues detectados")
-    coverage: CoverageAnalysis = Field(..., description="Análisis de cobertura")
-    acceptance_criteria: List[AcceptanceCriterion] = Field(default_factory=list, description="Criterios de aceptación")
-    traceability: TraceabilityAnalysis = Field(..., description="Análisis de trazabilidad")
-    summary: str = Field(..., description="Resumen ejecutivo")
-    proposed_clean_version: str = Field(..., description="Versión limpia propuesta del requerimiento")
-    analysis_id: str = Field(..., description="ID único del análisis")
-    processing_time: float = Field(..., description="Tiempo de procesamiento en segundos")
-    created_at: datetime = Field(..., description="Timestamp de creación")
+    cobertura: CoverageAnalysis = Field(..., description="Análisis de cobertura")
+    criterios_aceptacion: List[AcceptanceCriterion] = Field(default_factory=list, description="Criterios de aceptación")
+    trazabilidad: TraceabilityAnalysis = Field(..., description="Análisis de trazabilidad")
+    resumen: str = Field(..., description="Resumen ejecutivo")
+    version_limpia_propuesta: str = Field(..., description="Versión limpia propuesta del requerimiento")
+    id_analisis: str = Field(..., description="ID único del análisis")
+    tiempo_procesamiento: float = Field(..., description="Tiempo de procesamiento en segundos")
+    fecha_creacion: datetime = Field(..., description="Timestamp de creación")
 
 # Modelos para análisis de Jira y diseño de planes de prueba en Confluence
 class ConfluenceTestPlanRequest(BaseModel):
     """Solicitud simplificada de análisis de Jira y diseño de plan de pruebas para Confluence"""
-    jira_issue_id: str = Field(
+    id_issue_jira: str = Field(
         ..., 
         description="ID del issue de Jira a analizar",
         example="PROJ-123",
         min_length=1,
         max_length=50
     )
-    confluence_space_key: str = Field(
+    espacio_confluence: str = Field(
         ..., 
         description="Clave del espacio de Confluence donde crear el plan",
         example="QA",
         min_length=1,
         max_length=20
     )
-    test_plan_title: Optional[str] = Field(
+    titulo_plan_pruebas: Optional[str] = Field(
         None,
         description="Título del plan de pruebas (opcional, se genera automáticamente si no se proporciona)",
         example="Plan de Pruebas - Autenticación de Usuarios",
@@ -488,56 +488,56 @@ class ConfluenceTestPlanRequest(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "jira_issue_id": "PROJ-123",
-                "confluence_space_key": "QA",
-                "test_plan_title": "Plan de Pruebas - Autenticación de Usuarios"
+                "id_issue_jira": "PROJ-123",
+                "espacio_confluence": "QA",
+                "titulo_plan_pruebas": "Plan de Pruebas - Autenticación de Usuarios"
             }
         }
 
 class TestPlanSection(BaseModel):
     """Sección del plan de pruebas"""
-    section_id: str = Field(..., description="ID de la sección", example="overview")
-    title: str = Field(..., description="Título de la sección", example="Resumen Ejecutivo")
-    content: str = Field(..., description="Contenido de la sección en formato Confluence")
-    order: int = Field(..., description="Orden de la sección", example=1)
+    id_seccion: str = Field(..., description="ID de la sección", example="overview")
+    titulo: str = Field(..., description="Título de la sección", example="Resumen Ejecutivo")
+    contenido: str = Field(..., description="Contenido de la sección en formato Confluence")
+    orden: int = Field(..., description="Orden de la sección", example=1)
 
 class TestExecutionPhase(BaseModel):
     """Fase de ejecución de pruebas"""
-    phase_name: str = Field(..., description="Nombre de la fase", example="Fase 1: Pruebas Unitarias")
-    duration: str = Field(..., description="Duración estimada", example="2-3 días")
-    test_cases_count: int = Field(..., description="Número de casos de prueba", example=15)
-    responsible: str = Field(..., description="Responsable de la fase", example="Equipo de Desarrollo")
-    dependencies: List[str] = Field(default_factory=list, description="Dependencias de la fase")
+    nombre_fase: str = Field(..., description="Nombre de la fase", example="Fase 1: Pruebas Unitarias")
+    duracion: str = Field(..., description="Duración estimada", example="2-3 días")
+    cantidad_casos_prueba: int = Field(..., description="Número de casos de prueba", example=15)
+    responsable: str = Field(..., description="Responsable de la fase", example="Equipo de Desarrollo")
+    dependencias: List[str] = Field(default_factory=list, description="Dependencias de la fase")
 
 class ConfluenceTestPlanResponse(BaseModel):
     """Respuesta del análisis de Jira y diseño de plan de pruebas para Confluence"""
-    jira_issue_id: str = Field(..., description="ID del issue de Jira analizado")
-    confluence_space_key: str = Field(..., description="Clave del espacio de Confluence")
-    test_plan_title: str = Field(..., description="Título del plan de pruebas")
-    analysis_id: str = Field(..., description="ID único del análisis")
-    status: str = Field(..., description="Estado del análisis", example="completed")
+    id_issue_jira: str = Field(..., description="ID del issue de Jira analizado")
+    espacio_confluence: str = Field(..., description="Clave del espacio de Confluence")
+    titulo_plan_pruebas: str = Field(..., description="Título del plan de pruebas")
+    id_analisis: str = Field(..., description="ID único del análisis")
+    estado: str = Field(..., description="Estado del análisis", example="completed")
     
     # Datos del issue de Jira
-    jira_data: Dict[str, Any] = Field(..., description="Datos obtenidos de Jira")
+    datos_jira: Dict[str, Any] = Field(..., description="Datos obtenidos de Jira")
     
     # Plan de pruebas estructurado
-    test_plan_sections: List[TestPlanSection] = Field(..., description="Secciones del plan de pruebas")
-    test_execution_phases: List[TestExecutionPhase] = Field(..., description="Fases de ejecución")
-    test_cases: List[TestCase] = Field(..., description="Casos de prueba generados")
+    secciones_plan_pruebas: List[TestPlanSection] = Field(..., description="Secciones del plan de pruebas")
+    fases_ejecucion: List[TestExecutionPhase] = Field(..., description="Fases de ejecución")
+    casos_prueba: List[TestCase] = Field(..., description="Casos de prueba generados")
     
     # Metadatos del plan
-    total_test_cases: int = Field(..., description="Total de casos de prueba generados")
-    estimated_duration: str = Field(..., description="Duración total estimada", example="1-2 semanas")
-    risk_level: str = Field(..., description="Nivel de riesgo del plan", example="medium")
-    confidence_score: float = Field(..., description="Puntuación de confianza (0-1)", example=0.85)
+    total_casos_prueba: int = Field(..., description="Total de casos de prueba generados")
+    duracion_estimada: str = Field(..., description="Duración total estimada", example="1-2 semanas")
+    nivel_riesgo: str = Field(..., description="Nivel de riesgo del plan", example="medium")
+    puntuacion_confianza: float = Field(..., description="Puntuación de confianza (0-1)", example=0.85)
     
     # Contenido para Confluence
-    confluence_content: str = Field(..., description="Contenido completo del plan en formato Confluence")
-    confluence_markup: str = Field(..., description="Markup de Confluence para crear la página")
+    contenido_confluence: str = Field(..., description="Contenido completo del plan en formato Confluence")
+    markup_confluence: str = Field(..., description="Markup de Confluence para crear la página")
     
     # Métricas y análisis
-    coverage_analysis: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
-    automation_potential: Dict[str, Any] = Field(..., description="Análisis de potencial de automatización")
+    analisis_cobertura: Dict[str, Any] = Field(..., description="Análisis de cobertura de pruebas")
+    potencial_automatizacion: Dict[str, Any] = Field(..., description="Análisis de potencial de automatización")
     
     processing_time: float = Field(..., description="Tiempo de procesamiento en segundos")
     created_at: datetime = Field(..., description="Timestamp de creación")
@@ -614,10 +614,10 @@ async def health_check():
     overall_status = "healthy" if all(status == "healthy" for status in components.values()) else "degraded"
     
     return HealthResponse(
-        status=overall_status,
+        estado=overall_status,
         timestamp=datetime.utcnow(),
         version="1.0.0",
-        components=components
+        componentes=components
     )
 
 @app.get("/config", include_in_schema=False)
@@ -781,35 +781,35 @@ async def analyze_content(
     - **processing_time**: Tiempo de procesamiento en segundos
     """
     start_time = datetime.utcnow()
-    analysis_id = f"analysis_{request.content_id}_{int(start_time.timestamp())}"
+    analysis_id = f"analysis_{request.id_contenido}_{int(start_time.timestamp())}"
     
     try:
         logger.info(
             "Starting content analysis",
-            content_id=request.content_id,
-            content_type=request.content_type,
-            analysis_level=request.analysis_level,
+            content_id=request.id_contenido,
+            content_type=request.tipo_contenido,
+            analysis_level=request.nivel_analisis,
             analysis_id=analysis_id
         )
         
         # Sanitizar contenido sensible
-        sanitized_content = sanitizer.sanitize(request.content)
+        sanitized_content = sanitizer.sanitize(request.contenido)
         
         # Obtener prompt según el tipo de contenido
-        if request.content_type == "test_case":
+        if request.tipo_contenido == "test_case":
             prompt = prompt_templates.get_analysis_prompt(
                 test_case_content=sanitized_content,
                 project_key="",  # Ya no requerido
                 priority="",     # Ya no requerido
                 labels=[]        # Ya no requerido
             )
-        elif request.content_type == "requirement":
+        elif request.tipo_contenido == "requirement":
             prompt = prompt_templates.get_requirements_analysis_prompt(
                 requirement_content=sanitized_content,
                 project_key="",  # Ya no requerido
                 priority="",     # Ya no requerido
                 test_types=["functional", "integration"],  # Valores por defecto
-                coverage_level=request.analysis_level
+                coverage_level=request.nivel_analisis
             )
         else:  # user_story
             prompt = prompt_templates.get_requirements_analysis_prompt(
@@ -817,20 +817,20 @@ async def analyze_content(
                 project_key="",  # Ya no requerido
                 priority="",     # Ya no requerido
                 test_types=["functional", "integration"],  # Valores por defecto
-                coverage_level=request.analysis_level
+                coverage_level=request.nivel_analisis
             )
         
         # Ejecutar análisis con LLM
-        if request.content_type == "test_case":
+        if request.tipo_contenido == "test_case":
             analysis_result = await llm_wrapper.analyze_test_case(
                 prompt=prompt,
-                test_case_id=request.content_id,
+                test_case_id=request.id_contenido,
                 analysis_id=analysis_id
             )
         else:
             analysis_result = await llm_wrapper.analyze_requirements(
                 prompt=prompt,
-                requirement_id=request.content_id,
+                requirement_id=request.id_contenido,
                 analysis_id=analysis_id
             )
         
@@ -839,30 +839,30 @@ async def analyze_content(
         if analysis_result.get("test_cases"):
             for tc_data in analysis_result["test_cases"]:
                 test_case = TestCase(
-                    test_case_id=tc_data.get("test_case_id", f"TC-{request.content_id}-001"),
-                    title=tc_data.get("title", ""),
-                    description=tc_data.get("description", ""),
-                    test_type=tc_data.get("test_type", "functional"),
-                    priority=tc_data.get("priority", "medium"),
-                    steps=tc_data.get("steps", []),
-                    expected_result=tc_data.get("expected_result", ""),
-                    preconditions=tc_data.get("preconditions", []),
-                    test_data=tc_data.get("test_data", {}),
-                    automation_potential=tc_data.get("automation_potential", "medium"),
-                    estimated_duration=tc_data.get("estimated_duration", "5-10 minutes")
+                    id_caso_prueba=tc_data.get("test_case_id", f"TC-{request.id_contenido}-001"),
+                    titulo=tc_data.get("title", ""),
+                    descripcion=tc_data.get("description", ""),
+                    tipo_prueba=tc_data.get("test_type", "functional"),
+                    prioridad=tc_data.get("priority", "medium"),
+                    pasos=tc_data.get("steps", []),
+                    resultado_esperado=tc_data.get("expected_result", ""),
+                    precondiciones=tc_data.get("preconditions", []),
+                    datos_prueba=tc_data.get("test_data", {}),
+                    potencial_automatizacion=tc_data.get("automation_potential", "medium"),
+                    duracion_estimada=tc_data.get("estimated_duration", "5-10 minutes")
                 )
                 test_cases.append(test_case)
         
         # Procesar sugerencias (solo para casos de prueba existentes)
         suggestions = []
-        if request.content_type == "test_case" and analysis_result.get("suggestions"):
+        if request.tipo_contenido == "test_case" and analysis_result.get("suggestions"):
             for suggestion in analysis_result["suggestions"]:
                 suggestions.append({
-                    "type": suggestion.get("type", "general"),
-                    "title": suggestion.get("title", ""),
-                    "description": suggestion.get("description", ""),
-                    "priority": suggestion.get("priority", "medium"),
-                    "category": suggestion.get("category", "improvement")
+                    "tipo": suggestion.get("type", "general"),
+                    "titulo": suggestion.get("title", ""),
+                    "descripcion": suggestion.get("description", ""),
+                    "prioridad": suggestion.get("priority", "medium"),
+                    "categoria": suggestion.get("category", "improvement")
                 })
         
         # Calcular tiempo de procesamiento
@@ -870,29 +870,29 @@ async def analyze_content(
         
         # Crear respuesta
         response = AnalysisResponse(
-            content_id=request.content_id,
-            analysis_id=analysis_id,
-            status="completed",
-            test_cases=test_cases,
-            suggestions=suggestions,
-            coverage_analysis=analysis_result.get("coverage_analysis", {}),
-            confidence_score=analysis_result.get("confidence_score", 0.8),
-            processing_time=processing_time,
-            created_at=start_time
+            id_contenido=request.id_contenido,
+            id_analisis=analysis_id,
+            estado="completed",
+            casos_prueba=test_cases,
+            sugerencias=suggestions,
+            analisis_cobertura=analysis_result.get("coverage_analysis", {}),
+            puntuacion_confianza=analysis_result.get("confidence_score", 0.8),
+            tiempo_procesamiento=processing_time,
+            fecha_creacion=start_time
         )
         
         # Registrar en background task para tracking
         background_tasks.add_task(
             log_analysis_completion,
             analysis_id,
-            request.content_id,
+            request.id_contenido,
             response
         )
         
         logger.info(
             "Content analysis completed",
-            content_id=request.content_id,
-            content_type=request.content_type,
+            content_id=request.id_contenido,
+            content_type=request.tipo_contenido,
             analysis_id=analysis_id,
             test_cases_count=len(test_cases),
             suggestions_count=len(suggestions),
@@ -904,7 +904,7 @@ async def analyze_content(
     except Exception as e:
         logger.error(
             "Content analysis failed",
-            content_id=request.content_id,
+            content_id=request.id_contenido,
             analysis_id=analysis_id,
             error=str(e)
         )
@@ -986,26 +986,26 @@ async def analyze_jira_workitem(
     - **processing_time**: Tiempo de procesamiento en segundos
     """
     start_time = datetime.utcnow()
-    analysis_id = f"jira_analysis_{request.work_item_id.replace('-', '')}_{int(start_time.timestamp())}"
+    analysis_id = f"jira_analysis_{request.id_work_item.replace('-', '')}_{int(start_time.timestamp())}"
     
     try:
         logger.info(
             "Starting Jira work item analysis",
-            work_item_id=request.work_item_id,
-            analysis_level=request.analysis_level,
+            work_item_id=request.id_work_item,
+            analysis_level=request.nivel_analisis,
             analysis_id=analysis_id
         )
         
         # Obtener datos del work item desde Jira (sin project_key requerido)
         jira_data = await tracker_client.get_work_item_details(
-            work_item_id=request.work_item_id,
-            project_key=""  # Se detecta automáticamente del work_item_id
+            work_item_id=request.id_work_item,
+            project_key=""  # Se detecta automáticamente del id_work_item
         )
         
         if not jira_data:
             raise HTTPException(
                 status_code=404,
-                detail=f"Work item {request.work_item_id} not found"
+                detail=f"Work item {request.id_work_item} not found"
             )
         
         # Construir contenido para análisis
@@ -1037,13 +1037,13 @@ async def analyze_jira_workitem(
             requirement_content=sanitized_content,
             project_key="",  # Ya no requerido
             test_types=["functional", "integration"],  # Valores por defecto
-            coverage_level=request.analysis_level
+            coverage_level=request.nivel_analisis
         )
         
         # Ejecutar análisis con LLM
         analysis_result = await llm_wrapper.analyze_jira_workitem(
             prompt=prompt,
-            work_item_id=request.work_item_id,
+            work_item_id=request.id_work_item,
             analysis_id=analysis_id
         )
         
@@ -1052,17 +1052,17 @@ async def analyze_jira_workitem(
         if analysis_result.get("test_cases"):
             for tc_data in analysis_result["test_cases"]:
                 test_case = TestCase(
-                    test_case_id=tc_data.get("test_case_id", f"TC-{request.work_item_id}-001"),
-                    title=tc_data.get("title", ""),
-                    description=tc_data.get("description", ""),
-                    test_type=tc_data.get("test_type", "functional"),
-                    priority=tc_data.get("priority", "medium"),
-                    steps=tc_data.get("steps", []),
-                    expected_result=tc_data.get("expected_result", ""),
-                    preconditions=tc_data.get("preconditions", []),
-                    test_data=tc_data.get("test_data", {}),
-                    automation_potential=tc_data.get("automation_potential", "medium"),
-                    estimated_duration=tc_data.get("estimated_duration", "5-10 minutes")
+                    id_caso_prueba=tc_data.get("test_case_id", f"TC-{request.id_work_item}-001"),
+                    titulo=tc_data.get("title", ""),
+                    descripcion=tc_data.get("description", ""),
+                    tipo_prueba=tc_data.get("test_type", "functional"),
+                    prioridad=tc_data.get("priority", "medium"),
+                    pasos=tc_data.get("steps", []),
+                    resultado_esperado=tc_data.get("expected_result", ""),
+                    precondiciones=tc_data.get("preconditions", []),
+                    datos_prueba=tc_data.get("test_data", {}),
+                    potencial_automatizacion=tc_data.get("automation_potential", "medium"),
+                    duracion_estimada=tc_data.get("estimated_duration", "5-10 minutes")
                 )
                 test_cases.append(test_case)
         
@@ -1071,28 +1071,28 @@ async def analyze_jira_workitem(
         
         # Crear respuesta
         response = JiraAnalysisResponse(
-            work_item_id=request.work_item_id,
-            jira_data=jira_data,
-            analysis_id=analysis_id,
-            status="completed",
-            test_cases=test_cases,
-            coverage_analysis=analysis_result.get("coverage_analysis", {}),
-            confidence_score=analysis_result.get("confidence_score", 0.8),
-            processing_time=processing_time,
-            created_at=start_time
+            id_work_item=request.id_work_item,
+            datos_jira=jira_data,
+            id_analisis=analysis_id,
+            estado="completed",
+            casos_prueba=test_cases,
+            analisis_cobertura=analysis_result.get("coverage_analysis", {}),
+            puntuacion_confianza=analysis_result.get("confidence_score", 0.8),
+            tiempo_procesamiento=processing_time,
+            fecha_creacion=start_time
         )
         
         # Registrar en background task para tracking
         background_tasks.add_task(
             log_jira_workitem_analysis_completion,
             analysis_id,
-            request.work_item_id,
+            request.id_work_item,
             response
         )
         
         logger.info(
             "Jira work item analysis completed",
-            work_item_id=request.work_item_id,
+            work_item_id=request.id_work_item,
             analysis_id=analysis_id,
             test_cases_count=len(test_cases),
             processing_time=processing_time
@@ -1105,7 +1105,7 @@ async def analyze_jira_workitem(
     except Exception as e:
         logger.error(
             "Jira work item analysis failed",
-            work_item_id=request.work_item_id,
+            work_item_id=request.id_work_item,
             analysis_id=analysis_id,
             error=str(e)
         )
@@ -1215,17 +1215,17 @@ async def generate_advanced_test_cases(
         if analysis_result.get("test_cases"):
             for tc_data in analysis_result["test_cases"]:
                 test_case = TestCase(
-                    test_case_id=tc_data.get("test_case_id", f"CP-001-{request.aplicacion}-MODULO-DATO-CONDICION-RESULTADO"),
-                    title=tc_data.get("title", f"CP - 001 - {request.aplicacion} - MODULO - DATO - CONDICION - RESULTADO"),
-                    description=tc_data.get("description", ""),
-                    test_type=tc_data.get("test_type", "functional"),
-                    priority=tc_data.get("priority", "high"),
-                    steps=tc_data.get("steps", []),
-                    expected_result=tc_data.get("expected_result", "Resultado Esperado: [Descripción específica]"),
-                    preconditions=tc_data.get("preconditions", ["Precondicion: [Descripción específica]"]),
-                    test_data=tc_data.get("test_data", {}),
-                    automation_potential=tc_data.get("automation_potential", "high"),
-                    estimated_duration=tc_data.get("estimated_duration", "5-10 minutes")
+                    id_caso_prueba=tc_data.get("test_case_id", f"CP-001-{request.aplicacion}-MODULO-DATO-CONDICION-RESULTADO"),
+                    titulo=tc_data.get("title", f"CP - 001 - {request.aplicacion} - MODULO - DATO - CONDICION - RESULTADO"),
+                    descripcion=tc_data.get("description", ""),
+                    tipo_prueba=tc_data.get("test_type", "functional"),
+                    prioridad=tc_data.get("priority", "high"),
+                    pasos=tc_data.get("steps", []),
+                    resultado_esperado=tc_data.get("expected_result", "Resultado Esperado: [Descripción específica]"),
+                    precondiciones=tc_data.get("preconditions", ["Precondicion: [Descripción específica]"]),
+                    datos_prueba=tc_data.get("test_data", {}),
+                    potencial_automatizacion=tc_data.get("automation_potential", "high"),
+                    duracion_estimada=tc_data.get("estimated_duration", "5-10 minutes")
                 )
                 test_cases.append(test_case)
         
@@ -1235,13 +1235,13 @@ async def generate_advanced_test_cases(
         # Crear respuesta
         response = AdvancedTestGenerationResponse(
             aplicacion=request.aplicacion,
-            generation_id=generation_id,
-            status="completed",
-            test_cases=test_cases,
-            coverage_analysis=analysis_result.get("coverage_analysis", {}),
-            confidence_score=analysis_result.get("confidence_score", 0.8),
-            processing_time=processing_time,
-            created_at=start_time
+            id_generacion=generation_id,
+            estado="completed",
+            casos_prueba=test_cases,
+            analisis_cobertura=analysis_result.get("coverage_analysis", {}),
+            puntuacion_confianza=analysis_result.get("confidence_score", 0.8),
+            tiempo_procesamiento=processing_time,
+            fecha_creacion=start_time
         )
         
         # Registrar en background task para tracking
@@ -1503,32 +1503,32 @@ async def analyze_jira_confluence_test_plan(
     - **automation_potential**: Análisis de potencial de automatización
     """
     start_time = datetime.utcnow()
-    analysis_id = f"confluence_plan_{request.jira_issue_id.replace('-', '')}_{int(start_time.timestamp())}"
+    analysis_id = f"confluence_plan_{request.id_issue_jira.replace('-', '')}_{int(start_time.timestamp())}"
     
     try:
         logger.info(
             "Starting Jira-Confluence test plan analysis",
-            jira_issue_id=request.jira_issue_id,
-            confluence_space_key=request.confluence_space_key,
-            test_plan_title=request.test_plan_title,
+            jira_issue_id=request.id_issue_jira,
+            confluence_space_key=request.espacio_confluence,
+            test_plan_title=request.titulo_plan_pruebas,
             analysis_id=analysis_id
         )
         
         # Obtener datos del issue desde Jira
         jira_data = await tracker_client.get_work_item_details(
-            work_item_id=request.jira_issue_id,
-            project_key=""  # Se detecta automáticamente del jira_issue_id
+            work_item_id=request.id_issue_jira,
+            project_key=""  # Se detecta automáticamente del id_issue_jira
         )
         
         if not jira_data:
             raise HTTPException(
                 status_code=404,
-                detail=f"Issue de Jira {request.jira_issue_id} not found"
+                detail=f"Issue de Jira {request.id_issue_jira} not found"
             )
         
         # Generar título del plan si no se proporciona
-        if not request.test_plan_title:
-            request.test_plan_title = f"Plan de Pruebas - {jira_data.get('summary', request.jira_issue_id)}"
+        if not request.titulo_plan_pruebas:
+            request.titulo_plan_pruebas = f"Plan de Pruebas - {jira_data.get('summary', request.id_issue_jira)}"
         
         # Sanitizar contenido sensible
         sanitized_jira_data = sanitizer.sanitize_dict(jira_data)
@@ -1536,18 +1536,18 @@ async def analyze_jira_confluence_test_plan(
         # Generar prompt para análisis de Jira y diseño de plan de pruebas con valores por defecto inteligentes
         prompt = prompt_templates.get_confluence_test_plan_prompt(
             jira_data=sanitized_jira_data,
-            test_plan_title=request.test_plan_title,
+            test_plan_title=request.titulo_plan_pruebas,
             test_strategy="comprehensive",  # Valor por defecto
             include_automation=True,  # Valor por defecto
             include_performance=False,  # Valor por defecto
             include_security=True,  # Valor por defecto
-            confluence_space_key=request.confluence_space_key
+            confluence_space_key=request.espacio_confluence
         )
         
         # Ejecutar análisis con LLM
         analysis_result = await llm_wrapper.analyze_requirements(
             prompt=prompt,
-            requirement_id=request.jira_issue_id,
+            requirement_id=request.id_issue_jira,
             analysis_id=analysis_id
         )
         
@@ -1556,10 +1556,10 @@ async def analyze_jira_confluence_test_plan(
         if analysis_result.get("test_plan_sections"):
             for section_data in analysis_result["test_plan_sections"]:
                 section = TestPlanSection(
-                    section_id=section_data.get("section_id", "section"),
-                    title=section_data.get("title", ""),
-                    content=section_data.get("content", ""),
-                    order=section_data.get("order", 1)
+                    id_seccion=section_data.get("section_id", "section"),
+                    titulo=section_data.get("title", ""),
+                    contenido=section_data.get("content", ""),
+                    orden=section_data.get("order", 1)
                 )
                 test_plan_sections.append(section)
         
@@ -1568,11 +1568,11 @@ async def analyze_jira_confluence_test_plan(
         if analysis_result.get("test_execution_phases"):
             for phase_data in analysis_result["test_execution_phases"]:
                 phase = TestExecutionPhase(
-                    phase_name=phase_data.get("phase_name", ""),
-                    duration=phase_data.get("duration", ""),
-                    test_cases_count=phase_data.get("test_cases_count", 0),
-                    responsible=phase_data.get("responsible", ""),
-                    dependencies=phase_data.get("dependencies", [])
+                    nombre_fase=phase_data.get("phase_name", ""),
+                    duracion=phase_data.get("duration", ""),
+                    cantidad_casos_prueba=phase_data.get("test_cases_count", 0),
+                    responsable=phase_data.get("responsible", ""),
+                    dependencias=phase_data.get("dependencies", [])
                 )
                 test_execution_phases.append(phase)
         
@@ -1600,23 +1600,23 @@ async def analyze_jira_confluence_test_plan(
         
         # Crear respuesta
         response = ConfluenceTestPlanResponse(
-            jira_issue_id=request.jira_issue_id,
-            confluence_space_key=request.confluence_space_key,
-            test_plan_title=request.test_plan_title,
-            analysis_id=analysis_id,
-            status="completed",
-            jira_data=jira_data,
-            test_plan_sections=test_plan_sections,
-            test_execution_phases=test_execution_phases,
-            test_cases=test_cases,
-            total_test_cases=len(test_cases),
-            estimated_duration=analysis_result.get("estimated_duration", "1-2 semanas"),
-            risk_level=analysis_result.get("risk_level", "medium"),
-            confidence_score=analysis_result.get("confidence_score", 0.8),
-            confluence_content=analysis_result.get("confluence_content", ""),
-            confluence_markup=analysis_result.get("confluence_markup", ""),
-            coverage_analysis=analysis_result.get("coverage_analysis", {}),
-            automation_potential=analysis_result.get("automation_potential", {}),
+            id_issue_jira=request.id_issue_jira,
+            espacio_confluence=request.espacio_confluence,
+            titulo_plan_pruebas=request.titulo_plan_pruebas,
+            id_analisis=analysis_id,
+            estado="completed",
+            datos_jira=jira_data,
+            secciones_plan_pruebas=test_plan_sections,
+            fases_ejecucion=test_execution_phases,
+            casos_prueba=test_cases,
+            total_casos_prueba=len(test_cases),
+            duracion_estimada=analysis_result.get("estimated_duration", "1-2 semanas"),
+            nivel_riesgo=analysis_result.get("risk_level", "medium"),
+            puntuacion_confianza=analysis_result.get("confidence_score", 0.8),
+            contenido_confluence=analysis_result.get("confluence_content", ""),
+            markup_confluence=analysis_result.get("confluence_markup", ""),
+            analisis_cobertura=analysis_result.get("coverage_analysis", {}),
+            potencial_automatizacion=analysis_result.get("automation_potential", {}),
             processing_time=processing_time,
             created_at=start_time
         )
@@ -1625,13 +1625,13 @@ async def analyze_jira_confluence_test_plan(
         background_tasks.add_task(
             log_confluence_test_plan_completion,
             analysis_id,
-            request.jira_issue_id,
+            request.id_issue_jira,
             response
         )
         
         logger.info(
             "Jira-Confluence test plan analysis completed",
-            jira_issue_id=request.jira_issue_id,
+            jira_issue_id=request.id_issue_jira,
             analysis_id=analysis_id,
             test_plan_sections_count=len(test_plan_sections),
             test_execution_phases_count=len(test_execution_phases),
@@ -1646,7 +1646,7 @@ async def analyze_jira_confluence_test_plan(
     except Exception as e:
         logger.error(
             "Jira-Confluence test plan analysis failed",
-            jira_issue_id=request.jira_issue_id,
+            jira_issue_id=request.id_issue_jira,
             analysis_id=analysis_id,
             error=str(e)
         )
