@@ -463,7 +463,7 @@ class ISTQBAnalysisResponse(BaseModel):
 
 # Modelos para análisis de Jira y diseño de planes de prueba en Confluence
 class ConfluenceTestPlanRequest(BaseModel):
-    """Solicitud de análisis de Jira y diseño de plan de pruebas para Confluence"""
+    """Solicitud simplificada de análisis de Jira y diseño de plan de pruebas para Confluence"""
     jira_issue_id: str = Field(
         ..., 
         description="ID del issue de Jira a analizar",
@@ -478,30 +478,11 @@ class ConfluenceTestPlanRequest(BaseModel):
         min_length=1,
         max_length=20
     )
-    test_plan_title: str = Field(
-        ..., 
-        description="Título del plan de pruebas en Confluence",
+    test_plan_title: Optional[str] = Field(
+        None,
+        description="Título del plan de pruebas (opcional, se genera automáticamente si no se proporciona)",
         example="Plan de Pruebas - Autenticación de Usuarios",
-        min_length=5,
         max_length=200
-    )
-    test_strategy: Optional[str] = Field(
-        "comprehensive",
-        description="Estrategia de testing a aplicar",
-        example="comprehensive",
-        pattern="^(basic|standard|comprehensive|agile)$"
-    )
-    include_automation: bool = Field(
-        True,
-        description="Incluir casos de automatización en el plan"
-    )
-    include_performance: bool = Field(
-        False,
-        description="Incluir casos de rendimiento en el plan"
-    )
-    include_security: bool = Field(
-        True,
-        description="Incluir casos de seguridad en el plan"
     )
     
     class Config:
@@ -509,11 +490,7 @@ class ConfluenceTestPlanRequest(BaseModel):
             "example": {
                 "jira_issue_id": "PROJ-123",
                 "confluence_space_key": "QA",
-                "test_plan_title": "Plan de Pruebas - Autenticación de Usuarios",
-                "test_strategy": "comprehensive",
-                "include_automation": True,
-                "include_performance": False,
-                "include_security": True
+                "test_plan_title": "Plan de Pruebas - Autenticación de Usuarios"
             }
         }
 
@@ -1496,20 +1473,17 @@ async def analyze_jira_confluence_test_plan(
     4. **Formato Confluence**: Se genera contenido optimizado para Confluence
     5. **Casos de Prueba**: Se crean casos de prueba detallados y ejecutables
     
-    ### Datos Obtenidos de Jira:
-    - **Summary**: Título del issue
-    - **Description**: Descripción detallada
-    - **Acceptance Criteria**: Criterios de aceptación (si están disponibles)
-    - **Issue Type**: Tipo de issue (Story, Task, Bug, Epic)
-    - **Priority**: Prioridad del issue
-    - **Status**: Estado actual
-    - **Dependencies**: Dependencias con otros issues
+    ### Parámetros Simplificados:
+    - **jira_issue_id** (requerido): ID del issue de Jira a analizar
+    - **confluence_space_key** (requerido): Espacio de Confluence donde crear el plan
+    - **test_plan_title** (opcional): Título personalizado del plan (se genera automáticamente si no se proporciona)
     
-    ### Estrategias de Testing:
-    - **basic**: Plan básico con casos esenciales
-    - **standard**: Plan estándar con casos funcionales y de integración
-    - **comprehensive**: Plan completo con todos los tipos de pruebas
-    - **agile**: Plan ágil optimizado para metodologías ágiles
+    ### Valores por Defecto Inteligentes:
+    - **Estrategia**: comprehensive (plan completo con todos los tipos de pruebas)
+    - **Automatización**: habilitada (incluye casos de automatización)
+    - **Rendimiento**: deshabilitado (no incluye casos de rendimiento por defecto)
+    - **Seguridad**: habilitada (incluye casos de seguridad)
+    - **Título**: se genera automáticamente basado en el summary del issue de Jira
     
     ### Características del Plan:
     - **Secciones Estructuradas**: Resumen, alcance, estrategia, ejecución, casos, criterios, riesgos, recursos
@@ -1553,17 +1527,21 @@ async def analyze_jira_confluence_test_plan(
                 detail=f"Issue de Jira {request.jira_issue_id} not found"
             )
         
+        # Generar título del plan si no se proporciona
+        if not request.test_plan_title:
+            request.test_plan_title = f"Plan de Pruebas - {jira_data.get('summary', request.jira_issue_id)}"
+        
         # Sanitizar contenido sensible
         sanitized_jira_data = sanitizer.sanitize_dict(jira_data)
         
-        # Generar prompt para análisis de Jira y diseño de plan de pruebas
+        # Generar prompt para análisis de Jira y diseño de plan de pruebas con valores por defecto inteligentes
         prompt = prompt_templates.get_confluence_test_plan_prompt(
             jira_data=sanitized_jira_data,
             test_plan_title=request.test_plan_title,
-            test_strategy=request.test_strategy,
-            include_automation=request.include_automation,
-            include_performance=request.include_performance,
-            include_security=request.include_security,
+            test_strategy="comprehensive",  # Valor por defecto
+            include_automation=True,  # Valor por defecto
+            include_performance=False,  # Valor por defecto
+            include_security=True,  # Valor por defecto
             confluence_space_key=request.confluence_space_key
         )
         
