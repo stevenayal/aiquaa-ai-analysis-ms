@@ -1511,7 +1511,6 @@ async def analyze_jira_confluence_test_plan(
             jira_issue_id=request.jira_issue_id,
             confluence_space_key=request.confluence_space_key,
             test_plan_title=request.test_plan_title,
-            test_strategy=request.test_strategy,
             analysis_id=analysis_id
         )
         

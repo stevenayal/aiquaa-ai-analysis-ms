@@ -3,6 +3,7 @@ Prompt Templates Versionados
 Plantillas de prompts para diferentes tipos de análisis QA
 """
 
+import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import structlog
@@ -1229,17 +1230,18 @@ C) Artefactos técnicos básicos
             template_data = self.templates["confluence_test_plan"]
             template = template_data["template"]
             
-            # Reemplazar variables en el template
-            prompt = template.format(
-                jira_data=jira_data,
-                test_plan_title=test_plan_title,
-                test_strategy=test_strategy,
-                include_automation=str(include_automation).lower(),
-                include_performance=str(include_performance).lower(),
-                include_security=str(include_security).lower(),
-                confluence_space_key=confluence_space_key,
-                timestamp=datetime.utcnow().isoformat()
-            )
+            # Convertir jira_data a string para el template
+            jira_data_str = json.dumps(jira_data, indent=2, ensure_ascii=False)
+            
+            # Reemplazar variables usando replace para evitar conflictos con llaves JSON
+            prompt = template.replace('{jira_data}', jira_data_str)
+            prompt = prompt.replace('{test_plan_title}', test_plan_title)
+            prompt = prompt.replace('{test_strategy}', test_strategy)
+            prompt = prompt.replace('{include_automation}', str(include_automation).lower())
+            prompt = prompt.replace('{include_performance}', str(include_performance).lower())
+            prompt = prompt.replace('{include_security}', str(include_security).lower())
+            prompt = prompt.replace('{confluence_space_key}', confluence_space_key)
+            prompt = prompt.replace('{timestamp}', datetime.utcnow().isoformat())
             
             logger.info("Confluence test plan prompt generated", 
                        test_plan_title=test_plan_title, 
