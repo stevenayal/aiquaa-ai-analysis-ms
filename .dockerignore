@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# Logs
+logs/
+*.log
+
+# Data
+data/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development
+.env
+.env.local
+config.env
+railway.env
+
+# Legacy files (not needed in container)
+main_simplified.py
+basic_endpoints.py
+jira_endpoints.py
+confluence_endpoints.py
+feature_flag_config.py
+llm_wrapper.py
+tracker_client.py
+sanitizer.py
+prompt_templates.py
+migrate_to_simplified.py
+test_*.py
+postman_*.json
+
+# Scripts (not needed in container)
+scripts/
+
+# Deployment configs (not needed in container)
+deploy/
+railway.json
+Dockerfile
+.dockerignore
+
+# Examples
+docs/examples/
+
+# Claude
+.claude/

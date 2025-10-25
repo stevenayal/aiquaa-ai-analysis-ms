@@ -27,12 +27,19 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p logs data
 
+# Copy startup script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Set Python path
+ENV PYTHONPATH=/app
+
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/api/v1/salud').raise_for_status()"
+# Health check (disabled for Railway - will use Railway's healthcheck)
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+#     CMD python -c "import httpx; httpx.get('http://localhost:${PORT:-8000}/api/v1/salud').raise_for_status()"
 
-# Run application
-CMD ["python", "-m", "uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run application using startup script
+CMD ["/app/start.sh"]
