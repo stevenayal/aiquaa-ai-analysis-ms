@@ -1,304 +1,123 @@
-# 🤖 Microservicio de Análisis QA con Técnicas ISTQB
+# 🤖 API de Análisis QA con IA
 
-Análisis automatizado de casos de prueba con técnicas ISTQB Foundation Level, observabilidad completa usando FastAPI, Langfuse y Gemini.
+Sistema de análisis automatizado de casos de prueba que integra Jira, Confluence y modelos de IA para generar planes de pruebas estructurados y casos de prueba automatizados.
 
 ## 🚀 Quick Start
 
 ```bash
-# 1. Crear entorno virtual
-python -m venv venv
-venv\Scripts\activate
-
-# 2. Instalar dependencias
+# 1. Instalar dependencias
 pip install -r requirements.txt
 
-# 3. Configurar variables de entorno
-copy config.env .env
-# Editar .env con tus credenciales (NUNCA subir credenciales reales al repositorio)
+# 2. Configurar variables de entorno
+cp config.env.example config.env
+# Editar config.env con tus credenciales
 
-# 4. Iniciar servicio
-python -m uvicorn main:app --reload
+# 3. Iniciar servicio
+python main.py
 
-# 5. Abrir API Docs
-start http://localhost:8000/docs
+# 4. Abrir documentación
+# http://localhost:8000/docs
 ```
 
-## 📊 Stack Tecnológico
+## 🌐 Endpoints Principales
 
-- ✅ **FastAPI** - Framework web moderno y rápido
-- ✅ **Langfuse** - Observabilidad y tracking de LLM
-- ✅ **Jira** - Integración con sistema de issues
-- ✅ **Gemini** - Modelo de lenguaje de Google
-- ✅ **Pydantic** - Validación de datos
-- ✅ **Structlog** - Logging estructurado
-- ✅ **Docker** - Containerización
-- 🎯 **ISTQB** - Técnicas de diseño de pruebas Foundation Level
+### **Análisis de Contenido**
+- **`POST /analizar`** - Análisis unificado de contenido
+- **`POST /analizar-jira`** - Análisis de work items de Jira
+- **`POST /generar-pruebas-avanzadas`** - Generación con técnicas avanzadas
 
-## 🔒 Seguridad
+### **Análisis Especializado**
+- **`POST /analisis/requisitos/verificacion-istqb`** - Análisis ISTQB
+- **`POST /analizar-jira-confluence`** - Planes de pruebas para Confluence
+- **`POST /analizar-jira-confluence-simple`** - Versión simplificada (recomendada)
 
-**IMPORTANTE**: Este proyecto NO incluye credenciales reales por seguridad.
-
-### Variables de Entorno Requeridas:
-- `GOOGLE_API_KEY` - API key de Google Gemini (REQUERIDA)
-- `GEMINI_MODEL` - Modelo de Gemini (por defecto: gemini-pro)
-
-### Variables Opcionales:
-- `LANGFUSE_PUBLIC_KEY` - Para observabilidad
-- `LANGFUSE_SECRET_KEY` - Para observabilidad  
-- `JIRA_BASE_URL` - Para integración con Jira
-- `JIRA_TOKEN` - Token de Jira
-- `JIRA_ORG_ID` - ID de organización de Jira
-
-### Para Railway:
-Ver [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md) para configuración completa.
-
-## 🔗 Endpoints Principales
-
-### 🎯 Generación ISTQB (NUEVO)
-```http
-POST /generate-istqb-tests
-Content-Type: application/json
-
-{
-  "programa": "SISTEMA_AUTH",
-  "dominio": "Autenticación de usuarios con validación de credenciales",
-  "modulos": ["AUTORIZACION", "VALIDACION", "AUDITORIA"],
-  "factores": {
-    "TIPO_USUARIO": ["ADMIN", "USER", "GUEST"],
-    "ESTADO_CREDENCIAL": ["VALIDA", "INVALIDA", "EXPIRADA"]
-  },
-  "limites": {
-    "CAMPO_USUARIO_len": {"min": 1, "max": 64},
-    "REINTENTOS": 3
-  },
-  "reglas": [
-    "R1: si TIPO_USUARIO=ADMIN y ESTADO_CREDENCIAL=VALIDA -> ACCESO_TOTAL"
-  ],
-  "tecnicas": {
-    "equivalencia": true,
-    "valores_limite": true,
-    "tabla_decision": true
-  },
-  "cantidad_max": 150
-}
-```
-
-### Análisis de Casos de Prueba
-```http
-POST /analyze
-Content-Type: application/json
-
-{
-  "test_case_id": "TC-001",
-  "test_case_content": "Descripción del caso de prueba...",
-  "project_key": "PROJ",
-  "priority": "High",
-  "labels": ["test", "qa"]
-}
-```
-
-### Análisis de Requerimientos
-```http
-POST /analyze-requirements
-Content-Type: application/json
-
-{
-  "requirement_id": "REQ-001",
-  "requirement_content": "El sistema debe permitir...",
-  "project_key": "PROJ",
-  "test_types": ["functional", "integration"],
-  "coverage_level": "high"
-}
-```
-
-### Integración Jira
-```http
-POST /analyze-jira-workitem
-Content-Type: application/json
-
-{
-  "work_item_id": "PROJ-123",
-  "project_key": "PROJ",
-  "test_types": ["functional", "ui"],
-  "coverage_level": "medium"
-}
-```
-
-### Health Check
-```http
-GET /health
-```
-
-## 🏗️ Arquitectura
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   FastAPI App   │────│  Langfuse       │    │  Jira API       │
-│   (main.py)     │    │  (Observabilidad)│    │  (Tracker)      │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │
-         │
-┌─────────────────┐    ┌─────────────────┐
-│  Gemini LLM     │    │  PII Sanitizer  │
-│  (Análisis)     │    │  (Seguridad)    │
-└─────────────────┘    └─────────────────┘
-```
-
-## 📁 Estructura del Proyecto
-
-```
-microservicio-analisis-qa/
-├── main.py                 # Aplicación FastAPI principal
-├── tracker_client.py       # Cliente para Jira/Redmine
-├── llm_wrapper.py         # Wrapper para LLM con Langfuse
-├── prompt_templates.py    # Plantillas de prompts versionadas
-├── sanitizer.py           # Sanitizador de PII
-├── requirements.txt       # Dependencias Python
-├── Dockerfile            # Imagen Docker
-├── docker-compose.yml    # Orquestación de servicios
-├── .env.example          # Variables de entorno ejemplo
-├── tests/                # Tests unitarios
-│   ├── test_main.py
-│   └── test_tracker_client.py
-├── monitoring/           # Configuración de monitoreo
-│   ├── prometheus/
-│   └── grafana/
-└── nginx/               # Configuración de proxy
-```
+### **Monitoreo**
+- **`GET /salud`** - Health check del servicio
+- **`GET /diagnostico-llm`** - Diagnóstico del LLM
 
 ## 🔧 Configuración
 
 ### Variables de Entorno Requeridas
-
 ```bash
-# Langfuse
-LANGFUSE_PUBLIC_KEY=pk-lf-xxxxxxxx
-LANGFUSE_SECRET_KEY=sk-lf-xxxxxxxx
-LANGFUSE_HOST=https://cloud.langfuse.com
-
-# Jira
-JIRA_BASE_URL=https://your-domain.atlassian.net
-JIRA_TOKEN=your_token_here
-JIRA_ORG_ID=your_org_id_here
-
-# Gemini
-GOOGLE_API_KEY=your_key_here
-GOOGLE_PROJECT_ID=your_project_id_here
+# Google AI (REQUERIDA)
+GOOGLE_API_KEY=tu_api_key_aqui
 GEMINI_MODEL=gemini-pro
 
-# App
-LOG_LEVEL=INFO
-PORT=8000
-ENVIRONMENT=development
+# Langfuse (Opcional)
+LANGFUSE_PUBLIC_KEY=tu_public_key
+LANGFUSE_SECRET_KEY=tu_secret_key
+LANGFUSE_HOST=https://cloud.langfuse.com
+
+# Jira (Opcional)
+JIRA_BASE_URL=https://tu-empresa.atlassian.net
+JIRA_EMAIL=tu-email@empresa.com
+JIRA_TOKEN=tu_token_aqui
 ```
-
-## 🐳 Docker
-
-### Construir y ejecutar
-```bash
-# Construir imagen
-docker build -t qa-analysis .
-
-# Ejecutar contenedor
-docker run -p 8000:8000 --env-file .env qa-analysis
-
-# O usar docker-compose
-docker-compose up -d
-```
-
-### Servicios incluidos
-- **qa-analysis**: Aplicación principal
-- **redis**: Cache y cola de mensajes
-- **nginx**: Proxy reverso
-- **prometheus**: Métricas
-- **grafana**: Dashboards
 
 ## 🧪 Testing
 
+### Scripts de Prueba
 ```bash
-# Ejecutar todos los tests
-pytest
+# Pruebas completas
+python test_todos_endpoints_espanol.py
 
-# Tests con cobertura
-pytest --cov=.
+# Pruebas de Confluence
+python test_confluence_espanol.py
 
-# Tests específicos
-pytest tests/test_main.py
+# Pruebas simplificadas
+python test_confluence_simple.py
+```
+
+### Postman
+- Importar `postman_collection_completa_espanol.json`
+- Configurar variables en `postman_environment_confluence.json`
+
+## 🐳 Docker
+
+```bash
+# Construir imagen
+docker build -t ia-analisis .
+
+# Ejecutar contenedor
+docker run -p 8000:8000 --env-file config.env ia-analisis
+```
+
+## 🚀 Deployment
+
+### Railway
+```bash
+# Deploy automático desde GitHub
+# Configurar variables de entorno en Railway dashboard
 ```
 
 ## 📊 Monitoreo
 
-### Dashboards Disponibles
-- **API Docs**: http://localhost:8000/docs
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:9090
-- **Langfuse**: https://us.cloud.langfuse.com
-
-### Métricas Principales
-- Latencia de análisis
-- Tasa de éxito/error
-- Uso de tokens LLM
-- Calidad de sugerencias
+- **Swagger UI**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/salud
+- **Diagnóstico LLM**: http://localhost:8000/diagnostico-llm
 
 ## 🔒 Seguridad
 
-### Sanitización de PII
-El sistema incluye sanitización automática de:
-- Emails
-- Números de teléfono
-- SSNs
-- Tarjetas de crédito
-- Direcciones IP
-- URLs
-- API Keys
-- Tokens JWT
+- **Sanitización PII**: Eliminación automática de datos personales
+- **Variables de Entorno**: Configuración segura
+- **Logging Estructurado**: Logs seguros con structlog
 
-### Logging Seguro
-- Logs estructurados en JSON
-- Sanitización automática de datos sensibles
-- Rotación de logs configurable
+## 📚 Documentación
 
-## 🚀 Despliegue
+- **[ARQUITECTURA_PROYECTO.md](ARQUITECTURA_PROYECTO.md)** - Arquitectura completa del sistema
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Documentación de la API
+- **[ISTQB_DOCUMENTATION.md](ISTQB_DOCUMENTATION.md)** - Metodologías ISTQB
+- **[SECURITY.md](SECURITY.md)** - Políticas de seguridad
 
-### Producción
-1. Configurar variables de entorno de producción
-2. Usar HTTPS con certificados válidos
-3. Configurar backup de logs y métricas
-4. Implementar health checks
-5. Configurar alertas
+## 🎯 Características Principales
 
-### Escalabilidad
-- Horizontal: Múltiples instancias con load balancer
-- Vertical: Aumentar recursos del contenedor
-- Cache: Redis para respuestas frecuentes
-- Queue: Procesamiento asíncrono de lotes
-
-## 📚 Documentación Adicional
-
-- [QUICKSTART.md](QUICKSTART.md) - Guía de inicio rápido
-- [CONFIGURACION_COMPLETA.md](CONFIGURACION_COMPLETA.md) - Configuración detallada
-- [ALTERNATIVAS_LLM.md](ALTERNATIVAS_LLM.md) - Alternativas de modelos LLM
-- [ISTQB_DOCUMENTATION.md](ISTQB_DOCUMENTATION.md) - **NUEVO**: Documentación completa del sistema ISTQB
-- [ejemplo_istqb_usage.py](ejemplo_istqb_usage.py) - **NUEVO**: Ejemplos prácticos de uso
-
-## 🎯 Técnicas ISTQB Implementadas
-
-### Técnicas de Diseño de Pruebas
-1. **Equivalencia** - Partición de clases de equivalencia válidas/inválidas
-2. **Valores Límite** - Análisis de casos min-1, min, min+1, max-1, max, max+1
-3. **Tabla de Decisión** - Matrices compactas de condiciones y acciones
-4. **Transición de Estados** - Estados y transiciones principales del sistema
-5. **Árbol de Clasificación** - Clases/atributos y restricciones entre factores
-6. **Pairwise** - Combinaciones mínimas que cubren todas las parejas
-7. **Casos de Uso** - Flujos principales y alternos relevantes
-8. **Error Guessing** - Hipótesis de fallos del dominio
-9. **Checklist** - Verificación genérica de calidad
-
-### Formato de Salida Estructurado
-- **Sección A**: CSV con casos de prueba (CP - NNN - PROGRAMA - MODULO - CONDICION - ESCENARIO)
-- **Sección B**: Fichas detalladas con precondiciones y resultados esperados
-- **Sección C**: Artefactos técnicos según técnicas seleccionadas
-- **Sección D**: Plan de ejecución automatizado (opcional)
+- ✅ **Endpoints en español** para mejor UX
+- ✅ **Integración completa** con Jira y Confluence
+- ✅ **IA avanzada** con Google Gemini
+- ✅ **Observabilidad** con Langfuse
+- ✅ **Seguridad** con sanitización de datos
+- ✅ **Testing completo** con validación automática
+- ✅ **Solución a timeouts** con endpoint simplificado
 
 ## 🤝 Contribución
 
@@ -316,5 +135,5 @@ MIT License - ver [LICENSE](LICENSE) para detalles.
 
 Para soporte técnico:
 - Crear issue en el repositorio
-- Contactar al equipo de desarrollo
 - Revisar documentación en `/docs`
+- Consultar [ARQUITECTURA_PROYECTO.md](ARQUITECTURA_PROYECTO.md) para detalles técnicos
