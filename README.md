@@ -122,6 +122,14 @@ python -m uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
 - **ReDoc**: http://localhost:8000/redoc
 - **OpenAPI Schema**: http://localhost:8000/openapi.json
 
+### Live Demo (Railway)
+
+Access the live production deployment:
+- **🚀 Railway Production**: https://aiquaa-ai-analysis-ms-v2-production.up.railway.app/
+  - Automatically redirects to Swagger UI
+  - Full API documentation available
+  - Production-ready environment
+
 ## 📚 API Documentation
 
 ### OpenAPI/Swagger Endpoints
@@ -161,10 +169,33 @@ The API supports two authentication methods:
 
 Health check endpoints are public (no authentication required).
 
+### Available Servers
+
+The API is available on multiple servers:
+
+| Environment | URL | Description |
+|-------------|-----|-------------|
+| **Railway Production** | https://aiquaa-ai-analysis-ms-v2-production.up.railway.app | Live production deployment |
+| **Local Development** | http://localhost:8000 | Local development server |
+| **Main Production** | https://api.aiquaa.com | Main production server |
+
+**Note**: Root URL (/) automatically redirects to Swagger UI (/docs) on all servers.
+
 ### Example Requests
 
 #### Analyze Content (English)
 ```bash
+# Using Railway production
+curl -X POST "https://aiquaa-ai-analysis-ms-v2-production.up.railway.app/api/v1/analizar" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "content": "As a user, I want to reset my password...",
+    "content_type": "user_story",
+    "analysis_level": "comprehensive"
+  }'
+
+# Using localhost
 curl -X POST "http://localhost:8000/api/v1/analizar" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \

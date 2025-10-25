@@ -142,8 +142,12 @@ For support, please contact: support@aiquaa.com
             "description": "Local development server"
         },
         {
+            "url": "https://aiquaa-ai-analysis-ms-v2-production.up.railway.app",
+            "description": "Railway production server"
+        },
+        {
             "url": "https://api.aiquaa.com",
-            "description": "Production server"
+            "description": "Production server (main)"
         },
     ],
     docs_url="/docs",
