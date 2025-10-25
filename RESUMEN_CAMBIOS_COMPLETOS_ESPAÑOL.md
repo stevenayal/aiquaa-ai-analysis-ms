@@ -6,20 +6,7 @@ Implementar la traducción completa de todos los parámetros de entrada y salida
 
 ## 📋 Endpoints Actualizados
 
-### 🔄 **Endpoints en Español**
-
-Todos los endpoints han sido traducidos al español para mayor consistencia:
-
-| Endpoint Anterior | Nuevo Endpoint | Descripción |
-|-------------------|----------------|-------------|
-| `/analyze` | `/analizar` | Análisis de contenido |
-| `/analyze-jira` | `/analizar-jira` | Análisis de Jira |
-| `/generate-advanced-tests` | `/generar-pruebas-avanzadas` | Generación avanzada |
-| `/analysis/requirements/istqb-check` | `/analisis/requisitos/verificacion-istqb` | Análisis ISTQB |
-| `/analyze-jira-confluence` | `/analizar-jira-confluence` | Análisis Jira-Confluence |
-| `/health` | `/salud` | Health check |
-
-### 1. **`POST /analizar`** - Análisis de Contenido
+### 1. **`POST /analyze`** - Análisis de Contenido
 
 #### Parámetros de Entrada (Request):
 ```json
@@ -60,7 +47,7 @@ Todos los endpoints han sido traducidos al español para mayor consistencia:
 - `processing_time` → `tiempo_procesamiento`
 - `created_at` → `fecha_creacion`
 
-### 2. **`POST /analizar-jira`** - Análisis de Work Items de Jira
+### 2. **`POST /analyze-jira`** - Análisis de Work Items de Jira
 
 #### Parámetros de Entrada (Request):
 ```json
@@ -97,7 +84,7 @@ Todos los endpoints han sido traducidos al español para mayor consistencia:
 - `processing_time` → `tiempo_procesamiento`
 - `created_at` → `fecha_creacion`
 
-### 3. **`POST /generar-pruebas-avanzadas`** - Generación Avanzada
+### 3. **`POST /generate-advanced-tests`** - Generación Avanzada
 
 #### Parámetros de Entrada (Request):
 ```json
@@ -130,7 +117,7 @@ Todos los endpoints han sido traducidos al español para mayor consistencia:
 - `processing_time` → `tiempo_procesamiento`
 - `created_at` → `fecha_creacion`
 
-### 4. **`POST /analisis/requisitos/verificacion-istqb`** - Análisis ISTQB
+### 4. **`POST /analysis/requirements/istqb-check`** - Análisis ISTQB
 
 #### Parámetros de Entrada (Request):
 ```json
@@ -179,7 +166,7 @@ Todos los endpoints han sido traducidos al español para mayor consistencia:
 - `processing_time` → `tiempo_procesamiento`
 - `created_at` → `fecha_creacion`
 
-### 5. **`POST /analizar-jira-confluence`** - Análisis Jira-Confluence
+### 5. **`POST /analyze-jira-confluence`** - Análisis Jira-Confluence
 
 #### Parámetros de Entrada (Request):
 ```json
@@ -234,7 +221,7 @@ Todos los endpoints han sido traducidos al español para mayor consistencia:
 - `coverage_analysis` → `analisis_cobertura`
 - `automation_potential` → `potencial_automatizacion`
 
-### 6. **`GET /salud`** - Health Check
+### 6. **`GET /health`** - Health Check
 
 #### Parámetros de Salida (Response):
 ```json
@@ -284,7 +271,6 @@ Todos los endpoints han sido traducidos al español para mayor consistencia:
 - ✅ **`main.py`** - Todos los modelos y endpoints actualizados
 - ✅ **`postman_collection_completa_espanol.json`** - Colección completa en español
 - ✅ **`test_todos_endpoints_espanol.py`** - Script de prueba comprehensivo
-- ✅ **`ENDPOINTS_ESPAÑOL.md`** - Documentación de endpoints en español
 - ✅ **`RESUMEN_CAMBIOS_COMPLETOS_ESPAÑOL.md`** - Este documento
 
 ### Archivos de Prueba:
@@ -353,7 +339,7 @@ python test_todos_endpoints_espanol.py
 
 ### 3. **Ejemplo Mínimo:**
 ```bash
-curl -X POST "http://localhost:8000/analizar" \
+curl -X POST "http://localhost:8000/analyze" \
   -H "Content-Type: application/json" \
   -d '{
     "id_contenido": "TC-001",
@@ -364,13 +350,12 @@ curl -X POST "http://localhost:8000/analizar" \
 
 ## 📊 Estadísticas de Cambios
 
-- **6 endpoints** actualizados (rutas en español)
+- **6 endpoints** actualizados
 - **15 modelos** traducidos
 - **50+ parámetros** renombrados
 - **16 requests** en Postman
 - **100+ tests** automáticos
 - **0 funcionalidades** perdidas
-- **Swagger UI** actualizado con endpoints en español
 
 ## 🔄 Compatibilidad
 

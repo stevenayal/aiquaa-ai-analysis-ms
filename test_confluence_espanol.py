@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Configuración del servidor
 BASE_URL = "http://localhost:8000"
-ENDPOINT = "/analizar-jira-confluence"
+ENDPOINT = "/analyze-jira-confluence"
 
 # Ejemplos con parámetros en español
 EJEMPLOS_ESPAÑOL = [
