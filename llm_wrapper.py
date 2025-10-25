@@ -710,7 +710,7 @@ class LLMWrapper:
             "confidence_score": 0.8
         }
         
-        # Validar casos de prueba
+        # Validar casos de prueba con estructura modular
         if "test_cases" in response and isinstance(response["test_cases"], list):
             for tc in response["test_cases"]:
                 if isinstance(tc, dict):
@@ -720,12 +720,14 @@ class LLMWrapper:
                         "description": tc.get("description", ""),
                         "test_type": tc.get("test_type", "functional"),
                         "priority": tc.get("priority", "medium"),
-                        "steps": tc.get("steps", []),
-                        "expected_result": tc.get("expected_result", ""),
                         "preconditions": tc.get("preconditions", []),
+                        "steps": tc.get("steps", []),
+                        "expected_results": tc.get("expected_results", []),
                         "test_data": tc.get("test_data", {}),
                         "automation_potential": tc.get("automation_potential", "medium"),
-                        "estimated_duration": tc.get("estimated_duration", "5-10 minutes")
+                        "estimated_duration": tc.get("estimated_duration", "5-10 minutes"),
+                        "risk_level": tc.get("risk_level", "medium"),
+                        "business_impact": tc.get("business_impact", "medium")
                     })
         
         # Validar análisis de cobertura
@@ -771,17 +773,19 @@ class LLMWrapper:
         """Crear respuesta de fallback para análisis de work item de Jira"""
         return {
             "test_cases": [{
-                "test_case_id": "TC-JIRA-ERROR-001",
-                "title": "Error en análisis de Jira",
+                "test_case_id": "CP001-JIRA-ERROR-MODULO-CONDICION-RESULTADO",
+                "title": "CP001 - JIRA ERROR - MODULO - CONDICION Y RESULTADO",
                 "description": "No se pudo procesar el work item de Jira correctamente",
                 "test_type": "functional",
                 "priority": "low",
-                "steps": ["Revisar work item de Jira y reintentar"],
-                "expected_result": "Análisis exitoso",
-                "preconditions": [],
+                "preconditions": ["Precondición 1: Work item de Jira accesible"],
+                "steps": ["Paso 1: Revisar work item de Jira y reintentar"],
+                "expected_results": ["Resultado Esperado 1: Análisis exitoso"],
                 "test_data": {},
                 "automation_potential": "low",
-                "estimated_duration": "TBD"
+                "estimated_duration": "TBD",
+                "risk_level": "high",
+                "business_impact": "low"
             }],
             "coverage_analysis": {
                 "functional_coverage": "0%",

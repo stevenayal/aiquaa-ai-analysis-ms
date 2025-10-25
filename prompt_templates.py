@@ -725,19 +725,26 @@ FORMATO DE RESPUESTA JSON:
 {{
     "test_cases": [
         {{
-            "test_case_id": "CP-001-{project_key}-MODULO-DATO-CONDICION-RESULTADO",
-            "title": "CP - 001 - Aplicacion - Modulo - Dato - Condicion - Resultado",
+            "test_case_id": "CP001-{project_key}-MODULO-CONDICION-RESULTADO",
+            "title": "CP001 - NOMBRE DE APLICACION - MODULO - CONDICION Y RESULTADO",
             "description": "Descripción detallada que explique el propósito y alcance del caso",
             "test_type": "functional|integration|ui|api|security|performance|usability|accessibility",
             "priority": "critical|high|medium|low",
-            "steps": [
-                "Paso 1: Acción específica y verificable",
-                "Paso 2: Acción específica y verificable",
-                "Paso N: Verificación del resultado"
-            ],
-            "expected_result": "Resultado Esperado: [Descripción específica del resultado esperado]",
             "preconditions": [
-                "Precondicion: [Descripción específica de las precondiciones necesarias]"
+                "Precondición 1: [Descripción específica de la precondición necesaria]",
+                "Precondición 2: [Descripción específica de la precondición necesaria]",
+                "Precondición N: [Descripción específica de la precondición necesaria]"
+            ],
+            "steps": [
+                "Paso 1: [Acción específica y verificable]",
+                "Paso 2: [Acción específica y verificable]", 
+                "Paso 3: [Acción específica y verificable]",
+                "Paso N: [Verificación del resultado]"
+            ],
+            "expected_results": [
+                "Resultado Esperado 1: [Descripción específica del resultado esperado]",
+                "Resultado Esperado 2: [Descripción específica del resultado esperado]",
+                "Resultado Esperado N: [Descripción específica del resultado esperado]"
             ],
             "test_data": {{
                 "input_data": "Datos de entrada específicos",

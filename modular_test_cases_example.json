@@ -1,0 +1,64 @@
+{
+  "test_cases": [
+    {
+      "test_case_id": "CP001-ECOMMERCE-CART-VALIDATION-SUCCESS",
+      "title": "CP001 - ECOMMERCE - CART - VALIDATION Y SUCCESS",
+      "description": "Verificar que el carrito de compras valida correctamente los productos agregados",
+      "test_type": "functional",
+      "priority": "high",
+      "preconditions": [
+        "Precondición 1: Usuario autenticado en el sistema",
+        "Precondición 2: Productos disponibles en el catálogo",
+        "Precondición 3: Carrito de compras vacío"
+      ],
+      "steps": [
+        "Paso 1: Navegar a la página de productos",
+        "Paso 2: Seleccionar un producto del catálogo",
+        "Paso 3: Hacer clic en 'Agregar al carrito'",
+        "Paso 4: Verificar que el producto aparece en el carrito",
+        "Paso 5: Verificar que el total se calcula correctamente"
+      ],
+      "expected_results": [
+        "Resultado Esperado 1: El producto se agrega al carrito exitosamente",
+        "Resultado Esperado 2: El contador del carrito se actualiza",
+        "Resultado Esperado 3: El total del carrito se calcula correctamente",
+        "Resultado Esperado 4: Se muestra mensaje de confirmación"
+      ],
+      "test_data": {
+        "input_data": "Producto: iPhone 15, Cantidad: 1, Precio: $999",
+        "environment": "Entorno de testing con datos de prueba",
+        "user_roles": "Usuario autenticado con permisos de compra"
+      },
+      "automation_potential": "high",
+      "estimated_duration": "5-10 minutes",
+      "risk_level": "medium",
+      "business_impact": "high"
+    }
+  ],
+  "coverage_analysis": {
+    "functional_coverage": "85%",
+    "edge_case_coverage": "70%",
+    "integration_coverage": "80%",
+    "security_coverage": "60%",
+    "ui_coverage": "90%",
+    "usability_coverage": "75%",
+    "accessibility_coverage": "65%"
+  },
+  "confidence_score": 0.85,
+  "test_strategy": {
+    "approach": "Testing basado en casos de uso con cobertura modular",
+    "techniques_applied": [
+      "Partición de equivalencia",
+      "Valores límite",
+      "Casos de uso"
+    ],
+    "risks_identified": [
+      "Dependencias externas",
+      "Datos de prueba inconsistentes"
+    ],
+    "mitigation_strategies": [
+      "Mocking de servicios",
+      "Datos de prueba estandarizados"
+    ]
+  }
+}
