@@ -1,0 +1,322 @@
+{
+  "info": {
+    "name": "Análisis QA - Confluence Endpoint",
+    "description": "Colección para probar el endpoint /analyze-jira-confluence que analiza issues de Jira y genera planes de prueba para Confluence",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "jira_issue_id",
+      "value": "PROJ-123",
+      "type": "string"
+    },
+    {
+      "key": "confluence_space_key",
+      "value": "QA",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        },
+        "description": "Verificar el estado del servidor y sus componentes"
+      },
+      "response": []
+    },
+    {
+      "name": "Análisis Básico - Solo Parámetros Requeridos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"{{jira_issue_id}}\",\n  \"espacio_confluence\": \"{{confluence_space_key}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analyze-jira-confluence"]
+        },
+        "description": "Análisis mínimo con solo los parámetros requeridos. El título se genera automáticamente."
+      },
+      "response": []
+    },
+    {
+      "name": "Análisis Completo - Con Título Personalizado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"{{jira_issue_id}}\",\n  \"espacio_confluence\": \"{{confluence_space_key}}\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Autenticación de Usuarios\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analyze-jira-confluence"]
+        },
+        "description": "Análisis con título personalizado del plan de pruebas."
+      },
+      "response": []
+    },
+    {
+      "name": "Ejemplo 1 - Historia de Usuario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"AUTH-001\",\n  \"espacio_confluence\": \"QA\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Sistema de Autenticación\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analyze-jira-confluence"]
+        },
+        "description": "Ejemplo para una historia de usuario de autenticación."
+      },
+      "response": []
+    },
+    {
+      "name": "Ejemplo 2 - Tarea de Integración",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"API-002\",\n  \"espacio_confluence\": \"DEV\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Integración API de Pagos\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analyze-jira-confluence"]
+        },
+        "description": "Ejemplo para una tarea de integración de API."
+      },
+      "response": []
+    },
+    {
+      "name": "Ejemplo 3 - Bug de Rendimiento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"PERF-003\",\n  \"espacio_confluence\": \"QA\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Optimización de Rendimiento\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analyze-jira-confluence"]
+        },
+        "description": "Ejemplo para un bug de rendimiento."
+      },
+      "response": []
+    },
+    {
+      "name": "Ejemplo 4 - Epic Complejo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"EPIC-001\",\n  \"espacio_confluence\": \"PRODUCT\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Nueva Funcionalidad de E-commerce\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analyze-jira-confluence"]
+        },
+        "description": "Ejemplo para un epic complejo con múltiples funcionalidades."
+      },
+      "response": []
+    },
+    {
+      "name": "Prueba de Error - Issue No Encontrado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"INVALID-999\",\n  \"espacio_confluence\": \"QA\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analyze-jira-confluence"]
+        },
+        "description": "Prueba de manejo de errores cuando el issue no existe."
+      },
+      "response": []
+    },
+    {
+      "name": "Prueba de Error - Parámetros Inválidos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"\",\n  \"espacio_confluence\": \"QA\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analyze-jira-confluence"]
+        },
+        "description": "Prueba de validación con parámetros inválidos."
+      },
+      "response": []
+    },
+    {
+      "name": "Configuración del Servidor",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/config",
+          "host": ["{{base_url}}"],
+          "path": ["config"]
+        },
+        "description": "Verificar la configuración del servidor y sus componentes."
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Script que se ejecuta antes de cada request",
+          "console.log('Ejecutando request a:', pm.request.url.toString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Tests automáticos para las respuestas",
+          "pm.test('Status code is 200', function () {",
+          "    pm.response.to.have.status(200);",
+          "});",
+          "",
+          "pm.test('Response time is less than 120000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(120000);",
+          "});",
+          "",
+          "pm.test('Response has required fields', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('id_analisis');",
+          "    pm.expect(jsonData).to.have.property('id_issue_jira');",
+          "    pm.expect(jsonData).to.have.property('espacio_confluence');",
+          "    pm.expect(jsonData).to.have.property('estado');",
+          "});",
+          "",
+          "pm.test('Response contains test plan sections', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('secciones_plan_pruebas');",
+          "    pm.expect(jsonData.secciones_plan_pruebas).to.be.an('array');",
+          "    pm.expect(jsonData.secciones_plan_pruebas.length).to.be.above(0);",
+          "});",
+          "",
+          "pm.test('Response contains test cases', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('casos_prueba');",
+          "    pm.expect(jsonData.casos_prueba).to.be.an('array');",
+          "    pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
+          "});",
+          "",
+          "pm.test('Response contains confluence content', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('contenido_confluence');",
+          "    pm.expect(jsonData.contenido_confluence).to.be.a('string');",
+          "    pm.expect(jsonData.contenido_confluence.length).to.be.above(0);",
+          "});",
+          "",
+          "pm.test('Response contains coverage analysis', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('analisis_cobertura');",
+          "    pm.expect(jsonData.analisis_cobertura).to.be.an('object');",
+          "});",
+          "",
+          "pm.test('Response contains automation potential', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('potencial_automatizacion');",
+          "    pm.expect(jsonData.potencial_automatizacion).to.be.an('object');",
+          "});",
+          "",
+          "pm.test('Confidence score is between 0 and 1', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+          "    pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+          "    pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
+          "});",
+          "",
+          "pm.test('Processing time is reasonable', function () {",
+          "    const jsonData = pm.response.json();",
+          "    pm.expect(jsonData).to.have.property('processing_time');",
+          "    pm.expect(jsonData.processing_time).to.be.a('number');",
+          "    pm.expect(jsonData.processing_time).to.be.above(0);",
+          "});"
+        ]
+      }
+    }
+  ]
+}

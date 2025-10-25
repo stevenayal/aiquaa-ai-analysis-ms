@@ -1,0 +1,1082 @@
+{
+  "info": {
+    "name": "API Análisis QA - Colección Completa con Pruebas",
+    "description": "Colección completa de la API de Análisis QA con todos los endpoints, parámetros en español y pruebas automáticas",
+    "version": "3.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://ia-analisis-production.up.railway.app",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/salud",
+          "host": ["{{base_url}}"],
+          "path": ["salud"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    "pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('estado');",
+              "    pm.expect(jsonData).to.have.property('timestamp');",
+              "    pm.expect(jsonData).to.have.property('version');",
+              "    pm.expect(jsonData).to.have.property('componentes');",
+              "});",
+              "",
+              "pm.test('Health status is healthy', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.estado).to.eql('healthy');",
+              "});",
+              "",
+              "pm.test('Response time is less than 5000ms', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Análisis de Contenido - Caso de Prueba",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_contenido\": \"TC-001\",\n  \"contenido\": \"Verificar que el usuario pueda iniciar sesión con credenciales válidas. Pasos: 1) Abrir la página de login, 2) Ingresar usuario válido, 3) Ingresar contraseña válida, 4) Hacer clic en 'Iniciar Sesión'. Resultado esperado: Usuario logueado exitosamente y redirigido al dashboard.\",\n  \"tipo_contenido\": \"test_case\",\n  \"nivel_analisis\": \"high\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["analizar"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('id_contenido');",
+              "    pm.expect(jsonData).to.have.property('id_analisis');",
+              "    pm.expect(jsonData).to.have.property('estado');",
+              "    pm.expect(jsonData).to.have.property('casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('sugerencias');",
+              "    pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+              "    pm.expect(jsonData).to.have.property('tiempo_procesamiento');",
+              "    pm.expect(jsonData).to.have.property('fecha_creacion');",
+              "});",
+              "",
+              "pm.test('Analysis is completed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.estado).to.eql('completed');",
+              "});",
+              "",
+              "pm.test('Test cases are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.casos_prueba).to.be.an('array');",
+              "    pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Confidence score is valid', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
+              "});",
+              "",
+              "pm.test('Response time is reasonable', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Análisis de Contenido - Requerimiento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_contenido\": \"REQ-001\",\n  \"contenido\": \"El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado.\",\n  \"tipo_contenido\": \"requirement\",\n  \"nivel_analisis\": \"comprehensive\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["analizar"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Análisis de Contenido - Historia de Usuario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_contenido\": \"US-001\",\n  \"contenido\": \"Como usuario del sistema, quiero poder recuperar mi contraseña olvidada para poder acceder a mi cuenta nuevamente. Criterios de aceptación: 1) El usuario debe poder solicitar recuperación desde la página de login, 2) Debe recibir un email con instrucciones, 3) Debe poder establecer una nueva contraseña, 4) La nueva contraseña debe cumplir con los criterios de seguridad.\",\n  \"tipo_contenido\": \"user_story\",\n  \"nivel_analisis\": \"high\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["analizar"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Análisis de Jira - Work Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_work_item\": \"AUTH-123\",\n  \"nivel_analisis\": \"high\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar-jira",
+          "host": ["{{base_url}}"],
+          "path": ["analizar-jira"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('id_work_item');",
+              "    pm.expect(jsonData).to.have.property('datos_jira');",
+              "    pm.expect(jsonData).to.have.property('id_analisis');",
+              "    pm.expect(jsonData).to.have.property('estado');",
+              "    pm.expect(jsonData).to.have.property('casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+              "    pm.expect(jsonData).to.have.property('tiempo_procesamiento');",
+              "    pm.expect(jsonData).to.have.property('fecha_creacion');",
+              "});",
+              "",
+              "pm.test('Analysis is completed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.estado).to.eql('completed');",
+              "});",
+              "",
+              "pm.test('Jira data is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.datos_jira).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Test cases are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.casos_prueba).to.be.an('array');",
+              "    pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Confidence score is valid', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
+              "});",
+              "",
+              "pm.test('Response time is reasonable', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Análisis de Jira - Epic",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_work_item\": \"EPIC-001\",\n  \"nivel_analisis\": \"comprehensive\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar-jira",
+          "host": ["{{base_url}}"],
+          "path": ["analizar-jira"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Generación Avanzada - Autenticación",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requerimiento\": \"El sistema debe permitir a los usuarios autenticarse usando email y contraseña. El sistema debe validar las credenciales contra la base de datos y permitir el acceso solo a usuarios activos. En caso de credenciales incorrectas, debe mostrar un mensaje de error apropiado. El sistema debe implementar bloqueo de cuenta después de 3 intentos fallidos y permitir recuperación de contraseña.\",\n  \"aplicacion\": \"SISTEMA_AUTH\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/generar-pruebas-avanzadas",
+          "host": ["{{base_url}}"],
+          "path": ["generar-pruebas-avanzadas"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('aplicacion');",
+              "    pm.expect(jsonData).to.have.property('id_generacion');",
+              "    pm.expect(jsonData).to.have.property('estado');",
+              "    pm.expect(jsonData).to.have.property('casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('analisis_cobertura');",
+              "    pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+              "    pm.expect(jsonData).to.have.property('tiempo_procesamiento');",
+              "    pm.expect(jsonData).to.have.property('fecha_creacion');",
+              "});",
+              "",
+              "pm.test('Generation is completed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.estado).to.eql('completed');",
+              "});",
+              "",
+              "pm.test('Test cases are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.casos_prueba).to.be.an('array');",
+              "    pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Coverage analysis is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.analisis_cobertura).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Confidence score is valid', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
+              "});",
+              "",
+              "pm.test('Response time is reasonable', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Generación Avanzada - E-commerce",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requerimiento\": \"El sistema de e-commerce debe permitir a los usuarios agregar productos al carrito, modificar cantidades, aplicar cupones de descuento, calcular impuestos según la ubicación, procesar pagos con múltiples métodos (tarjeta, PayPal, transferencia), generar órdenes y enviar confirmaciones por email.\",\n  \"aplicacion\": \"ECOMMERCE_PLATFORM\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/generar-pruebas-avanzadas",
+          "host": ["{{base_url}}"],
+          "path": ["generar-pruebas-avanzadas"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Análisis ISTQB - Requerimiento Simple",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requirement_id\": \"REQ-001\",\n  \"requirement_text\": \"El sistema debe permitir a los usuarios iniciar sesión con email y contraseña.\",\n  \"context\": {\n    \"producto\": \"Sistema de Autenticación\",\n    \"modulo\": \"Login\",\n    \"stakeholders\": [\"PO\", \"QA\", \"Dev\"],\n    \"restricciones\": [\"PCI DSS\", \"LGPD\"],\n    \"dependencias\": [\"API Clientes v2\"]\n  },\n  \"glossary\": {\n    \"usuario\": \"Persona que accede al sistema\",\n    \"autenticación\": \"Proceso de verificación de identidad\"\n  },\n  \"acceptance_template\": \"Dado [condición] cuando [acción] entonces [resultado]\",\n  \"non_functional_expectations\": [\"Rendimiento\", \"Seguridad\", \"Usabilidad\"]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analisis/requisitos/verificacion-istqb",
+          "host": ["{{base_url}}"],
+          "path": ["analisis", "requisitos", "verificacion-istqb"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('id_requerimiento');",
+              "    pm.expect(jsonData).to.have.property('puntuacion_calidad');",
+              "    pm.expect(jsonData).to.have.property('issues');",
+              "    pm.expect(jsonData).to.have.property('cobertura');",
+              "    pm.expect(jsonData).to.have.property('criterios_aceptacion');",
+              "    pm.expect(jsonData).to.have.property('trazabilidad');",
+              "    pm.expect(jsonData).to.have.property('resumen');",
+              "    pm.expect(jsonData).to.have.property('version_limpia_propuesta');",
+              "    pm.expect(jsonData).to.have.property('id_analisis');",
+              "    pm.expect(jsonData).to.have.property('tiempo_procesamiento');",
+              "    pm.expect(jsonData).to.have.property('fecha_creacion');",
+              "});",
+              "",
+              "pm.test('Quality score is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.puntuacion_calidad).to.be.an('object');",
+              "    pm.expect(jsonData.puntuacion_calidad).to.have.property('overall_score');",
+              "});",
+              "",
+              "pm.test('Issues are detected', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.issues).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Coverage analysis is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.cobertura).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Acceptance criteria are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.criterios_aceptacion).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Clean version is provided', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.version_limpia_propuesta).to.be.a('string');",
+              "    pm.expect(jsonData.version_limpia_propuesta.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Response time is reasonable', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Análisis ISTQB - Requerimiento Complejo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"requirement_id\": \"REQ-002\",\n  \"requirement_text\": \"El sistema de pagos debe procesar transacciones de tarjeta de crédito de manera segura, validando la información del usuario contra la base de datos, verificando fondos disponibles, aplicando reglas de negocio específicas por tipo de transacción, generando logs de auditoría completos y notificando al usuario del resultado dentro de 5 segundos.\",\n  \"context\": {\n    \"producto\": \"Sistema de Pagos\",\n    \"modulo\": \"Procesamiento de Transacciones\",\n    \"stakeholders\": [\"PO\", \"QA\", \"Dev\", \"Compliance\"],\n    \"restricciones\": [\"PCI DSS\", \"SOX\", \"GDPR\"],\n    \"dependencias\": [\"Gateway de Pagos\", \"Sistema de Auditoría\"]\n  },\n  \"glossary\": {\n    \"transacción\": \"Operación de pago entre usuario y comercio\",\n    \"auditoría\": \"Registro de actividades para cumplimiento\",\n    \"gateway\": \"Servicio externo de procesamiento de pagos\"\n  },\n  \"acceptance_template\": \"Dado [condición] cuando [acción] entonces [resultado]\",\n  \"non_functional_expectations\": [\"Rendimiento\", \"Seguridad\", \"Confiabilidad\", \"Auditabilidad\"]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analisis/requisitos/verificacion-istqb",
+          "host": ["{{base_url}}"],
+          "path": ["analisis", "requisitos", "verificacion-istqb"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Análisis Jira-Confluence - Plan de Pruebas",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"PROJ-123\",\n  \"espacio_confluence\": \"QA\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Autenticación de Usuarios\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analizar-jira-confluence"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('id_issue_jira');",
+              "    pm.expect(jsonData).to.have.property('espacio_confluence');",
+              "    pm.expect(jsonData).to.have.property('titulo_plan_pruebas');",
+              "    pm.expect(jsonData).to.have.property('id_analisis');",
+              "    pm.expect(jsonData).to.have.property('estado');",
+              "    pm.expect(jsonData).to.have.property('datos_jira');",
+              "    pm.expect(jsonData).to.have.property('secciones_plan_pruebas');",
+              "    pm.expect(jsonData).to.have.property('fases_ejecucion');",
+              "    pm.expect(jsonData).to.have.property('casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('total_casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('duracion_estimada');",
+              "    pm.expect(jsonData).to.have.property('nivel_riesgo');",
+              "    pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+              "    pm.expect(jsonData).to.have.property('contenido_confluence');",
+              "    pm.expect(jsonData).to.have.property('markup_confluence');",
+              "    pm.expect(jsonData).to.have.property('analisis_cobertura');",
+              "    pm.expect(jsonData).to.have.property('potencial_automatizacion');",
+              "    pm.expect(jsonData).to.have.property('processing_time');",
+              "    pm.expect(jsonData).to.have.property('created_at');",
+              "});",
+              "",
+              "pm.test('Analysis is completed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.estado).to.eql('completed');",
+              "});",
+              "",
+              "pm.test('Jira data is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.datos_jira).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Test plan sections are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.secciones_plan_pruebas).to.be.an('array');",
+              "    pm.expect(jsonData.secciones_plan_pruebas.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Execution phases are present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.fases_ejecucion).to.be.an('array');",
+              "    pm.expect(jsonData.fases_ejecucion.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Test cases are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.casos_prueba).to.be.an('array');",
+              "    pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
+              "    pm.expect(jsonData.total_casos_prueba).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Confluence content is generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.contenido_confluence).to.be.a('string');",
+              "    pm.expect(jsonData.contenido_confluence.length).to.be.above(0);",
+              "    pm.expect(jsonData.markup_confluence).to.be.a('string');",
+              "    pm.expect(jsonData.markup_confluence.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Coverage analysis is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.analisis_cobertura).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Automation potential is analyzed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.potencial_automatizacion).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Confidence score is valid', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
+              "});",
+              "",
+              "pm.test('Response time is reasonable', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Análisis Jira-Confluence - Solo Parámetros Requeridos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"AUTH-001\",\n  \"espacio_confluence\": \"QA\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analizar-jira-confluence"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('id_issue_jira');",
+              "    pm.expect(jsonData).to.have.property('espacio_confluence');",
+              "    pm.expect(jsonData).to.have.property('titulo_plan_pruebas');",
+              "    pm.expect(jsonData).to.have.property('id_analisis');",
+              "    pm.expect(jsonData).to.have.property('estado');",
+              "    pm.expect(jsonData).to.have.property('datos_jira');",
+              "    pm.expect(jsonData).to.have.property('secciones_plan_pruebas');",
+              "    pm.expect(jsonData).to.have.property('fases_ejecucion');",
+              "    pm.expect(jsonData).to.have.property('casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('total_casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('duracion_estimada');",
+              "    pm.expect(jsonData).to.have.property('nivel_riesgo');",
+              "    pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+              "    pm.expect(jsonData).to.have.property('contenido_confluence');",
+              "    pm.expect(jsonData).to.have.property('markup_confluence');",
+              "    pm.expect(jsonData).to.have.property('analisis_cobertura');",
+              "    pm.expect(jsonData).to.have.property('potencial_automatizacion');",
+              "    pm.expect(jsonData).to.have.property('processing_time');",
+              "    pm.expect(jsonData).to.have.property('created_at');",
+              "});",
+              "",
+              "pm.test('Analysis is completed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.estado).to.eql('completed');",
+              "});",
+              "",
+              "pm.test('Jira data is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.datos_jira).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Test plan sections are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.secciones_plan_pruebas).to.be.an('array');",
+              "    pm.expect(jsonData.secciones_plan_pruebas.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Execution phases are present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.fases_ejecucion).to.be.an('array');",
+              "    pm.expect(jsonData.fases_ejecucion.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Test cases are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.casos_prueba).to.be.an('array');",
+              "    pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
+              "    pm.expect(jsonData.total_casos_prueba).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Confluence content is generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.contenido_confluence).to.be.a('string');",
+              "    pm.expect(jsonData.contenido_confluence.length).to.be.above(0);",
+              "    pm.expect(jsonData.markup_confluence).to.be.a('string');",
+              "    pm.expect(jsonData.markup_confluence.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Coverage analysis is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.analisis_cobertura).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Automation potential is analyzed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.potencial_automatizacion).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Confidence score is valid', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
+              "});",
+              "",
+              "pm.test('Response time is reasonable', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Análisis Jira-Confluence - Epic Complejo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_issue_jira\": \"EPIC-001\",\n  \"espacio_confluence\": \"PRODUCT\",\n  \"titulo_plan_pruebas\": \"Plan de Pruebas - Nueva Funcionalidad de E-commerce\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar-jira-confluence",
+          "host": ["{{base_url}}"],
+          "path": ["analizar-jira-confluence"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has required fields', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('id_issue_jira');",
+              "    pm.expect(jsonData).to.have.property('espacio_confluence');",
+              "    pm.expect(jsonData).to.have.property('titulo_plan_pruebas');",
+              "    pm.expect(jsonData).to.have.property('id_analisis');",
+              "    pm.expect(jsonData).to.have.property('estado');",
+              "    pm.expect(jsonData).to.have.property('datos_jira');",
+              "    pm.expect(jsonData).to.have.property('secciones_plan_pruebas');",
+              "    pm.expect(jsonData).to.have.property('fases_ejecucion');",
+              "    pm.expect(jsonData).to.have.property('casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('total_casos_prueba');",
+              "    pm.expect(jsonData).to.have.property('duracion_estimada');",
+              "    pm.expect(jsonData).to.have.property('nivel_riesgo');",
+              "    pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+              "    pm.expect(jsonData).to.have.property('contenido_confluence');",
+              "    pm.expect(jsonData).to.have.property('markup_confluence');",
+              "    pm.expect(jsonData).to.have.property('analisis_cobertura');",
+              "    pm.expect(jsonData).to.have.property('potencial_automatizacion');",
+              "    pm.expect(jsonData).to.have.property('processing_time');",
+              "    pm.expect(jsonData).to.have.property('created_at');",
+              "});",
+              "",
+              "pm.test('Analysis is completed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.estado).to.eql('completed');",
+              "});",
+              "",
+              "pm.test('Jira data is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.datos_jira).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Test plan sections are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.secciones_plan_pruebas).to.be.an('array');",
+              "    pm.expect(jsonData.secciones_plan_pruebas.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Execution phases are present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.fases_ejecucion).to.be.an('array');",
+              "    pm.expect(jsonData.fases_ejecucion.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Test cases are generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.casos_prueba).to.be.an('array');",
+              "    pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
+              "    pm.expect(jsonData.total_casos_prueba).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Confluence content is generated', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.contenido_confluence).to.be.a('string');",
+              "    pm.expect(jsonData.contenido_confluence.length).to.be.above(0);",
+              "    pm.expect(jsonData.markup_confluence).to.be.a('string');",
+              "    pm.expect(jsonData.markup_confluence.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Coverage analysis is present', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.analisis_cobertura).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Automation potential is analyzed', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.potencial_automatizacion).to.be.an('object');",
+              "});",
+              "",
+              "pm.test('Confidence score is valid', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+              "    pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
+              "});",
+              "",
+              "pm.test('Response time is reasonable', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Validación - ID Contenido Vacío",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_contenido\": \"\",\n  \"contenido\": \"Contenido de prueba\",\n  \"tipo_contenido\": \"test_case\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["analizar"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test('Response has validation error', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('detail');",
+              "});",
+              "",
+              "pm.test('Error message contains validation details', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.detail).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Response time is fast for validation error', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Validación - Contenido Muy Corto",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_contenido\": \"TC-001\",\n  \"contenido\": \"Corto\",\n  \"tipo_contenido\": \"test_case\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["analizar"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test('Response has validation error', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('detail');",
+              "});",
+              "",
+              "pm.test('Error message contains validation details', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.detail).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Response time is fast for validation error', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Validación - Tipo de Contenido Inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_contenido\": \"TC-001\",\n  \"contenido\": \"Contenido de prueba válido con suficiente longitud para pasar la validación\",\n  \"tipo_contenido\": \"invalid_type\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analizar",
+          "host": ["{{base_url}}"],
+          "path": ["analizar"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 422', function () {",
+              "    pm.response.to.have.status(422);",
+              "});",
+              "",
+              "pm.test('Response has validation error', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('detail');",
+              "});",
+              "",
+              "pm.test('Error message contains validation details', function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData.detail).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Response time is fast for validation error', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Configurar timestamp para requests",
+          "pm.globals.set('timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Tests automáticos para todos los endpoints",
+          "",
+          "pm.test('Response time is less than 120000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(120000);",
+          "});",
+          "",
+          "pm.test('Response has required fields', function () {",
+          "    const jsonData = pm.response.json();",
+          "    ",
+          "    // Verificar campos comunes según el endpoint",
+          "    if (pm.request.url.path.includes('analyze') && !pm.request.url.path.includes('jira')) {",
+          "        pm.expect(jsonData).to.have.property('id_analisis');",
+          "        pm.expect(jsonData).to.have.property('id_contenido');",
+          "        pm.expect(jsonData).to.have.property('estado');",
+          "        pm.expect(jsonData).to.have.property('casos_prueba');",
+          "        pm.expect(jsonData).to.have.property('puntuacion_confianza');",
+          "        pm.expect(jsonData).to.have.property('tiempo_procesamiento');",
+          "    }",
+          "    ",
+          "    if (pm.request.url.path.includes('analyze-jira')) {",
+          "        pm.expect(jsonData).to.have.property('id_analisis');",
+          "        pm.expect(jsonData).to.have.property('id_work_item');",
+          "        pm.expect(jsonData).to.have.property('estado');",
+          "        pm.expect(jsonData).to.have.property('casos_prueba');",
+          "        pm.expect(jsonData).to.have.property('datos_jira');",
+          "    }",
+          "    ",
+          "    if (pm.request.url.path.includes('generate-advanced-tests')) {",
+          "        pm.expect(jsonData).to.have.property('id_generacion');",
+          "        pm.expect(jsonData).to.have.property('aplicacion');",
+          "        pm.expect(jsonData).to.have.property('estado');",
+          "        pm.expect(jsonData).to.have.property('casos_prueba');",
+          "    }",
+          "    ",
+          "    if (pm.request.url.path.includes('analyze-jira-confluence')) {",
+          "        pm.expect(jsonData).to.have.property('id_analisis');",
+          "        pm.expect(jsonData).to.have.property('id_issue_jira');",
+          "        pm.expect(jsonData).to.have.property('espacio_confluence');",
+          "        pm.expect(jsonData).to.have.property('estado');",
+          "        pm.expect(jsonData).to.have.property('secciones_plan_pruebas');",
+          "        pm.expect(jsonData).to.have.property('fases_ejecucion');",
+          "        pm.expect(jsonData).to.have.property('casos_prueba');",
+          "    }",
+          "    ",
+          "    if (pm.request.url.path.includes('health')) {",
+          "        pm.expect(jsonData).to.have.property('estado');",
+          "        pm.expect(jsonData).to.have.property('componentes');",
+          "    }",
+          "});",
+          "",
+          "pm.test('Response contains test cases', function () {",
+          "    const jsonData = pm.response.json();",
+          "    if (jsonData.casos_prueba) {",
+          "        pm.expect(jsonData.casos_prueba).to.be.an('array');",
+          "        pm.expect(jsonData.casos_prueba.length).to.be.above(0);",
+          "        ",
+          "        // Verificar estructura de casos de prueba",
+          "        if (jsonData.casos_prueba.length > 0) {",
+          "            const testCase = jsonData.casos_prueba[0];",
+          "            pm.expect(testCase).to.have.property('id_caso_prueba');",
+          "            pm.expect(testCase).to.have.property('titulo');",
+          "            pm.expect(testCase).to.have.property('descripcion');",
+          "            pm.expect(testCase).to.have.property('tipo_prueba');",
+          "            pm.expect(testCase).to.have.property('prioridad');",
+          "            pm.expect(testCase).to.have.property('pasos');",
+          "            pm.expect(testCase).to.have.property('resultado_esperado');",
+          "            pm.expect(testCase).to.have.property('precondiciones');",
+          "            pm.expect(testCase).to.have.property('datos_prueba');",
+          "            pm.expect(testCase).to.have.property('potencial_automatizacion');",
+          "            pm.expect(testCase).to.have.property('duracion_estimada');",
+          "        }",
+          "    }",
+          "});",
+          "",
+          "pm.test('Confidence score is between 0 and 1', function () {",
+          "    const jsonData = pm.response.json();",
+          "    if (jsonData.puntuacion_confianza !== undefined) {",
+          "        pm.expect(jsonData.puntuacion_confianza).to.be.a('number');",
+          "        pm.expect(jsonData.puntuacion_confianza).to.be.within(0, 1);",
+          "    }",
+          "});",
+          "",
+          "pm.test('Processing time is reasonable', function () {",
+          "    const jsonData = pm.response.json();",
+          "    if (jsonData.tiempo_procesamiento !== undefined) {",
+          "        pm.expect(jsonData.tiempo_procesamiento).to.be.a('number');",
+          "        pm.expect(jsonData.tiempo_procesamiento).to.be.above(0);",
+          "    }",
+          "});",
+          "",
+          "pm.test('Response status is 200', function () {",
+          "    pm.response.to.have.status(200);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "timestamp",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
