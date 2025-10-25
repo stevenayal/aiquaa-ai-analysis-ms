@@ -1,0 +1,11 @@
+{
+  "requirement": "The system shall support user authentication via OAuth 2.0 with support for Google, GitHub, and Microsoft providers. Users should be able to link multiple OAuth providers to a single account.",
+  "strategies": [
+    "equivalence_partitioning",
+    "boundary_value",
+    "decision_table",
+    "state_transition"
+  ],
+  "include_istqb_format": true,
+  "include_execution_plan": false
+}

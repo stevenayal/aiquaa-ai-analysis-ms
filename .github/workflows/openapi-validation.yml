@@ -1,0 +1,106 @@
+name: OpenAPI Validation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate-openapi:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install openapi-spec-validator
+
+      - name: Generate OpenAPI schema
+        run: |
+          python -m apps.api.main --export-openapi ./openapi.json
+
+      - name: Validate OpenAPI schema
+        run: |
+          openapi-spec-validator openapi.json
+
+      - name: Upload OpenAPI schema as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-schema
+          path: openapi.json
+          retention-days: 30
+
+      - name: Test API endpoints availability
+        run: |
+          python -m uvicorn apps.api.main:app --host 0.0.0.0 --port 8000 &
+          sleep 10
+          curl -f http://localhost:8000/docs || exit 1
+          curl -f http://localhost:8000/redoc || exit 1
+          curl -f http://localhost:8000/openapi.json || exit 1
+          echo "✅ All OpenAPI endpoints are accessible"
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linting dependencies
+        run: |
+          pip install black isort flake8
+
+      - name: Run Black
+        run: |
+          black --check apps/ core/ domain/ infrastructure/ schemas/
+
+      - name: Run isort
+        run: |
+          isort --check-only apps/ core/ domain/ infrastructure/ schemas/
+
+      - name: Run flake8
+        run: |
+          flake8 apps/ core/ domain/ infrastructure/ schemas/ --max-line-length=120 --extend-ignore=E203,W503
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov pytest-mock
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --cov=apps --cov=core --cov=domain --cov=infrastructure
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false

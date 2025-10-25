@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(mkdir:*)",
+      "Bash(copy:*)",
+      "Bash(copy tracker_client.py \"infrastructure\\http\\jira_client.py\")",
+      "Bash(copy sanitizer.py infrastructuresanitizer.py)",
+      "Bash(chmod:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

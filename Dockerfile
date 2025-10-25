@@ -1,27 +1,38 @@
+# AIQUAA AI Analysis MS - Production Dockerfile
 FROM python:3.11-slim
 
-# Establecer directorio de trabajo
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Set working directory
 WORKDIR /app
 
-# Instalar dependencias del sistema
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copiar archivos de dependencias
+# Copy requirements first for better layer caching
 COPY requirements.txt .
 
-# Instalar dependencias de Python
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código de la aplicación
+# Copy application code
 COPY . .
 
-# Crear directorios necesarios
+# Create necessary directories
 RUN mkdir -p logs data
 
-# Exponer puerto
+# Expose port
 EXPOSE 8000
 
-# Comando por defecto
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import httpx; httpx.get('http://localhost:8000/api/v1/salud').raise_for_status()"
+
+# Run application
+CMD ["python", "-m", "uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

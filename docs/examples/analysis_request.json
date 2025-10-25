@@ -1,0 +1,5 @@
+{
+  "content": "As a user, I want to be able to reset my password so that I can regain access to my account if I forget my credentials. The system should send a reset link to the user's registered email address. The link should be valid for 24 hours.",
+  "content_type": "user_story",
+  "analysis_level": "comprehensive"
+}
