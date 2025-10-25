@@ -1,11 +1,14 @@
 """FastAPI dependencies for dependency injection."""
 
 from functools import lru_cache
+import structlog
 
 from infrastructure.ai import LLMWrapper, PromptTemplates
 from infrastructure.http import TrackerClient
 from infrastructure.sanitizer import PIISanitizer
 from domain.services import AnalysisService, JiraService, ConfluenceService
+
+logger = structlog.get_logger(__name__)
 
 
 # Infrastructure dependencies (singletons)
@@ -13,7 +16,12 @@ from domain.services import AnalysisService, JiraService, ConfluenceService
 @lru_cache
 def get_llm_wrapper() -> LLMWrapper:
     """Get LLM wrapper instance."""
-    return LLMWrapper()
+    try:
+        return LLMWrapper()
+    except Exception as e:
+        logger.warning("Failed to initialize LLMWrapper", error=str(e))
+        # Return instance anyway - it will handle missing config internally
+        return LLMWrapper()
 
 
 @lru_cache
@@ -31,7 +39,12 @@ def get_sanitizer() -> PIISanitizer:
 @lru_cache
 def get_tracker_client() -> TrackerClient:
     """Get Jira tracker client instance."""
-    return TrackerClient()
+    try:
+        return TrackerClient()
+    except Exception as e:
+        logger.warning("Failed to initialize TrackerClient", error=str(e))
+        # Return instance anyway - it will handle missing config internally
+        return TrackerClient()
 
 
 # Service dependencies
