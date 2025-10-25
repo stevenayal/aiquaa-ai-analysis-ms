@@ -1,0 +1,25 @@
+# Minimal Dockerfile for Railway debugging
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install minimal dependencies only
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy and install only essential dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir fastapi uvicorn pydantic python-dotenv
+
+# Copy only essential files
+COPY apps/ ./apps/
+COPY start-minimal.sh .
+RUN chmod +x start-minimal.sh
+
+# Set Python path
+ENV PYTHONPATH=/app
+
+EXPOSE 8000
+
+CMD ["./start-minimal.sh"]
