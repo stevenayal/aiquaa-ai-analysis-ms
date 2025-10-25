@@ -49,29 +49,7 @@
       "response": []
     },
     {
-      "name": "Análisis de Jira - Parámetros en Inglés",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"work_item_id\": \"KAN-6\",\n  \"analysis_level\": \"high\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/analizar-jira",
-          "host": ["{{base_url}}"],
-          "path": ["analizar-jira"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Análisis de Jira - Parámetros en Español",
+      "name": "Análisis de Jira",
       "request": {
         "method": "POST",
         "header": [
@@ -88,28 +66,6 @@
           "raw": "{{base_url}}/analizar-jira",
           "host": ["{{base_url}}"],
           "path": ["analizar-jira"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Análisis de Jira - Simplificado",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"work_item_id\": \"KAN-6\",\n  \"analysis_level\": \"high\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/analizar-jira-simple",
-          "host": ["{{base_url}}"],
-          "path": ["analizar-jira-simple"]
         }
       },
       "response": []

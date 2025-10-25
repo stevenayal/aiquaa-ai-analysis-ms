@@ -22,17 +22,6 @@ from sanitizer import PIISanitizer
 # Cargar variables de entorno
 load_dotenv()
 
-# Feature flags
-USE_SPANISH_PARAMS = os.getenv("USE_SPANISH_PARAMS", "false").lower() == "true"
-
-# Helper function to handle Jira parameters based on feature flag
-def get_jira_params(request_data):
-    """Extract Jira parameters based on feature flag"""
-    if USE_SPANISH_PARAMS:
-        return request_data.get("id_work_item"), request_data.get("nivel_analisis", "medium")
-    else:
-        return request_data.get("work_item_id"), request_data.get("analysis_level", "medium")
-
 # Configurar logging estructurado
 structlog.configure(
     processors=[
@@ -255,31 +244,6 @@ class JiraAnalysisRequest(BaseModel):
             "example": {
                 "id_work_item": "AUTH-123",
                 "nivel_analisis": "high"
-            }
-        }
-
-# Modelo alternativo en inglés para endpoints de Jira
-class JiraAnalysisRequestEN(BaseModel):
-    """Alternative English request model for Jira work item analysis"""
-    work_item_id: str = Field(
-        ..., 
-        description="ID of the work item in Jira (e.g: PROJ-123)",
-        example="AUTH-123",
-        min_length=1,
-        max_length=50
-    )
-    analysis_level: Optional[str] = Field(
-        "medium",
-        description="Analysis level and coverage",
-        example="high",
-        pattern="^(low|medium|high|comprehensive)$"
-    )
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "work_item_id": "AUTH-123",
-                "analysis_level": "high"
             }
         }
 
@@ -1229,14 +1193,6 @@ async def analyze_content(
                       }
                   }
               },
-              408: {
-                  "description": "Timeout en el análisis",
-                  "content": {
-                      "application/json": {
-                          "example": {"detail": "El análisis está tardando más de lo esperado"}
-                      }
-                  }
-              },
               500: {
                   "description": "Error interno del servidor",
                   "content": {
@@ -1247,7 +1203,7 @@ async def analyze_content(
               }
           })
 async def analyze_jira_workitem(
-    request: JiraAnalysisRequest if USE_SPANISH_PARAMS else JiraAnalysisRequestEN,
+    request: JiraAnalysisRequest,
     background_tasks: BackgroundTasks
 ):
     """
@@ -1283,30 +1239,27 @@ async def analyze_jira_workitem(
     - **confidence_score**: Puntuación de confianza (0-1)
     - **processing_time**: Tiempo de procesamiento en segundos
     """
-    # Extract parameters based on feature flag
-    work_item_id, analysis_level = get_jira_params(request.dict())
-    
     start_time = datetime.utcnow()
-    analysis_id = f"jira_analysis_{work_item_id.replace('-', '')}_{int(start_time.timestamp())}"
+    analysis_id = f"jira_analysis_{request.id_work_item.replace('-', '')}_{int(start_time.timestamp())}"
     
     try:
         logger.info(
             "Starting Jira work item analysis",
-            work_item_id=work_item_id,
-            analysis_level=analysis_level,
+            work_item_id=request.id_work_item,
+            analysis_level=request.nivel_analisis,
             analysis_id=analysis_id
         )
         
         # Obtener datos del work item desde Jira (sin project_key requerido)
         jira_data = await tracker_client.get_work_item_details(
-            work_item_id=work_item_id,
-            project_key=""  # Se detecta automáticamente del work_item_id
+            work_item_id=request.id_work_item,
+            project_key=""  # Se detecta automáticamente del id_work_item
         )
         
         if not jira_data:
             raise HTTPException(
                 status_code=404,
-                detail=f"Work item {work_item_id} not found"
+                detail=f"Work item {request.id_work_item} not found"
             )
         
         # Construir contenido para análisis
@@ -1338,36 +1291,22 @@ async def analyze_jira_workitem(
             requirement_content=sanitized_content,
             project_key="",  # Ya no requerido
             test_types=["functional", "integration"],  # Valores por defecto
-            coverage_level=analysis_level
+            coverage_level=request.nivel_analisis
         )
         
-        # Ejecutar análisis con LLM con timeout
-        try:
-            analysis_result = await asyncio.wait_for(
-                llm_wrapper.analyze_jira_workitem(
-                    prompt=prompt,
-                    work_item_id=work_item_id,
-                    analysis_id=analysis_id
-                ),
-                timeout=300.0  # 5 minutos de timeout
-            )
-        except asyncio.TimeoutError:
-            logger.error(
-                "LLM analysis timeout",
-                work_item_id=work_item_id,
-                analysis_id=analysis_id
-            )
-            raise HTTPException(
-                status_code=408,
-                detail="El análisis está tardando más de lo esperado. Por favor, intenta con un work item más simple o contacta al administrador."
-            )
+        # Ejecutar análisis con LLM
+        analysis_result = await llm_wrapper.analyze_jira_workitem(
+            prompt=prompt,
+            work_item_id=request.id_work_item,
+            analysis_id=analysis_id
+        )
         
         # Procesar casos de prueba generados
         test_cases = []
         if analysis_result.get("test_cases"):
             for tc_data in analysis_result["test_cases"]:
                 test_case = TestCase(
-                    id_caso_prueba=tc_data.get("test_case_id", f"TC-{work_item_id}-001"),
+                    id_caso_prueba=tc_data.get("test_case_id", f"TC-{request.id_work_item}-001"),
                     titulo=tc_data.get("title", ""),
                     descripcion=tc_data.get("description", ""),
                     tipo_prueba=tc_data.get("test_type", "functional"),
@@ -1386,7 +1325,7 @@ async def analyze_jira_workitem(
         
         # Crear respuesta
         response = JiraAnalysisResponse(
-            id_work_item=work_item_id,
+            id_work_item=request.id_work_item,
             datos_jira=jira_data,
             id_analisis=analysis_id,
             estado="completed",
@@ -1401,13 +1340,13 @@ async def analyze_jira_workitem(
         background_tasks.add_task(
             log_jira_workitem_analysis_completion,
             analysis_id,
-            work_item_id,
+            request.id_work_item,
             response
         )
         
         logger.info(
             "Jira work item analysis completed",
-            work_item_id=work_item_id,
+            work_item_id=request.id_work_item,
             analysis_id=analysis_id,
             test_cases_count=len(test_cases),
             processing_time=processing_time
@@ -1420,206 +1359,13 @@ async def analyze_jira_workitem(
     except Exception as e:
         logger.error(
             "Jira work item analysis failed",
-            work_item_id=work_item_id,
+            work_item_id=request.id_work_item,
             analysis_id=analysis_id,
             error=str(e)
         )
         raise HTTPException(
             status_code=500,
             detail=f"Error analyzing Jira work item: {str(e)}"
-        )
-
-
-@app.post("/analizar-jira-simple", 
-          response_model=JiraAnalysisResponse,
-          summary="Análisis simplificado de Jira work item",
-          description="Versión simplificada del análisis de Jira con prompt más corto para evitar timeouts",
-          tags=["Integración Jira"],
-          responses={
-              200: {
-                  "description": "Análisis simplificado completado exitosamente",
-                  "model": JiraAnalysisResponse
-              },
-              404: {
-                  "description": "Work item no encontrado en Jira",
-                  "content": {
-                      "application/json": {
-                          "example": {"detail": "Work item no encontrado en Jira"}
-                      }
-                  }
-              },
-              408: {
-                  "description": "Timeout en el análisis",
-                  "content": {
-                      "application/json": {
-                          "example": {"detail": "El análisis simplificado está tardando más de lo esperado"}
-                      }
-                  }
-              },
-              422: {
-                  "description": "Datos de entrada inválidos",
-                  "content": {
-                      "application/json": {
-                          "example": {"detail": "Error de validación en los datos de entrada"}
-                      }
-                  }
-              },
-              500: {
-                  "description": "Error interno del servidor",
-                  "content": {
-                      "application/json": {
-                          "example": {"detail": "Error interno del servidor"}
-                      }
-                  }
-              }
-          })
-async def analyze_jira_workitem_simple(
-    request: JiraAnalysisRequest if USE_SPANISH_PARAMS else JiraAnalysisRequestEN,
-    background_tasks: BackgroundTasks
-):
-    """
-    ## Análisis Simplificado de Jira Work Item
-    
-    Versión simplificada que usa un prompt más corto para evitar timeouts en producción.
-    
-    ### Características:
-    - Prompt simplificado para análisis más rápido
-    - Timeout de 2 minutos en lugar de 5
-    - Generación básica de casos de prueba
-    - Menos detalle en el análisis
-    """
-    # Extract parameters based on feature flag
-    work_item_id, analysis_level = get_jira_params(request.dict())
-    
-    start_time = datetime.utcnow()
-    analysis_id = f"jira_simple_{work_item_id.replace('-', '')}_{int(start_time.timestamp())}"
-    
-    try:
-        logger.info(
-            "Starting simplified Jira work item analysis",
-            work_item_id=work_item_id,
-            analysis_level=analysis_level,
-            analysis_id=analysis_id
-        )
-        
-        # Obtener datos del work item desde Jira
-        jira_data = await tracker_client.get_work_item_details(
-            work_item_id=work_item_id,
-            project_key=""
-        )
-        
-        if not jira_data:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Work item {work_item_id} not found"
-            )
-        
-        # Sanitizar contenido sensible
-        sanitized_jira_data = sanitizer.sanitize_dict(jira_data)
-        
-        # Generar prompt simplificado
-        prompt_simple = f"""
-        Analiza el siguiente work item de Jira y genera casos de prueba básicos:
-
-        TÍTULO: {sanitized_jira_data.get('summary', '')}
-        DESCRIPCIÓN: {sanitized_jira_data.get('description', '')[:300]}...
-        TIPO: {sanitized_jira_data.get('issue_type', '')}
-        PRIORIDAD: {sanitized_jira_data.get('priority', '')}
-
-        Genera:
-        1. 3-5 casos de prueba básicos
-        2. Análisis de cobertura simple
-        3. Puntuación de confianza
-
-        Responde en formato JSON con: test_cases, coverage_analysis, confidence_score
-        """
-        
-        # Ejecutar análisis con LLM con timeout reducido
-        try:
-            analysis_result = await asyncio.wait_for(
-                llm_wrapper.analyze_jira_workitem(
-                    prompt=prompt_simple,
-                    work_item_id=work_item_id,
-                    analysis_id=analysis_id
-                ),
-                timeout=120.0  # 2 minutos de timeout
-            )
-        except asyncio.TimeoutError:
-            logger.error(
-                "LLM analysis timeout (simplified)",
-                work_item_id=work_item_id,
-                analysis_id=analysis_id
-            )
-            raise HTTPException(
-                status_code=408,
-                detail="El análisis simplificado está tardando más de lo esperado. Por favor, intenta con un work item más simple."
-            )
-        
-        # Procesar casos de prueba básicos
-        test_cases = []
-        if analysis_result.get("test_cases"):
-            for i, tc_data in enumerate(analysis_result["test_cases"][:5], 1):  # Máximo 5 casos
-                test_case = TestCase(
-                    id_caso_prueba=tc_data.get("test_case_id", f"TC-{work_item_id}-{i:03d}"),
-                    titulo=tc_data.get("title", f"Caso de Prueba {i}"),
-                    descripcion=tc_data.get("description", ""),
-                    pasos=tc_data.get("steps", []),
-                    resultado_esperado=tc_data.get("expected_result", ""),
-                    datos_prueba=tc_data.get("test_data", {}),
-                    tipo_prueba=tc_data.get("test_type", "funcional"),
-                    prioridad=tc_data.get("priority", "media"),
-                    precondiciones=tc_data.get("preconditions", []),
-                    potencial_automatizacion=tc_data.get("automation_potential", "media"),
-                    duracion_estimada=tc_data.get("estimated_duration", "5-10 minutos")
-                )
-                test_cases.append(test_case)
-        
-        # Calcular tiempo de procesamiento
-        processing_time = (datetime.utcnow() - start_time).total_seconds()
-        
-        # Crear respuesta simplificada
-        response = JiraAnalysisResponse(
-            id_work_item=work_item_id,
-            datos_jira=jira_data,
-            id_analisis=analysis_id,
-            estado="completed",
-            casos_prueba=test_cases,
-            analisis_cobertura=analysis_result.get("coverage_analysis", {"funcional": "80%"}),
-            puntuacion_confianza=analysis_result.get("confidence_score", 0.7),
-            tiempo_procesamiento=processing_time,
-            fecha_creacion=start_time
-        )
-        
-        # Registrar en background task para tracking
-        background_tasks.add_task(
-            log_jira_workitem_analysis_completion,
-            analysis_id,
-            work_item_id,
-            response
-        )
-        
-        logger.info(
-            "Simplified Jira work item analysis completed",
-            work_item_id=work_item_id,
-            analysis_id=analysis_id,
-            test_cases_count=len(test_cases),
-            processing_time=processing_time
-        )
-        
-        return response
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(
-            "Simplified Jira work item analysis failed",
-            work_item_id=work_item_id,
-            analysis_id=analysis_id,
-            error=str(e)
-        )
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error en análisis simplificado: {str(e)}"
         )
 
 @app.post("/generar-pruebas-avanzadas", 
